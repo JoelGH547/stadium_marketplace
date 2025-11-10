@@ -1,0 +1,54 @@
+<?php
+
+namespace App\Database\Migrations;
+
+use CodeIgniter\Database\Migration;
+
+class CreateUsersTable extends Migration
+{
+    public function up()
+    {
+        $this->forge->addField([
+            'id' => [
+                'type'           => 'INT',
+                'constraint'     => 11,
+                'unsigned'       => true,
+                'auto_increment' => true,
+            ],
+            'username' => [
+                'type'       => 'VARCHAR',
+                'constraint' => '100',
+            ],
+            'email' => [
+                'type'       => 'VARCHAR',
+                'constraint' => '100',
+                'unique'     => true,
+            ],
+            'password' => [
+                'type'       => 'VARCHAR',
+                'constraint' => '255', // ต้องยาวพอสำหรับเก็บรหัสผ่านที่ hash แล้ว
+            ],
+            'role' => [
+                'type'       => 'VARCHAR',
+                'constraint' => '50', // 'admin', 'user' ฯลฯ
+                'null'       => true,
+            ],
+            'created_at' => [
+                'type' => 'DATETIME',
+                'null' => true,
+            ],
+            'updated_at' => [
+                'type' => 'DATETIME',
+                'null' => true,
+            ],
+        ]);
+
+        $this->forge->addKey('id', true); // กำหนด id เป็น Primary Key
+        $this->forge->createTable('users'); // สร้างตารางชื่อ users
+    }
+
+    public function down()
+    {
+        $this->forge->dropTable('users'); // คำสั่งสำหรับเวลายกเลิก
+    }
+}
