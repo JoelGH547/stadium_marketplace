@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= (isset($title) ? esc($title) . ' | ' : '') ?>CI4 Stock System</title>
+    <title><?= (isset($title) ? esc($title) . ' | ' : '') ?>Stadium Admin</title>
     
     <!-- (CSS สำหรับ Auth Layout) -->
     <style>

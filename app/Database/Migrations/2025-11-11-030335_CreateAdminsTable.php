@@ -4,7 +4,7 @@ namespace App\Database\Migrations;
 
 use CodeIgniter\Database\Migration;
 
-class CreateUsersTable extends Migration
+class CreateAdminsTable extends Migration
 {
     public function up()
     {
@@ -18,20 +18,16 @@ class CreateUsersTable extends Migration
             'username' => [
                 'type'       => 'VARCHAR',
                 'constraint' => '100',
+                'unique'     => true, // username ห้ามซ้ำ
             ],
             'email' => [
                 'type'       => 'VARCHAR',
                 'constraint' => '100',
-                'unique'     => true,
+                'unique'     => true, // email ห้ามซ้ำ
             ],
-            'password' => [
+            'password_hash' => [ // ใช้ชื่อนี้แทน 'password' จะชัดเจนกว่า
                 'type'       => 'VARCHAR',
                 'constraint' => '255', // ต้องยาวพอสำหรับเก็บรหัสผ่านที่ hash แล้ว
-            ],
-            'role' => [
-                'type'       => 'VARCHAR',
-                'constraint' => '50', // 'admin', 'user' ฯลฯ
-                'null'       => true,
             ],
             'created_at' => [
                 'type' => 'DATETIME',
@@ -44,11 +40,11 @@ class CreateUsersTable extends Migration
         ]);
 
         $this->forge->addKey('id', true); // กำหนด id เป็น Primary Key
-        $this->forge->createTable('users'); // สร้างตารางชื่อ users
+        $this->forge->createTable('admins'); // สร้างตารางชื่อ 'admins'
     }
 
     public function down()
     {
-        $this->forge->dropTable('users'); // คำสั่งสำหรับเวลายกเลิก
+        $this->forge->dropTable('admins'); // คำสั่งสำหรับเวลายกเลิก
     }
 }

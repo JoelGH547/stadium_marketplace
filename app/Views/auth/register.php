@@ -4,7 +4,8 @@
 <?= $this->section('content') ?>
 
 <div class="auth-card">
-    <h1>Register</h1>
+    <h1>Register Customer Account</h1>
+    <p>Sign up to start making reservations.</p>
 
     <!-- (แสดงข้อความ Success/Error) -->
     <?php if (session()->getFlashdata('success')): ?>

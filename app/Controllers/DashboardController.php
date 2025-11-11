@@ -3,34 +3,41 @@
 namespace App\Controllers;
 
 use App\Controllers\BaseController;
-use App\Models\StadiumModel; // เปลี่ยนจาก ProductModel
+
+// 1. ⬇️ ลบ UserModel และนำเข้า 3 Models ใหม่ (บวก 2 Models ที่มีอยู่) ⬇️
+use App\Models\AdminModel;
+use App\Models\VendorModel;
+use App\Models\CustomerModel;
+use App\Models\StadiumModel;
 use App\Models\CategoryModel;
-use App\Models\UserModel;
+// (เราไม่ใช้ UserModel แล้ว)
 
 class DashboardController extends BaseController
 {
     public function index()
     {
-        // โหลด Models ที่จำเป็น
-        $stadiumModel = new StadiumModel(); // เปลี่ยนจาก ProductModel
+        // 2. ⬇️ โหลด Models ทั้ง 5 ตัว ⬇️
+        $adminModel    = new AdminModel();
+        $vendorModel   = new VendorModel();
+        $customerModel = new CustomerModel();
+        $stadiumModel  = new StadiumModel();
         $categoryModel = new CategoryModel();
-        $userModel = new UserModel();
         
-        // (เราจะดึงข้อมูล User ที่ Login อยู่มาด้วย)
-        // $userModel = new UserModel(); // ซ้ำ ไม่จำเป็นต้องประกาศใหม่
-        $user = $userModel->find(session()->get('user_id'));
+        // (เราจะไม่ดึงข้อมูล User ที่ Login อยู่... เพราะ Filter จัดการให้แล้ว)
+        // (และเราไม่รู้ว่า User มาจากตารางไหนในหน้านี้)
 
-        // เตรียมข้อมูลส่งไปให้ View
+        // 3. ⬇️ เตรียมข้อมูลส่งไปให้ View (นับข้อมูลจาก 5 ตาราง) ⬇️
         $data = [
             'title' => 'Admin Dashboard',
-            'user' => $user,
             
             // --- ข้อมูลสรุป (Stats) ---
-            'total_stadiums' => $stadiumModel->countAllResults(), // เปลี่ยนจาก total_products
+            'total_stadiums'   => $stadiumModel->countAllResults(),
             'total_categories' => $categoryModel->countAllResults(),
-            'total_users' => $userModel->countAllResults(),
             
-            // (ลบคอมเมนต์ low_stock_products ออก เพราะเราไม่ใช้ stock แล้ว)
+            // ⬇️ เปลี่ยนจาก $total_users (เก่า) เป็น 3 ตัวแปรใหม่ ⬇️
+            'total_admins'    => $adminModel->countAllResults(),
+            'total_vendors'   => $vendorModel->countAllResults(),
+            'total_customers' => $customerModel->countAllResults(),
         ];
 
         // โหลด View ของ Dashboard (ที่อยู่ในโฟลเดอร์ admin)

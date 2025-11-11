@@ -7,7 +7,7 @@
       - $title จะถูกส่งมาจาก Controller (เช่น 'Product List')
       - 'CI4 Stock' คือชื่อระบบหลัก
     -->
-    <title><?= (isset($title) ? esc($title) . ' | ' : '') ?>CI4 Stock System</title>
+    <title><?= (isset($title) ? esc($title) . ' | ' : '') ?>Stadium Management</title>
     
     <!-- (CSS สำหรับ Layout นี้เท่านั้น) -->
     <style>

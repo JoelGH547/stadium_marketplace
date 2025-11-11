@@ -7,24 +7,38 @@ use CodeIgniter\Router\RouteCollection;
 /**
  * @var RouteCollection $routes
  */
-$routes->get('/', 'Home::index');
+
+// 1. ⬇️ --- Redirect หน้าแรกไป /login (สำหรับ Customer) --- ⬇️
+$routes->get('/', static function () {
+    return redirect()->to('/login');
+});
 
 
-// --- Auth Routes (Login, Register) ---
-$routes->get('/register', 'AuthController::register');
-$routes->post('/register', 'AuthController::processRegister');
-$routes->get('/login', 'AuthController::index');
-$routes->post('/login', 'AuthController::processLogin');
-$routes->get('/logout', 'AuthController::logout');
+// 2. ⬇️ --- AUTH (CUSTOMER) ROUTES (สาธารณะ) --- ⬇️
+// (Controller: AuthController.php)
+$routes->get('login', 'AuthController::index');
+$routes->post('login', 'AuthController::processLogin');
+$routes->get('register', 'AuthController::register');
+$routes->post('register', 'AuthController::processRegister');
+$routes->get('logout', 'AuthController::logout'); // Logout สาธารณะ (สำหรับ Customer)
 
 
-// --- User Dashboard (สำหรับทุกคนที่ Login แล้ว) ---
-$routes->get('/dashboard', 'DashboardController::index', ['filter' => 'auth']);
+// 3. ⬇️ --- ADMIN LOGIN ROUTES (หน้าล็อคอินแอดมิน) --- ⬇️
+// (Controller: admin/AdminAuthController.php)
+$routes->get('admin/login', 'admin\AdminAuthController::index');
+$routes->post('admin/login', 'admin\AdminAuthController::processLogin');
+$routes->get('admin/logout', 'admin\AdminAuthController::logout');
 
 
-// ==========================================================
-// --- ADMIN SECTION (ต้อง Login และมี Role 'admin') ---
-// ==========================================================
+// 4. ⬇️ --- VENDOR LOGIN ROUTES (หน้าล็อคอินเจ้าของสนาม) --- ⬇️
+// (Controller: vendor/VendorAuthController.php)
+$routes->get('vendor/login', 'vendor\VendorAuthController::index');
+$routes->post('vendor/login', 'vendor\VendorAuthController::processLogin');
+$routes->get('vendor/logout', 'vendor\VendorAuthController::logout');
+
+
+// 5. ⬇️ --- ADMIN SECTION (หน้า Dashboard ของแอดมิน) --- ⬇️
+// (Filter: 'auth' และ 'admin')
 $routes->group('admin', ['filter' => ['auth', 'admin']], static function ($routes) {
 
     $routes->get('dashboard', 'DashboardController::index');
@@ -37,26 +51,38 @@ $routes->group('admin', ['filter' => ['auth', 'admin']], static function ($route
     $routes->post('categories/update/(:num)', 'CategoryController::update/$1');
     $routes->get('categories/delete/(:num)', 'CategoryController::delete/$1');
 
-
-    // --- Stadium CRUD Routes (แก้ไขจาก Products) ---
+    // --- Stadium CRUD Routes ---
     $routes->get('stadiums', 'StadiumController::index');
     $routes->get('stadiums/create', 'StadiumController::create');
     $routes->post('stadiums', 'StadiumController::store');
     $routes->get('stadiums/edit/(:num)', 'StadiumController::edit/$1');
     $routes->post('stadiums/update/(:num)', 'StadiumController::update/$1');
     $routes->get('stadiums/delete/(:num)', 'StadiumController::delete/$1');
-
     
-    // --- Stock Management Routes (ลบส่วนนี้ทิ้ง) ---
-    // (เราไม่ใช้ StockController แล้ว)
-
-
-    // --- User Management Routes ---
+    // 6. ⬇️ --- USER MANAGEMENT ROUTES (แก้ไขใหม่!) --- ⬇️
+    // (Controller: admin/UserController.php)
     $routes->get('users', 'admin\UserController::index');
     $routes->get('users/create', 'admin\UserController::create');
     $routes->post('users', 'admin\UserController::store');
-    $routes->get('users/edit/(:num)', 'admin\UserController::edit/$1');
-    $routes->post('users/update/(:num)', 'admin\UserController::update/$1');
-    $routes->get('users/delete/(:num)', 'admin\UserController::delete/$1');
+    
+    // (แก้ไข: รับ :segment (คือ role) และ :num (คือ id))
+    $routes->get('users/edit/(:segment)/(:num)', 'admin\UserController::edit/$1/$2');
+    $routes->post('users/update/(:segment)/(:num)', 'admin\UserController::update/$1/$2');
+    $routes->get('users/delete/(:segment)/(:num)', 'admin\UserController::delete/$1/$2');
+});
 
+
+// 7. ⬇️ --- VENDOR SECTION (หน้า Dashboard ของเจ้าของสนาม) --- ⬇️
+// (Filter: 'auth' และ 'vendor')
+$routes->group('vendor', ['filter' => ['auth', 'vendor']], static function ($routes) {
+    $routes->get('dashboard', 'vendor\VendorController::index');
+    // (อนาคต: เพิ่ม 'vendor/stadiums' ฯลฯ ที่นี่)
+});
+
+
+// 8. ⬇️ --- CUSTOMER SECTION (หน้า Dashboard ของลูกค้า) --- ⬇️
+// (Filter: 'auth' และ 'customer')
+$routes->group('customer', ['filter' => ['auth', 'customer']], static function ($routes) {
+    $routes->get('dashboard', 'CustomerController::index');
+    // (อนาคต: เพิ่ม 'customer/bookings' ฯลฯ ที่นี่)
 });

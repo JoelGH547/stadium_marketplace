@@ -3,8 +3,8 @@
 
 <div class="auth-card">
     <!-- 1. เปลี่ยน Title และ Action -->
-    <h1>Customer Login</h1>
-    <p>Welcome! Please log in to your customer account.</p>
+    <h1>Vendor Login</h1>
+    <p>Please log in to access the Vendor Panel.</p>
 
     <!-- (แสดงข้อความ Success/Error) -->
     <?php if (session()->getFlashdata('success')): ?>
@@ -25,8 +25,8 @@
         </div>
     <?php endif; ?>
 
-    <!-- 2. Form Action ชี้ไปที่ 'login' (สาธารณะ) -->
-    <form action="<?= base_url('login') ?>" method="post">
+    <!-- 2. Form Action ชี้ไปที่ 'vendor/login' -->
+    <form action="<?= base_url('vendor/login') ?>" method="post">
         <?= csrf_field() ?>
 
         <div class="form-group">
@@ -39,16 +39,11 @@
             <input type="password" id="password" name="password" class="form-control" required>
         </div>
 
-        <button type="submit" class="btn btn-primary">Login as Customer</button>
+        <button type="submit" class="btn btn-primary">Login as Vendor</button>
     </form>
     
     <div class="auth-links">
-        <a href="<?= base_url('register') ?>">Don't have an account? Register</a>
-        <hr style="margin: 10px 0;">
-        <!-- 3. เพิ่มลิงก์สำหรับ Role อื่น -->
-        <a href="<?= base_url('admin/login') ?>" style="font-size: 0.9em;">Login as Admin</a>
-        |
-        <a href="<?= base_url('vendor/login') ?>" style="font-size: 0.9em;">Login as Vendor</a>
+        <a href="<?= base_url('login') ?>">Are you a Customer?</a>
     </div>
 </div>
 
