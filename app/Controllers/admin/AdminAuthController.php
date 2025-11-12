@@ -16,16 +16,19 @@ class AdminAuthController extends BaseController
     }
 
     /**
-     * แสดงหน้าฟอร์ม Login (สำหรับ Admin)
+     * 1. ⬇️ สร้างฟังก์ชัน "login()" ⬇️
+     * (นี่คือฟังก์ชันที่ "หายไป" ใน Error 404 รูปแรก)
+     * * แสดงหน้าฟอร์ม Login (สำหรับ Admin)
      */
-    public function index()
+    public function login()
     {
-        // เราจะสร้าง View นี้ในขั้นตอนต่อไป
+        // (เราจะสร้าง View นี้ในขั้นตอนต่อไป)
         return view('auth/login_admin'); 
     }
 
     /**
-     * ⬇️ --- รับข้อมูลจากฟอร์ม Login (สำหรับ Admin) --- ⬇️
+     * 2. ⬇️ สร้างฟังก์ชัน "processLogin()" ⬇️
+     * (รับข้อมูลจากฟอร์ม Login)
      */
     public function processLogin()
     {
@@ -36,19 +39,17 @@ class AdminAuthController extends BaseController
         ];
 
         if (! $this->validate($rules)) {
-            return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+            return redirect()->back()->withInput()->with('validation', $this->validator);
         }
 
         $email = $this->request->getVar('email');
         $password = $this->request->getVar('password');
 
-        // 2. ⬇️ --- ค้นหาในตาราง ADMINS (ตารางเดียว) --- ⬇️
+        // 2. ค้นหาในตาราง ADMINS (ตารางเดียว)
         $user = $this->adminModel->where('email', $email)->first();
-        $role = 'admin'; // กำหนด Role ตายตัว
 
         // 3. ตรวจสอบ User และ รหัสผ่าน
         if (! $user || ! password_verify($password, $user['password_hash'])) {
-            // ‼️ เด้งกลับไปหน้า Admin Login
             return redirect()->to('admin/login')->withInput()->with('errors', 'Invalid email or password for Admin.');
         }
 
@@ -57,24 +58,22 @@ class AdminAuthController extends BaseController
             'user_id'      => $user['id'],
             'username'     => $user['username'],
             'email'        => $user['email'],
-            'role'         => $role, // Role 'admin'
+            'role'         => 'admin', // ⬅️ บังคับ Role
             'is_logged_in' => true
         ];
         
         session()->set($sessionData);
 
-        // 5. ⬇️ --- Redirect ไปหน้า Admin Dashboard (ที่เดียว) --- ⬇️
+        // 5. เด้งไปหน้า Admin Dashboard
         return redirect()->to('admin/dashboard');
     }
     
     /**
      * Admin Logout
-     * (เราจะใช้ /logout (ตัวหลัก) หรือจะสร้าง /admin/logout ก็ได้)
      */
     public function logout()
     {
         session()->destroy();
-        // เด้งกลับไปหน้า Admin Login
         return redirect()->to('admin/login')->with('success', 'You have been logged out.');
     }
 
