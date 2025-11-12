@@ -1,37 +1,38 @@
 <?= $this->extend('admin/layout') ?>
 
+<!-- 2. เริ่ม Section Content -->
 <?= $this->section('content') ?>
 
     <h1><?= esc($title) ?></h1>
     <p><a href="<?= base_url('admin/stadiums') ?>">
-        <button>&laquo; Back to Stadium List</button>
+        <button class="btn btn-secondary">&laquo; Back to Stadium List</button>
     </a></p>
 
+    <!-- (แสดง Validation Errors) -->
     <?php $validation = session()->getFlashdata('validation'); ?>
     <?php if ($validation): ?>
-        <div style="color: red; border: 1px solid red; padding: 10px; margin-bottom: 15px; border-radius: 4px;">
-            <ul style="margin: 0; padding-left: 20px;">
-            <?php foreach ($validation->getErrors() as $error): ?>
-                <li><?= esc($error) ?></li>
-            <?php endforeach; ?>
-            </ul>
+        <div class="alert alert-danger">
+            <?= $validation->listErrors() ?? 'Please check your input.' ?>
         </div>
     <?php endif; ?>
 
+    <!-- 1. ⬇️ Form (Action ชี้ไปที่ 'admin/stadiums/update/[ID]') ⬇️ -->
     <form action="<?= base_url('admin/stadiums/update/' . $stadium['id']) ?>" method="post">
         
         <?= csrf_field() ?>
         
-        <div style="margin-bottom: 15px;">
+        <div class="form-group">
             <label for="name">Stadium Name:</label>
-            <input type="text" id="name" name="name" value="<?= old('name', $stadium['name']) ?>" required style="width: 100%; padding: 8px; box-sizing: border-box;">
+            <!-- (แสดง "ค่าเก่า") -->
+            <input type="text" id="name" name="name" class="form-control" value="<?= old('name', $stadium['name']) ?>" required>
         </div>
 
-        <div style="margin-bottom: 15px;">
+        <div class="form-group">
             <label for="category_id">Category:</label>
-            <select id="category_id" name="category_id" required style="width: 100%; padding: 8px; box-sizing: border-box;">
+            <select id="category_id" name="category_id" class="form-control" required>
                 <option value="">-- Select Category --</option>
                 <?php foreach ($categories as $category): ?>
+                    <!-- (เช็ก "ค่าเก่า" Selected) -->
                     <option value="<?= esc($category['id']) ?>" <?= (old('category_id', $stadium['category_id']) == $category['id']) ? 'selected' : '' ?>>
                         <?= esc($category['name']) ?>
                     </option>
@@ -39,19 +40,36 @@
             </select>
         </div>
 
-        <div style="margin-bottom: 15px;">
-            <label for="price">Price (per hour):</label>
-            <input type="number" id="price" name="price" step="0.01" value="<?= old('price', $stadium['price']) ?>" required style="width: 100%; padding: 8px; box-sizing: border-box;">
+        <!-- 2. ⬇️ (เพิ่ม) "Dropdown (ตัวเลือก) ...สำหรับ 'เลือก' (Assign) ...Vendor" ⬇️ -->
+        <div class="form-group">
+            <label for="vendor_id">Assign to Vendor (มอบหมายให้ Vendor):</label>
+            <select id="vendor_id" name="vendor_id" class="form-control" required>
+                <option value="">-- Select Vendor --</option>
+                <!-- (วนลูป $vendors ที่ Controller ส่งมา) -->
+                <?php foreach ($vendors as $vendor): ?>
+                    <!-- (เช็ก "ค่าเก่า" Selected ...จาก $stadium['vendor_id']) -->
+                    <option value="<?= esc($vendor['id']) ?>" <?= (old('vendor_id', $stadium['vendor_id']) == $vendor['id']) ? 'selected' : '' ?>>
+                        <?= esc($vendor['username']) ?> (<?= esc($vendor['vendor_name'] ?? 'N/A') ?>)
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        <!-- ⬆️ (จบส่วนที่เพิ่ม) ⬆️ -->
+
+        <div class="form-group">
+            <label for="price">Price:</label>
+            <input type="number" id="price" name="price" step="0.01" class="form-control" value="<?= old('price', $stadium['price']) ?>" required>
         </div>
 
-        <div style="margin-bottom: 15px;">
+        <div class="form-group">
             <label for="description">Description:</label>
-            <textarea id="description" name="description" style="width: 100%; padding: 8px; box-sizing: border-box; min-height: 100px;"><?= old('description', $stadium['description']) ?></textarea>
+            <textarea id="description" name="description" class="form-control" rows="4"><?= old('description', $stadium['description']) ?></textarea>
         </div>
         
-        <div>
-            <button type="submit" style="background-color: #28a745; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer;">Update Stadium</button>
+        <div class="form-group" style="margin-top: 20px;">
+            <button type="submit" class="btn btn-primary">Update Stadium</button>
         </div>
     </form>
 
+<!-- 3. จบ Section Content -->
 <?= $this->endSection() ?>
