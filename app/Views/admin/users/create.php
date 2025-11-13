@@ -1,4 +1,4 @@
-<?= $this->extend('admin/layout') ?>
+<?= $this->extend('layouts/admin') ?>
 <?= $this->section('content') ?>
 
 <h1><?= esc($title) ?></h1>

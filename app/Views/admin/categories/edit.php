@@ -1,4 +1,4 @@
-<?= $this->extend('admin/layout') ?>
+<?= $this->extend('layouts/admin') ?>
 
 <!-- 2. เริ่ม Section Content -->
 <?= $this->section('content') ?>

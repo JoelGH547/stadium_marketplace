@@ -227,8 +227,8 @@
             <li><a href="<?= base_url('admin/users') ?>">จัดการผู้ใช้งาน</a></li>
             
             <li class="logout">
-                <a href="<?= base_url('logout') ?>">ออกจากระบบ</a>
-            </li>
+    <a href="<?= base_url('admin/logout') ?>">ออกจากระบบ</a>
+</li>
         </ul>
     </div>
 

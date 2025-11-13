@@ -41,9 +41,7 @@ class Filters extends BaseFilters
         'performance'   => PerformanceMetrics::class,
         // ⬇ 2. (เพิ่ม) ตั้ง "ชื่อเล่น" ให้ยามของเรา ⬇
         'auth'          => AuthFilter::class,
-        'admin'         => AdminFilter::class,
-        'vendor'   => \App\Filters\VendorFilter::class, 
-        'customer' => \App\Filters\CustomerFilter::class,
+        'admin'         => AdminFilter::class, 
     ];
 
     /**

@@ -18,7 +18,7 @@ class AdminFilter implements FilterInterface
             // 2. ถ้าคุณไม่ใช่แอดมิน (เช่น เป็น 'staff')
             // ให้ "เด้ง" (redirect) กลับไปที่หน้า Dashboard หลัก
             // (เราไม่เตะไปหน้า login เพราะคุณ "login แล้ว" แต่แค่ "ไม่มีสิทธิ์")
-            return redirect()->to('/dashboard')->with('errors', 'You do not have permission to access this page.');
+            return redirect()->to('/admin/login')->with('errors', 'You do not have permission to access this page.');
         }
     }
 

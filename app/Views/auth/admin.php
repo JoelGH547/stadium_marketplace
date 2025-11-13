@@ -1,4 +1,4 @@
-<?= $this->extend('auth/layout') ?>
+<?= $this->extend('layouts/auth') ?>
 <?= $this->section('content') ?>
 
 <div class="auth-card">
@@ -38,9 +38,9 @@
 
         <button type="submit" class="btn btn-primary">Login as Admin</button>
     </form>
-    
-    <div class="auth-links">
-        <a href="<?= base_url('login') ?>">Are you a Customer?</a>
+
+    <div class="auth-links text-sm text-gray-500">
+    Login for Admin only
     </div>
 </div>
 

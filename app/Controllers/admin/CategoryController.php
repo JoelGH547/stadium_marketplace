@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Controllers;
+namespace App\Controllers\admin;
 
 use App\Controllers\BaseController;
 use App\Models\CategoryModel;
@@ -27,7 +27,7 @@ class CategoryController extends BaseController
         ];
         
         // ⬇️ --- แก้ไขบรรทัดนี้ --- ⬇️
-        return view('categories/index', $data); 
+        return view('admin/categories/index', $data); 
         // ⬆️ --- สิ้นสุดส่วนที่แก้ไข --- ⬆️
     }
 
@@ -41,7 +41,7 @@ class CategoryController extends BaseController
         ];
         
         // ⬇️ --- แก้ไขบรรทัดนี้ --- ⬇️
-        return view('categories/new', $data);
+        return view('admin/categories/create', $data);
         // ⬆️ --- สิ้นสุดส่วนที่แก้ไข --- ⬆️
     }
 
@@ -82,7 +82,7 @@ class CategoryController extends BaseController
         ];
 
         // ⬇️ --- แก้ไขบรรทัดนี้ --- ⬇️
-        return view('categories/edit', $data);
+        return view('admin/categories/edit', $data);
         // ⬆️ --- สิ้นสุดส่วนที่แก้ไข --- ⬆️
     }
 

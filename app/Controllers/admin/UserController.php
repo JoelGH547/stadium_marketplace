@@ -100,7 +100,7 @@ class UserController extends BaseController
         $data = [
             'username' => $this->request->getVar('username'),
             'email'    => $this->request->getVar('email'),
-            'password_hash' => password_hash($this->request->getVar('password'), PASSWORD_DEFAULT),
+            'password_hash' => password_hash($this->request->getVar('password'), PASSWORD_ARGON2ID),
         ];
 
         // เพิ่มข้อมูลพิเศษ (ถ้ามี)

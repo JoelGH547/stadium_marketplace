@@ -17,7 +17,7 @@ class AuthFilter implements FilterInterface
             
             // 2. ถ้ายังไม่ Login
             // ให้ "เด้ง" (redirect) กลับไปที่หน้า /login
-            return redirect()->to('/login')->with('errors', 'You must be logged in to access that page.');
+            return redirect()->to('/admin/login')->with('errors', 'You must be logged in to access that page.');
         }
     }
 

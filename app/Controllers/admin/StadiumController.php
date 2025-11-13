@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Controllers;
+namespace App\Controllers\admin;
 
+use App\Controllers\BaseController;
 use App\Models\StadiumModel;
 use App\Models\CategoryModel;
 use App\Models\VendorModel; // ⬅️ 1. (เพิ่ม) นำเข้า VendorModel
@@ -27,7 +28,7 @@ class StadiumController extends BaseController
             'stadiums' => $this->stadiumModel->getStadiumsWithCategory(),
             'title' => 'Stadium List (All Vendors)',
         ];
-        return view('stadiums/index', $data);
+        return view('admin/stadiums/index', $data);
     }
 
     // --- 2. CREATE (แสดงฟอร์มสร้างสนามใหม่) ---
@@ -38,7 +39,7 @@ class StadiumController extends BaseController
             'categories' => $this->categoryModel->findAll(), 
             'vendors' => $this->vendorModel->findAll(), // ⬅️ 4. (เพิ่ม) ส่ง "รายชื่อ" Vendor ไปให้ View
         ];
-        return view('stadiums/create', $data);
+        return view('admin/stadiums/create', $data);
     }
 
     // --- 3. STORE (บันทึกสนามใหม่) ---
@@ -81,7 +82,7 @@ class StadiumController extends BaseController
             'vendors' => $this->vendorModel->findAll(), // ⬅️ 7. (เพิ่ม) ส่ง "รายชื่อ" Vendor ไปให้ View (สำหรับ Edit)
         ];
 
-        return view('stadiums/edit', $data);
+        return view('admin/stadiums/edit', $data);
     }
 
     // --- 5. UPDATE (อัพเดทสนาม) ---

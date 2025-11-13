@@ -23,7 +23,7 @@ class AdminAuthController extends BaseController
     public function login()
     {
         // (เราจะสร้าง View นี้ในขั้นตอนต่อไป)
-        return view('auth/login_admin'); 
+        return view('auth/admin'); 
     }
 
     /**
@@ -31,42 +31,37 @@ class AdminAuthController extends BaseController
      * (รับข้อมูลจากฟอร์ม Login)
      */
     public function processLogin()
-    {
-        // 1. Validation
-        $rules = [
-            'email'    => 'required|valid_email',
-            'password' => 'required'
-        ];
+{
+    $email    = $this->request->getPost('email');
+    $password = $this->request->getPost('password');
 
-        if (! $this->validate($rules)) {
-            return redirect()->back()->withInput()->with('validation', $this->validator);
-        }
+    $adminModel = new \App\Models\AdminModel(); // หรือ UserModel แล้วแต่ของจริง
+    $user = $adminModel->where('email', $email)->first();
 
-        $email = $this->request->getVar('email');
-        $password = $this->request->getVar('password');
-
-        // 2. ค้นหาในตาราง ADMINS (ตารางเดียว)
-        $user = $this->adminModel->where('email', $email)->first();
-
-        // 3. ตรวจสอบ User และ รหัสผ่าน
-        if (! $user || ! password_verify($password, $user['password_hash'])) {
-            return redirect()->to('admin/login')->withInput()->with('errors', 'Invalid email or password for Admin.');
-        }
-
-        // 4. (Login สำเร็จ!) สร้าง Session
-        $sessionData = [
-            'user_id'      => $user['id'],
-            'username'     => $user['username'],
-            'email'        => $user['email'],
-            'role'         => 'admin', // ⬅️ บังคับ Role
-            'is_logged_in' => true
-        ];
-        
-        session()->set($sessionData);
-
-        // 5. เด้งไปหน้า Admin Dashboard
-        return redirect()->to('admin/dashboard');
+    if (! $user) {
+        return redirect()->back()->with('errors', 'Invalid email or password.');
     }
+
+    if (! password_verify($password, $user['password_hash'])) {
+        return redirect()->back()->with('errors', 'Invalid email or password.');
+    }
+
+    // 🔴 จุดสำคัญ: ให้ผ่านเฉพาะ admin
+    if (($user['role'] ?? 'admin') !== 'admin') {
+        return redirect()->back()->with('errors', 'You do not have permission to access admin panel.');
+    }
+
+    // จากตรงนี้ไป = admin แน่ ๆ
+    session()->set([
+        'user_id'      => $user['id'],
+        'username'     => $user['username'] ?? $user['email'],
+        'email'        => $user['email'],
+        'role'         => 'admin',
+        'is_logged_in' => true,
+    ]);
+
+    return redirect()->to('/admin/dashboard');
+}
     
     /**
      * Admin Logout
@@ -74,7 +69,7 @@ class AdminAuthController extends BaseController
     public function logout()
     {
         session()->destroy();
-        return redirect()->to('admin/login')->with('success', 'You have been logged out.');
+        return redirect()->to('/admin/login')->with('success', 'You have been logged out.');
     }
 
 }
