@@ -208,7 +208,7 @@ class UserController extends BaseController
 
         // (ถ้ามีรหัสใหม่ ให้ Hash)
         if ($this->request->getVar('password')) {
-            $data['password_hash'] = password_hash($this->request->getVar('password'), PASSWORD_DEFAULT);
+            $data['password_hash'] = password_hash($this->request->getVar('password'), PASSWORD_ARGON2ID);
         }
         
         // เพิ่มข้อมูลพิเศษ (ถ้ามี)
