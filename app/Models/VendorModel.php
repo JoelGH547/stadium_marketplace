@@ -7,8 +7,8 @@ use CodeIgniter\Model;
 class VendorModel extends Model
 {
     // 1. ชื่อตารางที่เชื่อมต่อ
-    protected $table         = 'vendors';
-    protected $primaryKey    = 'id';
+    protected $table        = 'vendors';
+    protected $primaryKey   = 'id';
     protected $useAutoIncrement = true;
 
     // 2. ฟิลด์ที่อนุญาตให้บันทึก (ตรงกับ Migration)
@@ -22,7 +22,10 @@ class VendorModel extends Model
         'vendor_name',
         'phone_number',
         'tax_id',
-        'bank_account'
+        'bank_account',
+
+        // ⬇️ (เพิ่ม) อนุญาตให้ Admin แก้ไข 'status' (Approve/Reject) ได้ ⬇️
+        'status' 
     ];
 
     // 3. เปิดใช้งาน Timestamps (CI4 จะจัดการอัตโนมัติ)

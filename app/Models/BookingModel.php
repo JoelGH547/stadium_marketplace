@@ -6,29 +6,27 @@ use CodeIgniter\Model;
 
 class BookingModel extends Model
 {
-    // 1. ⬇️ ชื่อตารางที่เชื่อมต่อ
-    protected $table         = 'bookings';
-    protected $primaryKey    = 'id';
+    protected $table            = 'bookings';
+    protected $primaryKey       = 'id';
     protected $useAutoIncrement = true;
+    protected $returnType       = 'array';
 
-    protected $returnType    = 'array';
-
-    // 2. ⬇️ ฟิลด์ที่อนุญาตให้บันทึก (ตรงกับ Migration)
-    protected $allowedFields = [
+    // ⬇️ (สำคัญ) ต้องอนุญาตฟิลด์ทั้งหมดที่เราจะ Save/Update ⬇️
+    protected $allowedFields    = [
         'customer_id',
         'stadium_id',
         'vendor_id',
+        'booking_date',      // (ถ้าคุณใช้ booking_start_time ก็ต้องแก้ตรงนี้ให้ตรงกับ DB)
         'booking_start_time',
         'booking_end_time',
+        'start_time',        // (ถ้าคุณยังใช้ start_time อยู่)
         'total_price',
-        'status' 
+        'status',
+        'is_viewed_by_admin'
     ];
 
-    // 3. ⬇️ เปิดใช้งาน Timestamps (CI4 จะจัดการอัตโนมัติ)
+    // Dates
     protected $useTimestamps = true;
     protected $createdField  = 'created_at';
     protected $updatedField  = 'updated_at';
-
-    // (ในอนาคต เราจะมาเพิ่มฟังก์ชันดึง "การจอง" (Booking)
-    // ...พร้อม "ชื่อลูกค้า" (Customer) และ "ชื่อสนาม" (Stadium) ที่นี่ครับ)
 }

@@ -22,13 +22,10 @@ class CategoryController extends BaseController
     {
         $data = [
             'title' => 'Category Management',
-            // (เรียงตาม ID ที่เราทำไว้)
             'categories' => $this->categoryModel->orderBy('id', 'ASC')->findAll(),
         ];
         
-        // ⬇️ --- แก้ไขบรรทัดนี้ --- ⬇️
         return view('admin/categories/index', $data); 
-        // ⬆️ --- สิ้นสุดส่วนที่แก้ไข --- ⬆️
     }
 
     /**
@@ -40,9 +37,7 @@ class CategoryController extends BaseController
             'title' => 'Add New Category'
         ];
         
-        // ⬇️ --- แก้ไขบรรทัดนี้ --- ⬇️
         return view('admin/categories/create', $data);
-        // ⬆️ --- สิ้นสุดส่วนที่แก้ไข --- ⬆️
     }
 
     /**
@@ -60,7 +55,7 @@ class CategoryController extends BaseController
         // 2. Save
         $this->categoryModel->save([
             'name' => $this->request->getPost('name'),
-            'description' => $this->request->getPost('description'),
+            // 💡 (ลบ description ที่ไม่ใช้ออก)
         ]);
 
         return redirect()->to(base_url('admin/categories'))->with('success', 'Category created successfully.');
@@ -81,9 +76,7 @@ class CategoryController extends BaseController
             'category' => $category,
         ];
 
-        // ⬇️ --- แก้ไขบรรทัดนี้ --- ⬇️
         return view('admin/categories/edit', $data);
-        // ⬆️ --- สิ้นสุดส่วนที่แก้ไข --- ⬆️
     }
 
     /**
@@ -101,7 +94,7 @@ class CategoryController extends BaseController
         // 2. Update
         $this->categoryModel->update($id, [
             'name' => $this->request->getPost('name'),
-            'description' => $this->request->getPost('description'),
+            // 💡 (ลบ description ที่ไม่ใช้ออก)
         ]);
 
         return redirect()->to(base_url('admin/categories'))->with('success', 'Category updated successfully.');
@@ -123,7 +116,7 @@ class CategoryController extends BaseController
             // 3. ถ้าล้มเหลว (เพราะ Error 1451)
             if ($e->getCode() == 1451) {
                 return redirect()->to(base_url('admin/categories'))
-                                 ->with('error', 'ไม่สามารถลบหมวดหมู่นี้ได้! (ID: '.esc($id).') เนื่องจากมีสินค้าอ้างอิงอยู่');
+                                ->with('error', 'ไม่สามารถลบหมวดหมู่นี้ได้! (ID: '.esc($id).') เนื่องจากมีสินค้าอ้างอิงอยู่');
             }
 
             // ถ้าเป็น Error อื่น
