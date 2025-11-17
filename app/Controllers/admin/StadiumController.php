@@ -52,16 +52,15 @@ class StadiumController extends BaseController
     }
 
     // =========================
-    //  STORE
+    //  STORE (เพิ่มข้อมูลใหม่)
     // =========================
     public function store()
     {
         if (!$this->validate([
-            'name'        => 'required|max_length[100]',
-            'price'       => 'required|numeric',
-            'category_id' => 'required|integer',
-            'vendor_id'   => 'required|integer',
-            // เบอร์โทร: ถ้ากรอก ต้องเป็นตัวเลข 10 หลัก
+            'name'          => 'required|max_length[100]',
+            'price'         => 'required|numeric',
+            'category_id'   => 'required|integer',
+            'vendor_id'     => 'required|integer',
             'contact_phone' => 'permit_empty|regex_match[/^[0-9]{10}$/]',
         ])) {
             return redirect()->back()
@@ -74,21 +73,23 @@ class StadiumController extends BaseController
             mkdir($uploadPath, 0777, true);
         }
 
-        // Outside cover
-        $outsideImagesJson = null;
+        // 1. จัดการรูปปก (Outside Image)
+        $outsideImagesJson = '[]'; // ค่า Default เป็น array ว่างแบบ JSON
         $outsideFile       = $this->request->getFile('outside_image');
-        if ($outsideFile && $outsideFile->isValid()) {
+
+        if ($outsideFile && $outsideFile->isValid() && !$outsideFile->hasMoved()) {
             $newName = 'outside_' . time() . '_' . $outsideFile->getRandomName();
             $outsideFile->move($uploadPath, $newName);
-            $outsideImagesJson = json_encode([$newName]);
+            $outsideImagesJson = json_encode([$newName]); // เก็บเป็น JSON Array
         }
 
-        // Inside multiple
-        $insideFiles       = $this->request->getFiles()['inside_images'] ?? [];
+        // 2. จัดการรูปภายใน (Inside Images)
+        $insideFiles = $this->request->getFileMultiple('inside_images');
         $insideImagesArray = [];
+
         if (!empty($insideFiles)) {
             foreach ($insideFiles as $file) {
-                if ($file->isValid()) {
+                if ($file->isValid() && !$file->hasMoved()) {
                     $newName = 'inside_' . time() . '_' . $file->getRandomName();
                     $file->move($uploadPath, $newName);
                     $insideImagesArray[] = $newName;
@@ -96,21 +97,22 @@ class StadiumController extends BaseController
             }
         }
 
+        // บันทึกข้อมูล
         $this->stadiumModel->save([
-            'name'          => $this->request->getPost('name'),
-            'price'         => $this->request->getPost('price'),
-            'description'   => $this->request->getPost('description'),
-            'category_id'   => $this->request->getPost('category_id'),
-            'vendor_id'     => $this->request->getPost('vendor_id'),
-            'open_time'     => $this->request->getPost('open_time'),
-            'close_time'    => $this->request->getPost('close_time'),
-            'contact_email' => $this->request->getPost('contact_email'),
-            'contact_phone' => $this->request->getPost('contact_phone'),
-            'province'      => $this->request->getPost('province'),
-            'address'       => $this->request->getPost('address'),
-            'lat'           => $this->request->getPost('lat'),
-            'lng'           => $this->request->getPost('lng'),
-            'map_link'      => $this->request->getPost('map_link'),
+            'name'           => $this->request->getPost('name'),
+            'price'          => $this->request->getPost('price'),
+            'description'    => $this->request->getPost('description'),
+            'category_id'    => $this->request->getPost('category_id'),
+            'vendor_id'      => $this->request->getPost('vendor_id'),
+            'open_time'      => $this->request->getPost('open_time'),
+            'close_time'     => $this->request->getPost('close_time'),
+            'contact_email'  => $this->request->getPost('contact_email'),
+            'contact_phone'  => $this->request->getPost('contact_phone'),
+            'province'       => $this->request->getPost('province'),
+            'address'        => $this->request->getPost('address'),
+            'lat'            => $this->request->getPost('lat'),
+            'lng'            => $this->request->getPost('lng'),
+            'map_link'       => $this->request->getPost('map_link'),
             'outside_images' => $outsideImagesJson,
             'inside_images'  => json_encode($insideImagesArray),
         ]);
@@ -138,7 +140,7 @@ class StadiumController extends BaseController
     }
 
     // =========================
-    //  UPDATE
+    //  UPDATE (แก้ไขข้อมูล)
     // =========================
     public function update($id = null)
     {
@@ -149,10 +151,10 @@ class StadiumController extends BaseController
         }
 
         if (!$this->validate([
-            'name'        => 'required|max_length[100]',
-            'price'       => 'required|numeric',
-            'category_id' => 'required|integer',
-            'vendor_id'   => 'required|integer',
+            'name'          => 'required|max_length[100]',
+            'price'         => 'required|numeric',
+            'category_id'   => 'required|integer',
+            'vendor_id'     => 'required|integer',
             'contact_phone' => 'permit_empty|regex_match[/^[0-9]{10}$/]',
         ])) {
             return redirect()->back()
@@ -165,23 +167,26 @@ class StadiumController extends BaseController
             mkdir($uploadPath, 0777, true);
         }
 
-        // Outside
+        // 1. Outside image (ถ้ามีรูปใหม่ ให้ใช้รูปใหม่ ถ้าไม่มี ใช้รูปเดิม)
         $outsideOld = json_decode($stadium['outside_images'] ?? '[]', true) ?? [];
-        $outside    = $outsideOld;
+        $outside = $outsideOld;
+
         $outsideFile = $this->request->getFile('outside_image');
-        if ($outsideFile && $outsideFile->isValid()) {
+        if ($outsideFile && $outsideFile->isValid() && !$outsideFile->hasMoved()) {
             $newName = 'outside_' . time() . '_' . $outsideFile->getRandomName();
             $outsideFile->move($uploadPath, $newName);
+            // แทนที่รูปเดิม (Cover มีได้รูปเดียว)
             $outside = [$newName];
         }
 
-        // Inside
-        $insideOld   = json_decode($stadium['inside_images'] ?? '[]', true) ?? [];
-        $inside      = $insideOld;
-        $insideFiles = $this->request->getFiles()['inside_images'] ?? [];
+        // 2. Inside multiple (เพิ่มรูปใหม่เข้าไปต่อท้ายรูปเดิม)
+        $insideOld = json_decode($stadium['inside_images'] ?? '[]', true) ?? [];
+        $inside    = $insideOld;
+
+        $insideFiles = $this->request->getFileMultiple('inside_images');
         if (!empty($insideFiles)) {
             foreach ($insideFiles as $file) {
-                if ($file->isValid()) {
+                if ($file->isValid() && !$file->hasMoved()) {
                     $newName = 'inside_' . time() . '_' . $file->getRandomName();
                     $file->move($uploadPath, $newName);
                     $inside[] = $newName;
@@ -189,21 +194,22 @@ class StadiumController extends BaseController
             }
         }
 
+        // อัปเดตข้อมูล
         $this->stadiumModel->update($id, [
-            'name'          => $this->request->getPost('name'),
-            'price'         => $this->request->getPost('price'),
-            'description'   => $this->request->getPost('description'),
-            'category_id'   => $this->request->getPost('category_id'),
-            'vendor_id'     => $this->request->getPost('vendor_id'),
-            'open_time'     => $this->request->getPost('open_time'),
-            'close_time'    => $this->request->getPost('close_time'),
-            'contact_email' => $this->request->getPost('contact_email'),
-            'contact_phone' => $this->request->getPost('contact_phone'),
-            'province'      => $this->request->getPost('province'),
-            'address'       => $this->request->getPost('address'),
-            'lat'           => $this->request->getPost('lat'),
-            'lng'           => $this->request->getPost('lng'),
-            'map_link'      => $this->request->getPost('map_link'),
+            'name'           => $this->request->getPost('name'),
+            'price'          => $this->request->getPost('price'),
+            'description'    => $this->request->getPost('description'),
+            'category_id'    => $this->request->getPost('category_id'),
+            'vendor_id'      => $this->request->getPost('vendor_id'),
+            'open_time'      => $this->request->getPost('open_time'),
+            'close_time'     => $this->request->getPost('close_time'),
+            'contact_email'  => $this->request->getPost('contact_email'),
+            'contact_phone'  => $this->request->getPost('contact_phone'),
+            'province'       => $this->request->getPost('province'),
+            'address'        => $this->request->getPost('address'),
+            'lat'            => $this->request->getPost('lat'),
+            'lng'            => $this->request->getPost('lng'),
+            'map_link'       => $this->request->getPost('map_link'),
             'outside_images' => json_encode($outside),
             'inside_images'  => json_encode($inside),
         ]);
@@ -218,12 +224,12 @@ class StadiumController extends BaseController
             $this->stadiumModel->delete($id);
             return redirect()->to(base_url('admin/stadiums'))
                              ->with('success', 'ลบสนามเรียบร้อยแล้ว');
+
         } catch (DatabaseException $e) {
             if ($e->getCode() == 1451) {
                 return redirect()->to(base_url('admin/stadiums'))
                     ->with('error', 'ไม่สามารถลบสนาม (ID: ' . esc($id) . ') เนื่องจากมีข้อมูลอื่นอ้างอิงอยู่');
             }
-
             return redirect()->to(base_url('admin/stadiums'))
                 ->with('error', 'Database Error: ' . $e->getMessage());
         }

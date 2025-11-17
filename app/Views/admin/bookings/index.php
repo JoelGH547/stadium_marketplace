@@ -6,25 +6,21 @@
 <p><a href="<?= base_url('admin/dashboard') ?>" class="btn btn-secondary">&laquo; Back to Dashboard</a></p>
 
 <?php if (session()->getFlashdata('success')): ?>
-    <div class="alert alert-success">
-        <?= session()->getFlashdata('success') ?>
-    </div>
+    <div class="alert alert-success"><?= session()->getFlashdata('success') ?></div>
 <?php endif; ?>
 <?php if (session()->getFlashdata('error')): ?>
-    <div class="alert alert-danger">
-        <?= session()->getFlashdata('error') ?>
-    </div>
+    <div class="alert alert-danger"><?= session()->getFlashdata('error') ?></div>
 <?php endif; ?>
 
 <table class="table table-striped">
     <thead>
         <tr>
             <th>Booking ID</th>
-            <th>ลูกค้า (Customer)</th>
-            <th>สนาม (Stadium)</th>
+            <th>ลูกค้า</th>
+            <th>สนาม</th>
             <th>วันที่จอง</th>
             <th>เวลา</th>
-            <th>สถานะ (Status)</th>
+            <th>สถานะ</th>
             <th>Actions</th>
         </tr>
     </thead>
@@ -35,8 +31,14 @@
                     <td><strong><?= esc($booking['id']) ?></strong></td>
                     <td><?= esc($booking['customer_name'] ?? 'N/A') ?></td>
                     <td><?= esc($booking['stadium_name'] ?? 'N/A') ?></td>
-                    <td><?= esc($booking['booking_date']) ?></td>
-                    <td><?= esc($booking['start_time']) ?></td>
+                    
+                    <td><?= date('d/m/Y', strtotime($booking['booking_start_time'])) ?></td>
+                    
+                    <td>
+                        <?= date('H:i', strtotime($booking['booking_start_time'])) ?> - 
+                        <?= date('H:i', strtotime($booking['booking_end_time'])) ?>
+                    </td>
+
                     <td>
                         <?php if ($booking['status'] == 'confirmed'): ?>
                             <span class="badge badge-success"><?= esc($booking['status']) ?></span>
@@ -48,10 +50,9 @@
                     </td>
                     <td>
                         <?php if ($booking['status'] != 'cancelled'): ?>
-                            
                             <a href="<?= base_url('admin/bookings/cancel/' . $booking['id']) ?>" 
                                class="btn btn-danger btn-sm" 
-                               onclick="return confirm('คุณแน่ใจหรือไม่ ว่าต้องการ ยกเลิก (Cancel) การจองนี้?')">
+                               onclick="return confirm('คุณแน่ใจหรือไม่ ว่าต้องการ &quot;ยกเลิก&quot; (Cancel) การจองนี้?')">
                                 Cancel Booking
                             </a>
                         <?php endif; ?>

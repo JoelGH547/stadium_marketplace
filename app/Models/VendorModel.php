@@ -23,6 +23,7 @@ class VendorModel extends Model
         'bank_account',
         'birthday',
         'province',
+        'status'
     ];
 
     protected $useTimestamps = true;

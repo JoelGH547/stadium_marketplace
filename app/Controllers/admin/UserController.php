@@ -3,14 +3,12 @@
 namespace App\Controllers\admin;
 
 use App\Controllers\BaseController;
-// ⬇️ --- 1. นำเข้า 3 Models ใหม่ --- ⬇️
 use App\Models\AdminModel;
 use App\Models\VendorModel;
 use App\Models\CustomerModel;
 
 class UserController extends BaseController
 {
-    // ⬇️ --- 2. ประกาศ 3 Models --- ⬇️
     protected $adminModel;
     protected $vendorModel;
     protected $customerModel;
@@ -24,13 +22,11 @@ class UserController extends BaseController
 
     /**
      * Display a listing of the resource.
-     * (แก้ไข: ดึงข้อมูลจาก 3 ตาราง)
      */
     public function index()
     {
         $data = [
             'title' => 'User Management',
-            // ⬇️ --- 3. ดึงข้อมูล User จาก 3 ตาราง --- ⬇️
             'admins'    => $this->adminModel->findAll(),
             'vendors'   => $this->vendorModel->findAll(),
             'customers' => $this->customerModel->findAll(),
@@ -39,29 +35,18 @@ class UserController extends BaseController
         return view('admin/users/index', $data); 
     }
 
-    /**
-     * Show the form for creating a new resource.
-     * (เหมือนเดิม)
-     */
     public function create()
     {
-        $data = [
-            'title' => 'Add New User',
-        ];
+        $data = ['title' => 'Add New User'];
         return view('admin/users/create', $data);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     * (แก้ไข: บันทึกตาม Role ที่เลือก)
-     */
     public function store()
     {
         $role = $this->request->getVar('role');
         $model = null;
         $rules = [];
 
-        // 4. ⬇️ --- เลือก Model และ Rules ตาม Role --- ⬇️
         switch ($role) {
             case 'admin':
                 $model = $this->adminModel;
@@ -77,7 +62,7 @@ class UserController extends BaseController
                     'username' => 'required|min_length[3]|max_length[50]|is_unique[vendors.username]',
                     'email'    => 'required|valid_email|is_unique[vendors.email]',
                     'password' => 'required|min_length[6]',
-                    'vendor_name' => 'required', // ฟิลด์พิเศษ
+                    'vendor_name' => 'required',
                 ];
                 break;
             case 'customer':
@@ -96,47 +81,42 @@ class UserController extends BaseController
             return redirect()->back()->withInput()->with('validation', $this->validator);
         }
 
-        // 5. ⬇️ --- เตรียม Data (รวมข้อมูลพื้นฐาน และ ข้อมูลพิเศษ) --- ⬇️
+        // Hashing options
+        $options = ['memory_cost' => 1 << 17, 'time_cost' => 4, 'threads' => 2];
+        
         $data = [
             'username' => $this->request->getVar('username'),
             'email'    => $this->request->getVar('email'),
-            'password_hash' => password_hash($this->request->getVar('password'), PASSWORD_ARGON2ID),
+            'password_hash' => password_hash($this->request->getVar('password'), PASSWORD_ARGON2ID, $options),
         ];
 
-        // เพิ่มข้อมูลพิเศษ (ถ้ามี)
         if ($role == 'vendor') {
             $data['vendor_name'] = $this->request->getVar('vendor_name');
             $data['phone_number'] = $this->request->getVar('phone_number');
             $data['tax_id'] = $this->request->getVar('tax_id');
             $data['bank_account'] = $this->request->getVar('bank_account');
+            $data['status'] = 'approved'; // ถ้า Admin สร้างเอง ให้ Approve เลย
         } elseif ($role == 'customer') {
             $data['full_name'] = $this->request->getVar('full_name');
             $data['phone_number'] = $this->request->getVar('phone_number');
         }
 
-        // 6. ⬇️ --- บันทึกลง Model ที่ถูกต้อง --- ⬇️
         $model->save($data);
 
         return redirect()->to('admin/users')->with('success', 'User created successfully.');
     }
 
-
-    /**
-     * Show the form for editing the specified resource.
-     * (แก้ไข: รับ $role และ $id)
-     */
     public function edit($role = null, $id = null)
     {
         $user = null;
         $model = null;
 
-        // 7. ⬇️ --- เลือก Model ตาม Role --- ⬇️
         switch ($role) {
             case 'admin': $model = $this->adminModel; break;
             case 'vendor': $model = $this->vendorModel; break;
             case 'customer': $model = $this->customerModel; break;
             default:
-                 throw new \CodeIgniter\Exceptions\PageNotFoundException('Invalid user role.');
+                  throw new \CodeIgniter\Exceptions\PageNotFoundException('Invalid user role.');
         }
         
         $user = $model->find($id);
@@ -147,23 +127,17 @@ class UserController extends BaseController
         $data = [
             'title' => 'Edit User: ' . $user['username'],
             'user'  => $user,
-            'role'  => $role, // ส่ง Role ไปให้ View ด้วย
+            'role'  => $role,
         ];
         
-        // 8. ⬇️ --- เรียก View 'edit' (เดี๋ยวเราต้องแก้ View นี้) --- ⬇️
         return view('admin/users/edit', $data); 
     }
 
-    /**
-     * Update the specified resource in storage.
-     * (แก้ไข: รับ $role และ $id)
-     */
     public function update($role = null, $id = null)
     {
         $model = null;
         $rules = [];
 
-        // 9. ⬇️ --- เลือก Model และ Rules ตาม Role (สำหรับ is_unique) --- ⬇️
         switch ($role) {
             case 'admin':
                 $model = $this->adminModel;
@@ -191,7 +165,6 @@ class UserController extends BaseController
                  return redirect()->back()->withInput()->with('errors', 'Invalid role.');
         }
 
-        // (ตรวจสอบว่ามีการกรอกรหัสผ่านใหม่หรือไม่)
         if ($this->request->getVar('password')) {
             $rules['password'] = 'required|min_length[6]';
         }
@@ -200,18 +173,16 @@ class UserController extends BaseController
             return redirect()->back()->withInput()->with('validation', $this->validator);
         }
 
-        // 10. ⬇️ --- เตรียม Data (เหมือนตอน store) --- ⬇️
         $data = [
             'username' => $this->request->getVar('username'),
             'email'    => $this->request->getVar('email'),
         ];
 
-        // (ถ้ามีรหัสใหม่ ให้ Hash)
         if ($this->request->getVar('password')) {
-            $data['password_hash'] = password_hash($this->request->getVar('password'), PASSWORD_ARGON2ID);
+            $options = ['memory_cost' => 1 << 17, 'time_cost' => 4, 'threads' => 2];
+            $data['password_hash'] = password_hash($this->request->getVar('password'), PASSWORD_ARGON2ID, $options);
         }
         
-        // เพิ่มข้อมูลพิเศษ (ถ้ามี)
         if ($role == 'vendor') {
             $data['vendor_name'] = $this->request->getVar('vendor_name');
             $data['phone_number'] = $this->request->getVar('phone_number');
@@ -222,25 +193,18 @@ class UserController extends BaseController
             $data['phone_number'] = $this->request->getVar('phone_number');
         }
         
-        // 11. ⬇️ --- อัปเดต Model ที่ถูกต้อง --- ⬇️
         $model->update($id, $data);
 
         return redirect()->to('admin/users')->with('success', 'User updated successfully.');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     * (แก้ไข: รับ $role และ $id)
-     */
     public function delete($role = null, $id = null)
     {
         $model = null;
         
-        // 12. ⬇️ --- เลือก Model ตาม Role --- ⬇️
         switch ($role) {
             case 'admin': 
                 $model = $this->adminModel; 
-                // (ป้องกัน Admin ลบตัวเอง)
                 $loggedInUserId = session()->get('user_id');
                 if ($id == $loggedInUserId) {
                     return redirect()->to('admin/users')->with('error', 'You cannot delete your own admin account.');
@@ -254,5 +218,48 @@ class UserController extends BaseController
 
         $model->delete($id);
         return redirect()->to('admin/users')->with('success', 'User deleted successfully.');
+    }
+
+
+    // --- ⬇️ (ส่วนที่เคยหายไป) ฟังก์ชันสำหรับอนุมัติ Vendor ⬇️ ---
+
+    /**
+     * 1. แสดงรายชื่อ Vendor ที่รออนุมัติ (status = 'pending')
+     */
+    public function pendingList()
+    {
+        $data = [
+            'title' => 'Pending Vendor Approvals',
+            'vendors' => $this->vendorModel
+                ->where('status', 'pending')
+                ->orderBy('created_at', 'ASC')
+                ->findAll(),
+        ];
+
+        return view('admin/users/pending_vendors', $data);
+    }
+
+    /**
+     * 2. อนุมัติ Vendor (เปลี่ยน status เป็น approved)
+     */
+    public function approveVendor($vendor_id = null)
+    {
+        $this->vendorModel->update($vendor_id, [
+            'status' => 'approved'
+        ]);
+
+        return redirect()->back()->with('success', 'Vendor (ID: '.$vendor_id.') has been APPROVED.');
+    }
+
+    /**
+     * 3. ปฏิเสธ Vendor (เปลี่ยน status เป็น rejected)
+     */
+    public function rejectVendor($vendor_id = null)
+    {
+        $this->vendorModel->update($vendor_id, [
+            'status' => 'rejected'
+        ]);
+        
+        return redirect()->back()->with('success', 'Vendor (ID: '.$vendor_id.') has been REJECTED.');
     }
 }
