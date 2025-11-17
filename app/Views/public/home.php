@@ -3,7 +3,7 @@
 <?= $this->section('content') ?>
 <!-- HERO -->
 <div class="relative" id="home">
-  <img src="<?= base_url($heroUrl ?? 'assets/images/1.jpg') ?>" alt="Sports Arena"
+  <img src="<?= base_url('assets/uploads/home/batminton.webp') ?>" alt="Sports Arena"
        class="block h-[48vh] w-full object-cover select-none" fetchpriority="high">
   <div class="pointer-events-none absolute inset-x-0 bottom-0 h-40 sm:h-44 md:h-48 bg-gradient-to-t from-gray-100/90 via-gray-100/60 to-transparent"></div>
   <svg class="pointer-events-none absolute bottom-[-1px] left-0 w-full h-32 sm:h-36 md:h-40 text-[var(--primary)] z-[2]"
@@ -41,11 +41,11 @@
           <div id="heroCarousel" class="deck-stage" aria-roledescription="carousel">
             <?php
               $heroSlides = [
-                'assets/images/1.jpg'
-                ,'assets/images/2.jpg'
-                ,'assets/images/3.jpg'
-                ,'assets/images/4.jpg'
-                ,'assets/images/5.jpg'
+                'assets/uploads/home/1.jpg'
+                ,'assets/uploads/home/2.jpg'
+                ,'assets/uploads/home/3.jpg'
+                ,'assets/uploads/home/4.jpg'
+                ,'assets/uploads/home/5.jpg'
               ];
             ?>
             <?php foreach ($heroSlides as $i => $img): ?>
@@ -142,12 +142,12 @@
     <?php
       /* ==== เพิ่ม/แก้การ์ดได้ที่นี่ ==== */
       $venues = $venues ?? [
-      ['name'=>'Greenhill Badminton','img'=>'assets/images/6.jpg','stars'=>5,'distance'=>'0.7km','price'=>140],
-      ['name'=>'ATK Badminton','img'=>'assets/images/7.jpg','stars'=>4.8,'distance'=>'3.6km','price'=>140],
-      ['name'=>'700th Chiangmai','img'=>'assets/images/8.jpg','stars'=>4.6,'distance'=>'3.2km','price'=>250],
-      ['name'=>'Central Court','img'=>'assets/images/9.jpg','stars'=>4.7,'distance'=>'2.1km','price'=>190],
-      ['name'=>'CMU Sport Complex','img'=>'assets/images/10.jpg','stars'=>4.9,'distance'=>'1.2km','price'=>200],
-      ['name'=>'North Gate Arena','img'=>'assets/images/11.jpg','stars'=>4.5,'distance'=>'5.0km','price'=>180],
+      ['name'=>'Greenhill Badminton','img'=>'assets/uploads/home/6.jpg','stars'=>5,  'distance'=>'0.7km', 'price'=>140, 'type'=>'แบดมินตัน','icon'=>'🏸'],
+      ['name'=>'ATK Badminton',     'img'=>'assets/uploads/home/7.jpg','stars'=>4.8,'distance'=>'3.6km', 'price'=>140, 'type'=>'แบดมินตัน','icon'=>'🏸'],
+      ['name'=>'700th Chiangmai',   'img'=>'assets/uploads/home/8.jpg','stars'=>4.6,'distance'=>'3.2km', 'price'=>250, 'type'=>'ฟุตบอล','icon'=>'⚽'],
+      ['name'=>'Central Court',     'img'=>'assets/uploads/home/9.jpg','stars'=>4.7,'distance'=>'2.1km', 'price'=>190, 'type'=>'ปิงปอง','icon'=>'🎾'],
+      ['name'=>'CMU Sport Complex', 'img'=>'assets/uploads/home/10.jpg','stars'=>4.9,'distance'=>'1.2km','price'=>200, 'type'=>'บาสเกตบอล','icon'=>'🏀'],
+      ['name'=>'North Gate Arena',  'img'=>'assets/uploads/home/11.jpg','stars'=>4.5,'distance'=>'5.0km','price'=>180, 'type'=>'วอลเลย์บอล','icon'=>'🏐'],
       ];
     ?>
 
@@ -191,8 +191,26 @@
               </div>
               <div class="mt-1 text-base font-semibold drop-shadow">฿<?= number_format((float)$v['price']) ?>/hr.</div>
             </div>
-
             <div class="pointer-events-none absolute inset-0 rounded-xl ring-1 ring-black/5"></div>
+            <!-- Badge ประเภทสนาม มุมขวาล่าง -->
+            <?php
+              $typeLabel = $v['type'] ?? 'สนามกีฬาในร่ม';
+              $typeIcon  = $v['icon'] ?? '🏟️';
+            ?>
+            <!-- Badge มินต์ มุมขวาล่าง -->
+<div class="pointer-events-none absolute bottom-4 right-4 z-[3]
+            inline-flex items-center gap-1
+            text-white text-[11px] font-semibold
+            px-3 py-1.5 rounded-full
+            bg-[var(--primary)]/90
+            shadow-lg shadow-[var(--primary)]/25
+            backdrop-blur-md
+            border border-white/20
+            transition-all duration-300
+            hover:scale-[1.05] hover:shadow-[var(--primary)]/40">
+    <span class="text-base leading-none drop-shadow-sm"><?= esc($typeIcon) ?></span>
+    <span class="leading-none"><?= esc($typeLabel) ?></span>
+</div>
           </article>
         <?php endforeach; ?>
       </div>
@@ -227,8 +245,10 @@
 </section>
 <section id="venueList" class=" py-4  bg-gray-50">
   <div class="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-    <ul id="venueItems" class="space-y-3">
-      <li class="flex items-center gap-4 bg-white rounded-2xl p-6 transition-all duration-200 hover:shadow-lg"
+    <ul id="venueItems" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <li class="relative flex items-center gap-4 bg-white rounded-2xl
+           p-4 pb-8 sm:p-5 sm:pb-10
+           transition-all duration-200 hover:shadow-lg"
           data-price="140" data-distance-km="0.7" data-rating="5" data-popular="98">
         <img src="https://picsum.photos/seed/greenhill/300/200" class="h-24 w-24 rounded-2xl object-cover" alt="">
         <div class="flex-1 min-w-0">
@@ -246,9 +266,23 @@
             <span class="text-[var(--primary)] font-semibold">฿140/hr.</span>
           </div>
         </div>
+        <div class="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 z-[5]
+            inline-flex items-center justify-center gap-1
+            text-[var(--primary)] text-[11px] font-semibold
+            px-3 py-1 rounded-full
+            bg-white/80
+            shadow-md shadow-black/15
+            backdrop-blur-md
+            border border-white/60
+            transition-all duration-300">
+  <span class="text-sm leading-none drop-shadow-sm"><?= esc($typeIcon) ?></span>
+  <span class="leading-none"><?= esc($typeLabel) ?></span>
+</div>
       </li>
 
-      <li class="flex items-center gap-4 bg-white rounded-2xl p-6 transition-all duration-200 hover:shadow-lg"
+      <li class="relative flex items-center gap-4 bg-white rounded-2xl
+           p-4 pb-8 sm:p-5 sm:pb-10
+           transition-all duration-200 hover:shadow-lg"
           data-price="140" data-distance-km="3.6" data-rating="4.8" data-popular="90">
         <img src="https://picsum.photos/seed/atk/300/200" class="h-24 w-24 rounded-2xl object-cover" alt="">
         <div class="flex-1 min-w-0">
@@ -266,9 +300,23 @@
             <span class="text-[var(--primary)] font-semibold">฿140/hr.</span>
           </div>
         </div>
+        <div class="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 z-[5]
+            inline-flex items-center justify-center gap-1
+            text-[var(--primary)] text-[11px] font-semibold
+            px-3 py-1 rounded-full
+            bg-white/80
+            shadow-md shadow-black/15
+            backdrop-blur-md
+            border border-white/60
+            transition-all duration-300">
+  <span class="text-sm leading-none drop-shadow-sm"><?= esc($typeIcon) ?></span>
+  <span class="leading-none"><?= esc($typeLabel) ?></span>
+</div>
       </li>
 
-      <li class="flex items-center gap-4 bg-white rounded-2xl p-6 transition-all duration-200 hover:shadow-lg"
+      <li class="relative flex items-center gap-4 bg-white rounded-2xl
+           p-4 pb-8 sm:p-5 sm:pb-10
+           transition-all duration-200 hover:shadow-lg"
           data-price="150" data-distance-km="3.9" data-rating="0" data-popular="75">
         <img src="https://picsum.photos/seed/cnx/300/200" class="h-24 w-24 rounded-2xl object-cover" alt="">
         <div class="flex-1 min-w-0">
@@ -286,9 +334,23 @@
             <span class="text-[var(--primary)] font-semibold">฿150/hr.</span>
           </div>
         </div>
+        <div class="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 z-[5]
+            inline-flex items-center justify-center gap-1
+            text-[var(--primary)] text-[11px] font-semibold
+            px-3 py-1 rounded-full
+            bg-white/80
+            shadow-md shadow-black/15
+            backdrop-blur-md
+            border border-white/60
+            transition-all duration-300">
+  <span class="text-sm leading-none drop-shadow-sm"><?= esc($typeIcon) ?></span>
+  <span class="leading-none"><?= esc($typeLabel) ?></span>
+</div>
       </li>
 
-      <li class="flex items-center gap-4 bg-white rounded-2xl p-6 transition-all duration-200 hover:shadow-lg"
+      <li class="relative flex items-center gap-4 bg-white rounded-2xl
+           p-4 pb-8 sm:p-5 sm:pb-10
+           transition-all duration-200 hover:shadow-lg"
           data-price="140" data-distance-km="10.9" data-rating="0" data-popular="70">
         <img src="https://picsum.photos/seed/spirit/300/200" class="h-24 w-24 rounded-2xl object-cover" alt="">
         <div class="flex-1 min-w-0">
@@ -306,9 +368,23 @@
             <span class="text-[var(--primary)] font-semibold">฿140/hr.</span>
           </div>
         </div>
+        <div class="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 z-[5]
+            inline-flex items-center justify-center gap-1
+            text-[var(--primary)] text-[11px] font-semibold
+            px-3 py-1 rounded-full
+            bg-white/80
+            shadow-md shadow-black/15
+            backdrop-blur-md
+            border border-white/60
+            transition-all duration-300">
+  <span class="text-sm leading-none drop-shadow-sm"><?= esc($typeIcon) ?></span>
+  <span class="leading-none"><?= esc($typeLabel) ?></span>
+</div>
       </li>
 
-      <li class="flex items-center gap-4 bg-white rounded-2xl p-6 transition-all duration-200 hover:shadow-lg"
+      <li class="relative flex items-center gap-4 bg-white rounded-2xl
+           p-4 pb-8 sm:p-5 sm:pb-10
+           transition-all duration-200 hover:shadow-lg"
           data-price="140" data-distance-km="10.9" data-rating="0" data-popular="70">
         <img src="https://picsum.photos/seed/spirit/300/200" class="h-24 w-24 rounded-2xl object-cover" alt="">
         <div class="flex-1 min-w-0">
@@ -326,9 +402,23 @@
             <span class="text-[var(--primary)] font-semibold">฿140/hr.</span>
           </div>
         </div>
+        <div class="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 z-[5]
+            inline-flex items-center justify-center gap-1
+            text-[var(--primary)] text-[11px] font-semibold
+            px-3 py-1 rounded-full
+            bg-white/80
+            shadow-md shadow-black/15
+            backdrop-blur-md
+            border border-white/60
+            transition-all duration-300">
+  <span class="text-sm leading-none drop-shadow-sm"><?= esc($typeIcon) ?></span>
+  <span class="leading-none"><?= esc($typeLabel) ?></span>
+</div>
       </li>
 
-      <li class="flex items-center gap-4 bg-white rounded-2xl p-6 transition-all duration-200 hover:shadow-lg"
+      <li class="relative flex items-center gap-4 bg-white rounded-2xl
+           p-4 pb-8 sm:p-5 sm:pb-10
+           transition-all duration-200 hover:shadow-lg"
           data-price="140" data-distance-km="10.9" data-rating="0" data-popular="70">
         <img src="https://picsum.photos/seed/spirit/300/200" class="h-24 w-24 rounded-2xl object-cover" alt="">
         <div class="flex-1 min-w-0">
@@ -346,9 +436,23 @@
             <span class="text-[var(--primary)] font-semibold">฿140/hr.</span>
           </div>
         </div>
+        <div class="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 z-[5]
+            inline-flex items-center justify-center gap-1
+            text-[var(--primary)] text-[11px] font-semibold
+            px-3 py-1 rounded-full
+            bg-white/80
+            shadow-md shadow-black/15
+            backdrop-blur-md
+            border border-white/60
+            transition-all duration-300">
+  <span class="text-sm leading-none drop-shadow-sm"><?= esc($typeIcon) ?></span>
+  <span class="leading-none"><?= esc($typeLabel) ?></span>
+</div>
       </li>
 
-      <li class="flex items-center gap-4 bg-white rounded-2xl p-6 transition-all duration-200 hover:shadow-lg"
+      <li class="relative flex items-center gap-4 bg-white rounded-2xl
+           p-4 pb-8 sm:p-5 sm:pb-10
+           transition-all duration-200 hover:shadow-lg"
           data-price="140" data-distance-km="10.9" data-rating="0" data-popular="70">
         <img src="https://picsum.photos/seed/spirit/300/200" class="h-24 w-24 rounded-2xl object-cover" alt="">
         <div class="flex-1 min-w-0">
@@ -366,9 +470,23 @@
             <span class="text-[var(--primary)] font-semibold">฿140/hr.</span>
           </div>
         </div>
+        <div class="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 z-[5]
+            inline-flex items-center justify-center gap-1
+            text-[var(--primary)] text-[11px] font-semibold
+            px-3 py-1 rounded-full
+            bg-white/80
+            shadow-md shadow-black/15
+            backdrop-blur-md
+            border border-white/60
+            transition-all duration-300">
+  <span class="text-sm leading-none drop-shadow-sm"><?= esc($typeIcon) ?></span>
+  <span class="leading-none"><?= esc($typeLabel) ?></span>
+</div>
       </li>
 
-      <li class="flex items-center gap-4 bg-white rounded-2xl p-6 transition-all duration-200 hover:shadow-lg"
+      <li class="relative flex items-center gap-4 bg-white rounded-2xl
+           p-4 pb-8 sm:p-5 sm:pb-10
+           transition-all duration-200 hover:shadow-lg"
           data-price="140" data-distance-km="10.9" data-rating="0" data-popular="70">
         <img src="https://picsum.photos/seed/spirit/300/200" class="h-24 w-24 rounded-2xl object-cover" alt="">
         <div class="flex-1 min-w-0">
@@ -386,9 +504,23 @@
             <span class="text-[var(--primary)] font-semibold">฿140/hr.</span>
           </div>
         </div>
+        <div class="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 z-[5]
+            inline-flex items-center justify-center gap-1
+            text-[var(--primary)] text-[11px] font-semibold
+            px-3 py-1 rounded-full
+            bg-white/80
+            shadow-md shadow-black/15
+            backdrop-blur-md
+            border border-white/60
+            transition-all duration-300">
+  <span class="text-sm leading-none drop-shadow-sm"><?= esc($typeIcon) ?></span>
+  <span class="leading-none"><?= esc($typeLabel) ?></span>
+</div>
       </li>
 
-      <li class="flex items-center gap-4 bg-white rounded-2xl p-6 transition-all duration-200 hover:shadow-lg"
+      <li class="relative flex items-center gap-4 bg-white rounded-2xl
+           p-4 pb-8 sm:p-5 sm:pb-10
+           transition-all duration-200 hover:shadow-lg"
           data-price="800" data-distance-km="25.6" data-rating="0" data-popular="65">
         <img src="https://picsum.photos/seed/kickgaze/300/200" class="h-24 w-24 rounded-2xl object-cover" alt="">
         <div class="flex-1 min-w-0">
@@ -406,9 +538,23 @@
             <span class="text-[var(--primary)] font-semibold">฿800/hr.</span>
           </div>
         </div>
+        <div class="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 z-[5]
+            inline-flex items-center justify-center gap-1
+            text-[var(--primary)] text-[11px] font-semibold
+            px-3 py-1 rounded-full
+            bg-white/80
+            shadow-md shadow-black/15
+            backdrop-blur-md
+            border border-white/60
+            transition-all duration-300">
+  <span class="text-sm leading-none drop-shadow-sm"><?= esc($typeIcon) ?></span>
+  <span class="leading-none"><?= esc($typeLabel) ?></span>
+</div>
       </li>
 
-      <li class="flex items-center gap-4 bg-white rounded-2xl p-6 transition-all duration-200 hover:shadow-lg"
+      <li class="relative flex items-center gap-4 bg-white rounded-2xl
+           p-4 pb-8 sm:p-5 sm:pb-10
+           transition-all duration-200 hover:shadow-lg"
           data-price="180" data-distance-km="496.3" data-rating="0" data-popular="50">
         <img src="https://picsum.photos/seed/good/300/200" class="h-24 w-24 rounded-2xl object-cover" alt="">
         <div class="flex-1 min-w-0">
@@ -426,6 +572,18 @@
             <span class="text-[var(--primary)] font-semibold">฿180/hr.</span>
           </div>
         </div>
+        <div class="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 z-[5]
+            inline-flex items-center justify-center gap-1
+            text-[var(--primary)] text-[11px] font-semibold
+            px-3 py-1 rounded-full
+            bg-white/80
+            shadow-md shadow-black/15
+            backdrop-blur-md
+            border border-white/60
+            transition-all duration-300">
+  <span class="text-sm leading-none drop-shadow-sm"><?= esc($typeIcon) ?></span>
+  <span class="leading-none"><?= esc($typeLabel) ?></span>
+</div>
       </li>
     </ul>
   </div>

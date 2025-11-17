@@ -316,7 +316,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   const wrap = ul.parentElement;
 
-  const INITIAL = 4;
+  const INITIAL = 8;
   const LIMIT   = 10;
 
   function applyPaging() {
@@ -340,14 +340,10 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    // show first 4 normally, 5th as partial preview
-    for (let i = INITIAL; i < Math.min(LIMIT, total); i++) {
-      items[i].classList.add('hidden');
-    }
-    const fifth = items[INITIAL];
-    if (fifth) {
-      fifth.classList.remove('hidden');
-      fifth.classList.add('vp-partial');
+    // show first INITIAL cards normally, and cards after that (up to LIMIT) as partial preview (blurred row)
+    const max = Math.min(LIMIT, total);
+    for (let i = INITIAL; i < max; i++) {
+      items[i].classList.add('vp-partial');
     }
 
     // create center button if not exists

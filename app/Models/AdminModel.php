@@ -6,23 +6,23 @@ use CodeIgniter\Model;
 
 class AdminModel extends Model
 {
-    // 1. ชื่อตารางที่เชื่อมต่อ
-    protected $table         = 'admins';
-    protected $primaryKey    = 'id';
+    // ชื่อตาราง
+    protected $table            = 'admins';
+    protected $primaryKey       = 'id';
     protected $useAutoIncrement = true;
 
-    // 2. ฟิลด์ที่อนุญาตให้บันทึก (ตรงกับ Migration)
-    protected $allowedFields = [
+    // คืนค่าเป็น array
+    protected $returnType       = 'array';
+
+    // ฟิลด์ที่อนุญาตให้ insert/update
+    protected $allowedFields    = [
         'username',
         'email',
-        'password_hash' 
-        // ไม่ต้องใส่ created_at, updated_at ตรงนี้
+        'password_hash',
     ];
 
-    // 3. เปิดใช้งาน Timestamps (CI4 จะจัดการอัตโนมัติ)
+    // Timestamp fields (created_at / updated_at)
     protected $useTimestamps = true;
     protected $createdField  = 'created_at';
     protected $updatedField  = 'updated_at';
-
-    // (เราจะเพิ่มฟังก์ชันค้นหา User, Hash Password ฯลฯ ที่นี่ในอนาคต)
 }

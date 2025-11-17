@@ -6,55 +6,47 @@ use CodeIgniter\Model;
 
 class StadiumModel extends Model
 {
-    // กำหนดชื่อตารางฐานข้อมูลที่ Model นี้จะใช้งาน
-    protected $table         = 'stadiums'; 
-    
-    // กำหนด Primary Key ของตาราง
-    protected $primaryKey    = 'id'; 
+    protected $table            = 'stadiums';
+    protected $primaryKey       = 'id';
+    protected $useAutoIncrement = true;
 
-    protected $useAutoIncrement = true; 
-    protected $returnType    = 'array'; 
-    protected $useSoftDelete = false; 
+    protected $returnType       = 'array';
 
-    // --- ⬇️ 1. อัปเดตบรรทัดนี้ ⬇️ ---
-    // (เพิ่ม 'vendor_id' เข้าไปในฟิลด์ที่อนุญาต)
-    protected $allowedFields = ['name', 'price', 'description', 'category_id', 'vendor_id'];
+    protected $allowedFields    = [
+        'name',
+        'price',
+        'description',
+        'category_id',
+        'vendor_id',
+        'open_time',
+        'close_time',
+        'contact_email',
+        'contact_phone',
+        'province',
+        'address',
+        'lat',
+        'lng',
+        'map_link',
+        'outside_images', // JSON string
+        'inside_images',  // JSON string
+    ];
 
-    protected $useTimestamps = true; 
-    protected $dateFormat    = 'datetime'; 
-    protected $createdField  = 'created_at'; 
-    protected $updatedField  = 'updated_at'; 
-    protected $deletedField  = 'deleted_at'; 
+    protected $useTimestamps = true;
+    protected $createdField  = 'created_at';
+    protected $updatedField  = 'updated_at';
 
     /**
-     * (ฟังก์ชันเก่า: สำหรับ Admin)
-     * ดึง 'สนามกีฬา' พร้อมชื่อ Category (เช่น ประเภท: สนามฟุตซอล, สนามแบด)
-     */
-    public function getStadiumsWithCategory($id = null)
-    {
-        $builder = $this->select('stadiums.*, categories.name as category_name')
-                         ->join('categories', 'categories.id = stadiums.category_id', 'left');
-
-        if ($id !== null) {
-            return $builder->where('stadiums.id', $id)->first();
-        }
-
-        return $builder->findAll();
-    }
-    
-    // --- ⬇️ 2. เพิ่มฟังก์ชันใหม่ (สำหรับ Vendor) ⬇️ ---
-    /**
-     * (ฟังก์ชันใหม่: สำหรับ Vendor)
-     * ดึง 'สนามกีฬา' (พร้อม Category) ...เฉพาะที่ 'vendor_id' ตรงกัน
+     * ดึงสนามของ vendor รายใดรายหนึ่ง
+     * - ถ้าไม่ส่ง $stadiumId => คืนทั้งหมดของ vendor นั้น
+     * - ถ้าส่ง $stadiumId => คืนเฉพาะสนามที่ต้องการ (ใช้กับหน้าแก้ไข)
      */
     public function getStadiumsByVendor($vendorId, $stadiumId = null)
     {
         $builder = $this->select('stadiums.*, categories.name as category_name')
-                         ->join('categories', 'categories.id = stadiums.category_id', 'left')
-                         ->where('stadiums.vendor_id', $vendorId); // ⬅️ กรองเฉพาะของ Vendor คนนี้
+                        ->join('categories', 'categories.id = stadiums.category_id', 'left')
+                        ->where('stadiums.vendor_id', $vendorId);
 
         if ($stadiumId !== null) {
-            // (สำหรับหน้า Edit)
             return $builder->where('stadiums.id', $stadiumId)->first();
         }
 
