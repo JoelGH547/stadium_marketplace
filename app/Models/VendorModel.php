@@ -6,29 +6,25 @@ use CodeIgniter\Model;
 
 class VendorModel extends Model
 {
-    // 1. ชื่อตารางที่เชื่อมต่อ
-    protected $table        = 'vendors';
-    protected $primaryKey   = 'id';
+    protected $table            = 'vendors';
+    protected $primaryKey       = 'id';
     protected $useAutoIncrement = true;
 
-    // 2. ฟิลด์ที่อนุญาตให้บันทึก (ตรงกับ Migration)
-    protected $allowedFields = [
-        // ข้อมูลล็อคอิน
+    protected $returnType       = 'array';
+
+    protected $allowedFields    = [
         'username',
         'email',
-        'password_hash', 
-        
-        // คอลัมน์พิเศษของ Vendor
+        'password_hash',
         'vendor_name',
+        'lastname',
         'phone_number',
         'tax_id',
         'bank_account',
-
-        // ⬇️ (เพิ่ม) อนุญาตให้ Admin แก้ไข 'status' (Approve/Reject) ได้ ⬇️
-        'status' 
+        'birthday',
+        'province',
     ];
 
-    // 3. เปิดใช้งาน Timestamps (CI4 จะจัดการอัตโนมัติ)
     protected $useTimestamps = true;
     protected $createdField  = 'created_at';
     protected $updatedField  = 'updated_at';

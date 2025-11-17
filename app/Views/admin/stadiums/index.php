@@ -2,79 +2,185 @@
 
 <?= $this->section('content') ?>
 
-<h1><?= esc($title) ?></h1>
+<h1><?= esc($title ?? 'Stadiums') ?></h1>
 
 <p>
-    <!-- 1. เปลี่ยน Link และ Text -->
     <a href="<?= base_url('admin/stadiums/create') ?>" class="btn btn-primary">
         Add New Stadium
     </a>
 </p>
 
-<!-- (แสดงข้อความ Success) -->
 <?php if (session()->getFlashdata('success')): ?>
     <div class="alert alert-success">
-        <?= session()->getFlashdata('success') ?>
+        <?= esc(session()->getFlashdata('success')) ?>
     </div>
 <?php endif; ?>
 
-<!-- (แสดงข้อความ Error) -->
 <?php if (session()->getFlashdata('error')): ?>
     <div class="alert alert-danger">
-        <?= session()->getFlashdata('error') ?>
+        <?= esc(session()->getFlashdata('error')) ?>
     </div>
 <?php endif; ?>
 
-
-<table class="table">
+<table class="table table-bordered table-striped">
     <thead>
         <tr>
-            <th>No.</th> 
             <th>ID</th>
+            <th>Cover</th>
             <th>Name</th>
             <th>Category</th>
-            <th>Price</th>
-            <!-- 2. ลบคอลัมน์ Stock -->
-            <th>Description</th>
-            <th>Actions</th>
+            <th>Vendor</th>
+            <th>Province</th>
+            <th>Price/Hour</th>
+            <th>Map</th>
+            <th style="width: 150px;">Actions</th>
         </tr>
     </thead>
     <tbody>
-        <!-- 3. เปลี่ยนตัวแปร $products เป็น $stadiums -->
-        <?php if (! empty($stadiums) && is_array($stadiums)): ?>
-            
-            <?php $i = 1; ?> 
-            
-            <!-- 4. เปลี่ยนตัวแปร $product เป็น $stadium -->
-            <?php foreach ($stadiums as $stadium): ?>
+        <?php if (!empty($stadiums)): ?>
+            <?php foreach ($stadiums as $index => $stadium): ?>
+                <?php
+                    $outsideArr = json_decode($stadium['outside_images'] ?? '[]', true) ?: [];
+                    $cover      = $outsideArr[0] ?? null;
+                ?>
                 <tr>
-                    <td><?= $i++ ?></td> 
-                    
-                    <td><?= esc($stadium['id']) ?></td>
-                    <td><?= esc($stadium['name']) ?></td>
-                    <td><?= esc($stadium['category_name'] ?? 'N/A') ?></td>
-                    <td><?= esc(number_format($stadium['price'], 2)) ?></td>
-                    <!-- 5. ลบ 'stock' ออกจาก cell -->
-                    <td><?= esc($stadium['description']) ?></td>
+                    <td><?= $index + 1 ?></td>
                     <td>
-                        <!-- 6. เปลี่ยน Link (แก้ไขแล้ว) -->
-                        <a href="<?= base_url('admin/stadiums/edit/' . $stadium['id']) ?>" 
-                           class="btn btn-warning btn-sm">Edit</a>
-                        
-                        <!-- 7. เปลี่ยน Link และ ข้อความ Confirm -->
-                        <a href="<?= base_url('admin/stadiums/delete/' . $stadium['id']) ?>" 
-                           class="btn btn-danger btn-sm" 
-                           onclick="return confirm('Are you sure you want to delete this stadium?')">Delete</a>
+                        <?php if ($cover): ?>
+                            <img src="<?= base_url('assets/uploads/stadiums/' . $cover) ?>"
+                                 alt="Cover"
+                                 style="width: 90px; height: 60px; object-fit: cover; border-radius: 4px;">
+                        <?php else: ?>
+                            <span class="text-muted">No image</span>
+                        <?php endif; ?>
+                    </td>
+                    <td><?= esc($stadium['name']) ?></td>
+                    <td><?= esc($stadium['category_name'] ?? '-') ?></td>
+                    <td><?= esc($stadium['vendor_name'] ?? '-') ?></td>
+                    <td><?= esc($stadium['province'] ?? '-') ?></td>
+                    <td><?= number_format((float) $stadium['price'], 2) ?></td>
+                    <td>
+                        <?php if (!empty($stadium['lat']) && !empty($stadium['lng'])): ?>
+                            <button type="button"
+                                    class="btn btn-sm btn-outline-secondary js-open-map"
+                                    data-lat="<?= esc($stadium['lat']) ?>"
+                                    data-lng="<?= esc($stadium['lng']) ?>">
+                                🗺
+                            </button>
+                        <?php elseif (!empty($stadium['map_link'])): ?>
+                            <a href="<?= esc($stadium['map_link']) ?>" target="_blank" class="btn btn-sm btn-outline-secondary">
+                                Link
+                            </a>
+                        <?php else: ?>
+                            <span class="text-muted">-</span>
+                        <?php endif; ?>
+                    </td>
+                    <td>
+                        <a href="<?= base_url('admin/stadiums/edit/' . $stadium['id']) ?>"
+                           class="btn btn-sm btn-warning">Edit</a>
+
+                        <a href="<?= base_url('admin/stadiums/delete/' . $stadium['id']) ?>"
+                           class="btn btn-sm btn-danger"
+                           onclick="return confirm('Are you sure you want to delete this stadium?');">
+                            Delete
+                        </a>
                     </td>
                 </tr>
             <?php endforeach; ?>
         <?php else: ?>
             <tr>
-                <!-- 8. เปลี่ยน colspan เป็น 7 (เพราะลบ Stock) และ Text -->
-                <td colspan="7" style="text-align: center;">No stadiums found.</td>
+                <td colspan="9" style="text-align: center;">No stadiums found.</td>
             </tr>
-        <?php endif ?>
+        <?php endif; ?>
     </tbody>
 </table>
+
+<!-- Modal แผนที่แบบ custom (ไม่พึ่ง Bootstrap JS) -->
+<div id="mapModal" class="stadium-map-modal" style="display:none;">
+    <div class="stadium-map-backdrop"></div>
+    <div class="stadium-map-dialog">
+        <button type="button" class="close stadium-map-close" aria-label="Close">&times;</button>
+        <h5>Stadium Location</h5>
+        <div class="stadium-map-frame-wrapper">
+            <iframe id="stadiumMapFrame"
+                    src=""
+                    width="100%"
+                    height="350"
+                    style="border:0;"
+                    allowfullscreen=""
+                    loading="lazy"
+                    referrerpolicy="no-referrer-when-downgrade"></iframe>
+        </div>
+    </div>
+</div>
+
+<style>
+    .stadium-map-modal {
+        position: fixed;
+        z-index: 1050;
+        inset: 0;
+        display: none;
+    }
+    .stadium-map-backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+    }
+    .stadium-map-dialog {
+        position: relative;
+        max-width: 700px;
+        margin: 60px auto;
+        background: #fff;
+        border-radius: 6px;
+        padding: 16px 20px 20px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        z-index: 1051;
+    }
+    .stadium-map-close {
+        border: none;
+        background: transparent;
+        font-size: 24px;
+        float: right;
+        cursor: pointer;
+    }
+    .stadium-map-frame-wrapper {
+        margin-top: 10px;
+    }
+</style>
+
+<script>
+    (function () {
+        const modal   = document.getElementById('mapModal');
+        const iframe  = document.getElementById('stadiumMapFrame');
+        const closeBtn = modal ? modal.querySelector('.stadium-map-close') : null;
+        const backdrop = modal ? modal.querySelector('.stadium-map-backdrop') : null;
+
+        function openMapModal(lat, lng) {
+            if (!lat || !lng) {
+                alert('ไม่พบพิกัดแผนที่ของสนามนี้');
+                return;
+            }
+            const url = 'https://www.google.com/maps?q=' + encodeURIComponent(lat + ',' + lng) + '&hl=th&z=16&output=embed';
+            iframe.src = url;
+            modal.style.display = 'block';
+        }
+
+        function closeMapModal() {
+            modal.style.display = 'none';
+            iframe.src = '';
+        }
+
+        document.querySelectorAll('.js-open-map').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                const lat = this.getAttribute('data-lat');
+                const lng = this.getAttribute('data-lng');
+                openMapModal(lat, lng);
+            });
+        });
+
+        if (closeBtn) closeBtn.addEventListener('click', closeMapModal);
+        if (backdrop) backdrop.addEventListener('click', closeMapModal);
+    })();
+</script>
 
 <?= $this->endSection() ?>
