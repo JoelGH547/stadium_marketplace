@@ -45,3 +45,38 @@ $routes->group('admin', ['filter' => ['auth', 'admin']], static function ($route
     $routes->get('users/delete/(:segment)/(:num)', 'admin\UserController::delete/$1/$2');
 });
 
+//vendor
+
+$routes->group('owner', ['namespace' => 'App\Controllers\Owner'], function($routes){
+    //welcome
+    $routes->get('welcome', 'Welcome::index');
+
+    // login
+    $routes->get('login', 'Login::index');
+    $routes->post('login', 'Login::auth');
+
+    // register
+    $routes->get('register', 'Register::index');
+    $routes->post('register', 'Register::store');
+
+    // dashboard
+    $routes->get('dashboard', 'Dashboard::index');
+    $routes->get('logout', 'Login::logout');  
+
+
+    // ---------- CREATE FIELD ----------
+    $routes->get('fields/step1', 'Field::step1');
+    $routes->post('fields/step1', 'Field::step1_save');
+
+    $routes->get('fields/step2', 'Field::step2');
+    $routes->post('fields/step2', 'Field::step2_save');
+
+    $routes->get('fields/step3', 'Field::step3');
+    $routes->post('fields/step3', 'Field::step3_save');
+
+    $routes->get('fields/step4', 'Field::step4');
+    $routes->post('fields/step4', 'Field::step4_save');
+
+    $routes->get('fields/confirm', 'Field::confirm');
+    $routes->post('fields/store', 'Field::store');
+});
