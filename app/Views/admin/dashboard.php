@@ -3,113 +3,165 @@
 <?= $this->section('content') ?>
 
 <style>
-    .stats-container {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 20px;
-        margin-top: 20px;
-    }
     .stat-card {
-        background-color: #ecf0f1;
-        border-radius: 8px;
-        padding: 20px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        border: none;
+        border-radius: 1rem;
+        background: #fff;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.03);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        height: 100%;
     }
-    .stat-card h3 { margin: 0; color: #34495e; font-size: 1.2rem; }
-    .stat-card .number { font-size: 2.5rem; font-weight: bold; margin-top: 10px; }
-    .stat-card a { display: inline-block; margin-top: 15px; text-decoration: none; color: #2980b9; font-weight: bold; }
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+        border-bottom: 4px solid var(--mint-primary);
+    }
+    .stat-icon-box {
+        width: 56px; height: 56px;
+        border-radius: 12px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.6rem;
+    }
+    .bg-mint-light { background-color: #ccfbf1; color: #0f766e; }
+    .bg-blue-light { background-color: #dbeafe; color: #1e40af; }
+    .bg-orange-light { background-color: #ffedd5; color: #c2410c; }
+    .bg-purple-light { background-color: #f3e8ff; color: #7e22ce; }
     
-    /* (Style 3 สีสำหรับ "Receive") */
-    .stat-card.pending-vendor { /* (สีส้ม) */
-        background-color: #fdf3e6; border: 1px solid #f39c12;
-    }
-    .stat-card.pending-vendor .number { color: #f39c12; }
-
-    .stat-card.new-booking { /* (สีเขียว) */
-        background-color: #eafaf1; border: 1px solid #2ecc71;
-    }
-    .stat-card.new-booking .number { color: #2ecc71; }
+    .card-title-text { color: #64748b; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; }
+    .card-value-text { color: #1e293b; font-size: 2.2rem; font-weight: 700; line-height: 1.2; }
     
-    .stat-card.pending-booking { /* (สีฟ้า) */
-        background-color: #e5f5fb; border: 1px solid #3498db;
+    /* Table Styles */
+    .table-custom thead th {
+        background-color: #f8fafc; color: #64748b; font-weight: 600; font-size: 0.85rem; border-top: none; padding: 1rem;
     }
-    .stat-card.pending-booking .number { color: #3498db; }
-
-    /* 1. ⬇️ (เพิ่ม) Style สำหรับลูกค้าใหม่ ⬇️ */
-    .stat-card.new-customer { /* (สีเขียวมิ้นท์) */
-        background-color: #e8f8f5; border: 1px solid #1abc9c;
-    }
-    .stat-card.new-customer .number { color: #1abc9c; }
+    .table-custom tbody td { padding: 1rem; vertical-align: middle; border-bottom: 1px solid #f1f5f9; }
+    .table-hover tbody tr:hover { background-color: #f0fdfa; }
 </style>
 
-<h1><?= esc($title) ?></h1>
-
-<div class="stats-container">
-
-    <?php if ($total_pending_vendors > 0): ?>
-        <div class="stat-card pending-vendor"> 
-            <h3>Vendors รอยืนยัน</h3>
-            <div class="number"><?= esc($total_pending_vendors) ?></div>
-            <a href="<?= base_url('admin/vendors/pending') ?>">อนุมัติเลย &rarr;</a>
-        </div>
-    <?php endif; ?>
-
-    <?php if ($total_new_bookings > 0): ?>
-        <div class="stat-card new-booking"> 
-            <h3>การจองใหม่ (จ่ายแล้ว)</h3>
-            <div class="number"><?= esc($total_new_bookings) ?></div>
-            <a href="<?= base_url('admin/bookings/new') ?>">ดูเลย &rarr;</a>
-        </div>
-    <?php endif; ?>
+<div class="container-fluid p-0">
     
-    <?php if ($total_pending_bookings > 0): ?>
-        <div class="stat-card pending-booking"> 
-            <h3>การจอง (รอจ่ายเงิน)</h3>
-            <div class="number"><?= esc($total_pending_bookings) ?></div>
-            <a href="<?= base_url('admin/bookings/pending') ?>">ดูรายการ &rarr;</a>
-        </div>
-    <?php endif; ?>
-
-    <?php if ($total_new_customers > 0): ?>
-        <div class="stat-card new-customer"> 
-            <h3>ลูกค้าใหม่ (ใน 24 ชม.)</h3>
-            <div class="number"><?= esc($total_new_customers) ?></div>
-            <a href="<?= base_url('admin/users') ?>#customers">ดูทั้งหมด &rarr;</a>
-        </div>
-    <?php endif; ?>
-
-
-    <div class="stat-card">
-        <h3>สนามกีฬาทั้งหมด</h3>
-        <div class="number" style="color: #9b59b6;">
-            <?= esc($total_stadiums) ?>
-        </div>
-    </div>
-    <div class="stat-card">
-        <h3>หมวดหมู่ทั้งหมด</h3>
-        <div class="number" style="color: #e67e22;">
-            <?= esc($total_categories) ?>
-        </div>
-    </div>
-    <div class="stat-card">
-        <h3>Admins (ทั้งหมด)</h3>
-        <div class="number" style="color: #e74c3c;">
-            <?= esc($total_admins) ?>
-        </div>
-    </div>
-    <div class="stat-card">
-        <h3>Vendors (ทั้งหมด)</h3>
-        <div class="number" style="color: #f39c12;">
-            <?= esc($total_vendors) ?>
-        </div>
-    </div>
-    <div class="stat-card">
-        <h3>Customers (ทั้งหมด)</h3>
-        <div class="number" style="color: #1abc9c;">
-            <?= esc($total_customers) ?>
+    <div class="mb-4 d-flex justify-content-between align-items-end">
+        <div>
+            <h3 class="fw-bold text-dark mb-1">ภาพรวมระบบ</h3>
+            <p class="text-muted mb-0 small">ข้อมูลอัปเดตล่าสุด: <?= date('d M Y, H:i') ?></p>
         </div>
     </div>
 
+    <div class="row g-4 mb-4">
+        
+        <div class="col-xl-3 col-md-6">
+            <div class="stat-card p-4 d-flex align-items-center justify-content-between">
+                <div>
+                    <div class="card-title-text mb-2">Vendors รออนุมัติ</div>
+                    <div class="card-value-text text-warning"><?= number_format($pendingCount) ?></div> 
+                    <a href="<?= base_url('admin/vendors/pending') ?>" class="btn btn-sm btn-outline-warning mt-3 rounded-pill px-3">
+                        ตรวจสอบทันที
+                    </a>
+                </div>
+                <div class="stat-icon-box bg-orange-light"><i class="fas fa-user-clock"></i></div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="stat-card p-4 d-flex align-items-center justify-content-between">
+                <div>
+                    <div class="card-title-text mb-2">ลูกค้าใหม่ (24 ชม.)</div>
+                    <div class="card-value-text text-primary"><?= number_format($newCustomerCount) ?></div>
+                    <a href="<?= base_url('admin/users/new_customers') ?>" class="text-decoration-none small text-muted mt-2 d-block">
+                        ดูรายชื่อ <i class="fas fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+                <div class="stat-icon-box bg-purple-light"><i class="fas fa-user-plus"></i></div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="stat-card p-4 d-flex align-items-center justify-content-between">
+                <div>
+                    <div class="card-title-text mb-2">ยอดจอง (วันนี้)</div>
+                    <div class="card-value-text">0</div>
+                    <span class="badge bg-light text-muted mt-2">Coming Soon</span>
+                </div>
+                <div class="stat-icon-box bg-blue-light"><i class="fas fa-calendar-day"></i></div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="stat-card p-4 d-flex align-items-center justify-content-between">
+                <div>
+                    <div class="card-title-text mb-2">สนามทั้งหมด</div>
+                    <div class="card-value-text text-success"><?= number_format($stadiumCount) ?></div>
+                    <a href="<?= base_url('admin/stadiums') ?>" class="text-decoration-none small text-muted mt-2 d-block">
+                        จัดการสนาม <i class="fas fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+                <div class="stat-icon-box bg-mint-light"><i class="fas fa-map-location-dot"></i></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="fw-bold m-0 text-dark"><i class="fas fa-store me-2 text-warning"></i>Vendors ล่าสุด</h6>
+                    <a href="<?= base_url('admin/users/vendors') ?>" class="btn btn-sm btn-light rounded-pill px-3">ดูทั้งหมด</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-custom table-hover align-middle mb-0">
+                        <thead><tr><th>ชื่อร้าน/สนาม</th><th>สถานะ</th></tr></thead>
+                        <tbody>
+                            <?php foreach ($recentVendors as $v): ?>
+                            <tr>
+                                <td class="fw-bold text-dark"><?= esc($v['vendor_name']) ?></td>
+                                <td>
+                                    <?php if(($v['status'] ?? '') == 'pending'): ?>
+                                        <span class="badge bg-warning text-dark rounded-pill">รออนุมัติ</span>
+                                    <?php else: ?>
+                                        <span class="badge bg-success rounded-pill">อนุมัติแล้ว</span>
+                                    <?php endif; ?>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="fw-bold m-0 text-dark"><i class="fas fa-users me-2 text-primary"></i>ลูกค้าล่าสุด</h6>
+                    <a href="<?= base_url('admin/users/customers') ?>" class="btn btn-sm btn-light rounded-pill px-3">ดูทั้งหมด</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-custom table-hover align-middle mb-0">
+                        <thead><tr><th>ชื่อลูกค้า</th><th>เบอร์โทร</th></tr></thead>
+                        <tbody>
+                            <?php foreach ($recentCustomers as $c): ?>
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-light rounded-circle d-flex justify-content-center align-items-center me-2" style="width:32px; height:32px;">
+                                            <i class="fas fa-user text-secondary small"></i>
+                                        </div>
+                                        <span class="fw-bold text-dark"><?= esc($c['full_name']) ?></span>
+                                    </div>
+                                </td>
+                                <td class="text-muted"><?= esc($c['phone_number'] ?? '-') ?></td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
 </div>
 
 <?= $this->endSection() ?>

@@ -30,7 +30,9 @@ class UserController extends BaseController
         }
     }
 
-    // 1. READ
+    // =================================================================
+    //  1. READ (แสดงรายการ)
+    // =================================================================
     public function admins() {
         return view('admin/users/index_admins', ['title' => 'จัดการผู้ดูแลระบบ (Admins)', 'users' => $this->adminModel->findAll()]);
     }
@@ -41,7 +43,27 @@ class UserController extends BaseController
         return view('admin/users/index_customers', ['title' => 'จัดการลูกค้า (Customers)', 'users' => $this->customerModel->findAll()]);
     }
 
-    // 2. CREATE
+    // [เพิ่มใหม่] แสดงลูกค้าใหม่ใน 24 ชม.
+    public function newCustomers()
+    {
+        $timeLimit = date('Y-m-d H:i:s', strtotime('-24 hours'));
+        
+        $newCustomers = $this->customerModel
+            ->where('created_at >=', $timeLimit)
+            ->orderBy('created_at', 'DESC')
+            ->findAll();
+
+        $data = [
+            'title' => 'ลูกค้าใหม่ (ใน 24 ชม. ล่าสุด)',
+            'users' => $newCustomers
+        ];
+        
+        return view('admin/users/new_customers', $data);
+    }
+
+    // =================================================================
+    //  2. CREATE
+    // =================================================================
     public function create($role)
     {
         if (!in_array($role, ['admins', 'vendors', 'customers'])) {
@@ -67,18 +89,20 @@ class UserController extends BaseController
             $data['username'] = $this->request->getPost('username');
         } 
         elseif ($role == 'vendors') {
+            // [แก้ตรงนี้] ใช้อีเมลเป็น Username ป้องกัน Error Duplicate ''
+            $data['username']     = $this->request->getPost('email'); 
+
             $data['vendor_name']  = $this->request->getPost('vendor_name');
             $data['tax_id']       = $this->request->getPost('tax_id');
             $data['bank_account'] = $this->request->getPost('bank_account');
             $data['status']       = 'approved';
-            
-            // [แก้ไข] เปลี่ยน key เป็น 'phone_number' ให้ตรงกับ Model
             $data['phone_number'] = $this->request->getPost('phone'); 
         } 
         elseif ($role == 'customers') {
-            $data['full_name'] = $this->request->getPost('full_name');
-            
-            // [แก้ไข] เปลี่ยน key เป็น 'phone_number' ให้ตรงกับ Model
+            // [แก้ตรงนี้] ใช้อีเมลเป็น Username เช่นกัน
+            $data['username']     = $this->request->getPost('email');
+
+            $data['full_name']    = $this->request->getPost('full_name');
             $data['phone_number'] = $this->request->getPost('phone');
         }
 
@@ -89,7 +113,9 @@ class UserController extends BaseController
         }
     }
 
-    // 3. EDIT
+    // =================================================================
+    //  3. EDIT
+    // =================================================================
     public function edit($role, $id)
     {
         $model = $this->getModel($role);
@@ -119,14 +145,10 @@ class UserController extends BaseController
             $data['vendor_name']  = $this->request->getPost('vendor_name');
             $data['tax_id']       = $this->request->getPost('tax_id');
             $data['bank_account'] = $this->request->getPost('bank_account');
-            
-            // [แก้ไข] เปลี่ยน key เป็น 'phone_number'
             $data['phone_number'] = $this->request->getPost('phone');
         } 
         elseif ($role == 'customers') {
-            $data['full_name'] = $this->request->getPost('full_name');
-            
-            // [แก้ไข] เปลี่ยน key เป็น 'phone_number'
+            $data['full_name']    = $this->request->getPost('full_name');
             $data['phone_number'] = $this->request->getPost('phone');
         }
 
@@ -137,7 +159,9 @@ class UserController extends BaseController
         }
     }
 
-    // 4. DELETE & APPROVAL
+    // =================================================================
+    //  4. DELETE & VENDOR APPROVAL
+    // =================================================================
     public function delete($role, $id)
     {
         $model = $this->getModel($role);

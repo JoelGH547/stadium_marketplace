@@ -24,7 +24,7 @@
         </div>
         <div class="card-body">
             <div class="table-responsive">
-                <table class="table table-bordered table-hover align-middle" width="100%" cellspacing="0">
+                <table class="table table-bordered table-hover table-datatable align-middle" width="100%" cellspacing="0">
                     <thead class="table-light">
                         <tr>
                             <th width="5%">ID</th>
@@ -49,8 +49,7 @@
                                         <i class="fas fa-edit"></i>
                                     </a>
                                     <a href="<?= base_url('admin/users/delete/vendors/' . $user['id']) ?>" 
-                                       class="btn btn-danger btn-sm"
-                                       onclick="return confirm('ยืนยันที่จะลบ Vendor รายนี้?');">
+                                       class="btn btn-danger btn-sm btn-delete">
                                         <i class="fas fa-trash"></i>
                                     </a>
                                 </td>

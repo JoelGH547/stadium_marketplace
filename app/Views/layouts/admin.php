@@ -5,10 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard</title>
     
+    <!-- Bootstrap 5 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Font (Prompt) -->
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
     
+    <!-- [เพิ่ม] CSS สำหรับ DataTables (ตารางค้นหาได้) -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+
     <style>
         :root {
             /* กำหนดตัวแปรสี Mint Theme */
@@ -30,14 +36,14 @@
         .sidebar {
             width: 260px;
             min-height: 100vh;
-            background: var(--sidebar-bg); /* สีพื้นหลัง Sidebar */
-            color: #9ca3af; /* สีตัวหนังสือเทาอ่อน */
+            background: var(--sidebar-bg);
+            color: #9ca3af;
             transition: all 0.3s;
             box-shadow: 4px 0 10px rgba(0,0,0,0.05);
         }
 
         .sidebar-header {
-            background-color: var(--sidebar-bg-accent); /* สีหัว Sidebar */
+            background-color: var(--sidebar-bg-accent);
             color: #fff;
         }
 
@@ -50,7 +56,7 @@
             justify-content: space-between;
             transition: all 0.2s;
             font-weight: 400;
-            border-left: 4px solid transparent; /* เตรียมเส้นซ้ายไว้ */
+            border-left: 4px solid transparent;
         }
 
         .nav-link:hover {
@@ -58,11 +64,10 @@
             background-color: rgba(255, 255, 255, 0.05);
         }
 
-        /* เมนูที่ถูกเลือก (Active) - ธีมมินต์ */
         .nav-link.active-menu {
-            color: var(--mint-hover); /* ตัวหนังสือสีมินต์สว่าง */
-            background-color: rgba(20, 184, 166, 0.1); /* พื้นหลังสีมินต์จางๆ */
-            border-left: 4px solid var(--mint-primary); /* เส้นด้านซ้ายสีมินต์ */
+            color: var(--mint-hover);
+            background-color: rgba(20, 184, 166, 0.1);
+            border-left: 4px solid var(--mint-primary);
         }
 
         .nav-link i {
@@ -72,14 +77,13 @@
         
         /* --- Submenu Styling --- */
         .submenu {
-            background-color: #00000030; /* สีพื้นหลังเมนูย่อยให้เข้มลงนิดนึง */
+            background-color: #00000030;
         }
         .submenu .nav-link {
             padding-left: 55px;
             font-size: 0.9em;
             border-left: none;
         }
-        /* เมนูย่อยที่ถูกเลือก */
         .submenu .nav-link.active-sub {
             color: var(--mint-hover) !important;
             font-weight: 500;
@@ -93,7 +97,7 @@
             height: 100vh;
         }
         
-        /* --- Custom Button Theme Mint (แถมให้) --- */
+        /* --- Custom Button Theme Mint --- */
         .btn-mint {
             background-color: var(--mint-primary);
             color: white;
@@ -112,6 +116,21 @@
             transition: transform 0.3s;
             font-size: 0.75em;
         }
+
+        /* [เพิ่ม] ปรับสไตล์ DataTables ให้เข้าธีม */
+        .dataTables_wrapper {
+            padding: 1rem 0;
+        }
+        .dataTables_filter input {
+            border-radius: 0.375rem !important;
+            border: 1px solid #ddd !important;
+            padding: 0.5rem 0.75rem;
+        }
+        .dataTables_length select {
+            border-radius: 0.375rem !important;
+            border: 1px solid #ddd !important;
+            padding: 0.5rem 0.75rem;
+        }
     </style>
 </head>
 <body class="d-flex">
@@ -121,6 +140,7 @@
         $currentUrl = $uri->getPath(); 
     ?>
 
+    <!-- Sidebar -->
     <div class="sidebar d-flex flex-column p-0 flex-shrink-0">
         <div class="p-4 text-center sidebar-header border-bottom border-secondary border-opacity-25">
             <h4 class="m-0 fw-bold tracking-wide">
@@ -152,7 +172,7 @@
             </li>
 
             <?php 
-                $isUserMenu = (strpos($currentUrl, 'admin/users') !== false);
+                $isUserMenu = (strpos($currentUrl, 'admin/users') !== false || strpos($currentUrl, 'admin/vendors/pending') !== false);
             ?>
             <li class="nav-item">
                 <a class="nav-link <?= $isUserMenu ? 'active-menu' : 'collapsed' ?>" 
@@ -175,7 +195,7 @@
                         </li>
                         <li class="nav-item">
                             <a href="<?= base_url('admin/users/vendors') ?>" 
-                               class="nav-link <?= (strpos($currentUrl, 'users/vendors') !== false) ? 'active-sub' : '' ?>">
+                               class="nav-link <?= (strpos($currentUrl, 'users/vendors') !== false && strpos($currentUrl, 'pending') === false) ? 'active-sub' : '' ?>">
                                 • Vendors (เจ้าของ)
                             </a>
                         </li>
@@ -185,10 +205,16 @@
                                 • Customers (ลูกค้า)
                             </a>
                         </li>
+                         <li class="nav-item">
+                            <a href="<?= base_url('admin/vendors/pending') ?>" 
+                               class="nav-link <?= (strpos($currentUrl, 'vendors/pending') !== false) ? 'active-sub' : '' ?>">
+                                • อนุมัติ Vendor
+                            </a>
+                        </li>
                     </ul>
                 </div>
             </li>
-            </ul>
+        </ul>
         
         <div class="mt-auto p-3 border-top border-secondary border-opacity-25">
             <a href="<?= base_url('admin/logout') ?>" class="btn btn-outline-danger w-100">
@@ -197,10 +223,96 @@
         </div>
     </div>
 
+    <!-- Content Area -->
     <div class="content">
         <?= $this->renderSection('content') ?>
     </div>
 
+    <!-- ========================================================== -->
+    <!-- [เพิ่ม] SCRIPT ZONE (SweetAlert + DataTables) -->
+    <!-- ========================================================== -->
+    
+    <!-- Bootstrap 5 JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- jQuery (จำเป็นสำหรับ DataTables) -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    
+    <!-- DataTables (ตารางค้นหาได้) -->
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
+    <!-- SweetAlert2 (แจ้งเตือนสวยๆ) -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        $(document).ready(function() {
+            // 1. แปลงตารางธรรมดา ให้เป็น DataTables (ค้นหาได้ + แบ่งหน้า)
+            // เราใช้ class .table-datatable แทน .table เพื่อไม่ให้กระทบตารางอื่นที่ไม่อยากให้ค้นหา
+            $('.table-datatable').DataTable({
+                "language": {
+                    "search": "ค้นหา:",
+                    "lengthMenu": "แสดง _MENU_ รายการ",
+                    "info": "แสดง _START_ ถึง _END_ จาก _TOTAL_ รายการ",
+                    "paginate": {
+                        "first": "หน้าแรก",
+                        "last": "หน้าสุดท้าย",
+                        "next": "ถัดไป",
+                        "previous": "ก่อนหน้า"
+                    },
+                    "zeroRecords": "ไม่พบข้อมูลที่ค้นหา",
+                    "infoEmpty": "ไม่มีข้อมูล",
+                    "infoFiltered": "(กรองจากทั้งหมด _MAX_ รายการ)"
+                },
+                "ordering": false // ปิดการเรียงลำดับอัตโนมัติ
+            });
+
+            // 2. แจ้งเตือน Success (ดึงจาก Session Flashdata)
+            <?php if(session()->getFlashdata('success')): ?>
+                Swal.fire({
+                    icon: 'success',
+                    title: 'สำเร็จ!',
+                    text: '<?= session()->getFlashdata('success') ?>',
+                    confirmButtonColor: '#14b8a6', // สีมิ้นต์
+                    timer: 3000, // ปิดเองใน 3 วิ
+                    timerProgressBar: true
+                });
+            <?php endif; ?>
+
+            // 3. แจ้งเตือน Error
+            <?php if(session()->getFlashdata('error')): ?>
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    text: '<?= session()->getFlashdata('error') ?>',
+                    confirmButtonColor: '#ef4444' // สีแดง
+                });
+            <?php endif; ?>
+
+            // 4. ระบบยืนยันการลบ (Confirm Delete)
+            // ดักจับการคลิกที่ปุ่มที่มี class 'btn-delete'
+            $(document).on('click', '.btn-delete', function(e) {
+                e.preventDefault(); // ห้ามลิ้งค์ทำงานทันที
+                const href = $(this).attr('href'); // เก็บลิ้งค์ไว้ก่อน
+
+                Swal.fire({
+                    title: 'คุณแน่ใจหรือไม่?',
+                    text: "ข้อมูลที่ลบจะไม่สามารถกู้คืนได้!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#ef4444', // สีแดง
+                    cancelButtonColor: '#6b7280', // สีเทา
+                    confirmButtonText: 'ใช่, ลบเลย!',
+                    cancelButtonText: 'ยกเลิก'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // ถ้ากดยืนยัน ให้วิ่งไปที่ลิ้งค์ลบ
+                        window.location.href = href;
+                    }
+                });
+            });
+        });
+    </script>
+
 </body>
 </html>
