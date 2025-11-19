@@ -6,7 +6,7 @@
     </div>
     <div>
       <div class="font-semibold">ติดต่อ</div>
-      <p class="text-sm mt-2">โทร 02-123-4567<br>Line: @yoursportsarena</p>
+      <p class="text-sm mt-2">โทร 02-123-4567<br>Line: @stadium_marketplace</p>
     </div>
     <div>
       <div class="font-semibold">ที่อยู่</div>

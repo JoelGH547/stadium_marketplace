@@ -24,7 +24,7 @@
   });
 })();
 
-/* ==================== Balls (วิ่งตลอด; throttle ระหว่างเลื่อนการ์ด) ==================== */
+/* ==================== Balls ==================== */
 const Balls=(function(){
   const section=document.getElementById('hero'), canvas=document.getElementById('heroBalls');
   if(!section||!canvas) return { setThrottle:()=>{} };
@@ -78,7 +78,7 @@ const Balls=(function(){
   return { setThrottle:(v)=>{ throttled=!!v; } };
 })();
 
-/* ==================== Deck Carousel — ultra smooth (transform-only) ==================== */
+/* ==================== Deck Carousel ==================== */
 (function(){
   const stage=document.getElementById('heroCarousel'); if(!stage) return;
   const slides=[...stage.querySelectorAll('[data-slide]')]; if(!slides.length) return;
@@ -177,7 +177,7 @@ const Balls=(function(){
   layout(); startAuto();
 })();
 
-/* ==== Arrow buttons for #nearScroller (no mouse-drag) ==== */
+/* ==== Arrow buttons for #nearScroller ==== */
 (function(){
   const scroller = document.getElementById('nearScroller');
   const leftBtn  = document.getElementById('nearLeft');
@@ -185,7 +185,6 @@ const Balls=(function(){
   if(!scroller || !leftBtn || !rightBtn) return;
 
   function stepSize(){
-    // ใช้ความกว้างการ์ดใบแรก + ช่องว่าง (gap-4 = 16px)
     const card = scroller.querySelector('article');
     if(!card) return 320;
     const rect = card.getBoundingClientRect();
@@ -195,28 +194,24 @@ const Balls=(function(){
   leftBtn.addEventListener('click', ()=> scroller.scrollBy({left: -stepSize(), behavior: 'smooth'}));
   rightBtn.addEventListener('click',()=> scroller.scrollBy({left:  stepSize(), behavior: 'smooth'}));
 
-  // ปิดการลากภาพที่อาจรบกวน
   scroller.querySelectorAll('img').forEach(img=>{
     img.addEventListener('dragstart', e=> e.preventDefault());
   });
 })();
 
-// ui.js — Sort menu controller (robust + no framework)
+/* ==================== Sort Menu Controller ==================== */
 document.addEventListener('DOMContentLoaded', function () {
   const wrap = document.getElementById('sortMenu');
   if (!wrap) return;
 
-  // กันกรณีมีเลเยอร์อื่นบังคลิก
   wrap.classList.add('relative', 'z-10');
 
-  // ปุ่มที่รองรับ: มี class="sort-btn" หรือมี data-sort ก็ใช้ได้
   const getButtons = () => wrap.querySelectorAll('button.sort-btn, button[data-sort]');
 
   function setActive(btn) {
     const buttons = getButtons();
     buttons.forEach(function (b) {
       b.classList.remove('bg-gray-900', 'text-white', 'font-semibold');
-      // คืนสีเดิมให้ปุ่มที่ไม่ได้เลือก (ปรับตามสไตล์คุณได้)
       b.classList.add('text-gray-700');
       b.setAttribute('aria-selected', 'false');
     });
@@ -226,16 +221,12 @@ document.addEventListener('DOMContentLoaded', function () {
     btn.setAttribute('aria-selected', 'true');
   }
 
-  // ตั้งค่า active เริ่มต้น (ถ้าไม่มี aria-selected="true" จะเลือกปุ่มแรกให้)
   var current =
     wrap.querySelector('button[aria-selected="true"]') ||
     getButtons()[0];
 
-  if (current) {
-    setActive(current);
-  }
+  if (current) setActive(current);
 
-  // จัดการคลิกด้วย event delegation
   wrap.addEventListener('click', function (e) {
     const btn = e.target.closest('button.sort-btn, button[data-sort]');
     if (!btn || !wrap.contains(btn)) return;
@@ -243,19 +234,16 @@ document.addEventListener('DOMContentLoaded', function () {
     e.preventDefault();
     setActive(btn);
 
-    // แจ้ง event ออกไปให้ส่วนอื่นเอาไปใช้งานต่อ (เช่น เรียงการ์ด)
     const key = btn.dataset.sort || '';
     try {
       window.dispatchEvent(new CustomEvent('sort-change', { detail: { key: key } }));
     } catch (_) {
-      // บราวเซอร์เก่ามาก ๆ
       const evt = document.createEvent('CustomEvent');
       evt.initCustomEvent('sort-change', true, true, { key: key });
       window.dispatchEvent(evt);
     }
   });
 
-  // รองรับคีย์บอร์ด (Space/Enter)
   wrap.addEventListener('keydown', function (e) {
     if (e.key !== 'Enter' && e.key !== ' ') return;
     const btn = e.target.closest('button.sort-btn, button[data-sort]');
@@ -274,14 +262,21 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 });
 
-// ===================== Venue Pager Overlay (show 4, preview blurred 5th, expand to 10) =====================
+/* ==================== Venue Pager Overlay ==================== */
 document.addEventListener('DOMContentLoaded', () => {
   const ul = document.getElementById('venueItems');
   if (!ul) return;
 
-  // Inject minimal CSS for partial blur + overlay
+  const PER_ROW       = 2;
+  const ROWS_INITIAL  = 4;
+  const ROWS_PREVIEW  = 5;
+  const ROWS_EXPANDED = 10;
+
+  const INITIAL       = ROWS_INITIAL  * PER_ROW;
+  const PREVIEW_LIMIT = ROWS_PREVIEW  * PER_ROW;
+  const EXPAND_LIMIT  = ROWS_EXPANDED * PER_ROW;
+
   const css = `
-  /* partial visibility for 5th card */
   .vp-partial {
     filter: blur(0.6px);
     opacity: .65;
@@ -290,12 +285,9 @@ document.addEventListener('DOMContentLoaded', () => {
     overflow: hidden;
   }
   .vp-partial::after{
-    content:'';
-    position:absolute; inset:0;
-    /* fade to gray-50 background to simulate cut-off */
+    content:''; position:absolute; inset:0;
     background: linear-gradient(to bottom, rgba(248,250,252,0) 0%, rgba(248,250,252,1) 85%);
   }
-  /* container to position the center button */
   .vp-wrap{ position:relative; }
   .vp-more{
     position:absolute; left:50%; transform:translateX(-50%);
@@ -307,46 +299,43 @@ document.addEventListener('DOMContentLoaded', () => {
   style.textContent = css;
   document.head.appendChild(style);
 
-  // Wrap UL with a relative container (non-destructive)
   if (!ul.parentElement.classList.contains('vp-wrap')) {
-    const wrap = document.createElement('div');
-    wrap.className = 'vp-wrap';
-    ul.parentElement.insertBefore(wrap, ul);
-    wrap.appendChild(ul);
+    const wrapDiv = document.createElement('div');
+    wrapDiv.className = 'vp-wrap';
+    ul.parentElement.insertBefore(wrapDiv, ul);
+    wrapDiv.appendChild(ul);
   }
   const wrap = ul.parentElement;
 
-  const INITIAL = 8;
-  const LIMIT   = 10;
-
   function applyPaging() {
     const items = Array.from(ul.children).filter(el => el.tagName === 'LI');
-    // reset all
-    items.forEach(li => { 
+    items.forEach(li => {
       li.classList.remove('vp-partial', 'hidden');
       li.style.removeProperty('maxHeight');
     });
 
     const total = items.length;
-    // hide over LIMIT
-    for (let i = LIMIT; i < total; i++) {
-      items[i].classList.add('hidden');
-    }
 
     if (total <= INITIAL) {
-      // remove button if exists
       const b = wrap.querySelector('#btnMoreOverlay');
       if (b) b.remove();
       return;
     }
 
-    // show first INITIAL cards normally, and cards after that (up to LIMIT) as partial preview (blurred row)
-    const max = Math.min(LIMIT, total);
-    for (let i = INITIAL; i < max; i++) {
+    for (let i = EXPAND_LIMIT; i < total; i++) {
+      items[i].classList.add('hidden');
+    }
+
+    const previewEnd = Math.min(PREVIEW_LIMIT, total);
+    for (let i = INITIAL; i < previewEnd; i++) {
       items[i].classList.add('vp-partial');
     }
 
-    // create center button if not exists
+    const expandEnd = Math.min(EXPAND_LIMIT, total);
+    for (let i = previewEnd; i < expandEnd; i++) {
+      items[i].classList.add('hidden');
+    }
+
     let btn = wrap.querySelector('#btnMoreOverlay');
     if (!btn) {
       btn = document.createElement('button');
@@ -363,34 +352,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function expandToLimit() {
     const items = Array.from(ul.children).filter(el => el.tagName === 'LI');
-    // unhide 5..LIMIT-1
-    for (let i = INITIAL; i < Math.min(LIMIT, items.length); i++) {
+    const max = Math.min(EXPAND_LIMIT, items.length);
+
+    for (let i = INITIAL; i < max; i++) {
       items[i].classList.remove('hidden', 'vp-partial');
     }
+
     const btn = wrap.querySelector('#btnMoreOverlay');
     if (btn) btn.classList.add('hidden');
-
-    // If more than LIMIT, optionally we could add a "ดูทั้งหมด" below; skipped unless requested.
   }
 
-  // initial
   applyPaging();
 
-  // re-apply after sorting
   window.addEventListener('sort-change', () => {
-    // allow DOM re-order to settle in same frame
     requestAnimationFrame(() => applyPaging());
   });
 });
 
-
-// ========== Venue DOM Sorter (sort <li> under #venueItems) ==========
+/* ==================== Venue DOM Sorter ==================== */
 document.addEventListener('DOMContentLoaded', () => {
   const list = document.getElementById('venueItems');
   const sortMenu = document.getElementById('sortMenu');
   if (!list || !sortMenu) return;
 
-  // stable index baseline
   Array.from(list.children).forEach((li, i) => { if (!li.dataset._idx) li.dataset._idx = String(i); });
 
   const toNum = (v, d=0) => {
@@ -422,10 +406,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const items = Array.from(list.children);
     items.sort((a,b)=>{
       const A = readMetrics(a), B = readMetrics(b);
-      if (key==='price'  && A.price  != B.price)  return A.price - B.price;        // ถูกสุดก่อน
-      if (key==='nearby' && A.price  != B.price)  return B.price - A.price;        // ราคาสุดหรู: แพงสุดก่อน
-      if (key==='rating' && A.rating != B.rating) return B.rating - A.rating;      // ดาวมากสุดก่อน
-      if (key!=='price' && key!=='nearby' && key!=='rating' && A.popular != B.popular) return B.popular - A.popular; // ยอดนิยม
+      if (key==='price'  && A.price  != B.price)  return A.price - B.price;
+      if (key==='nearby' && A.distKm != B.distKm) return A.distKm - B.distKm;
+      if (key==='rating' && A.rating != B.rating) return B.rating - A.rating;
+      if (key!=='price' && key!=='nearby' && key!=='rating' && A.popular != B.popular) return B.popular - A.popular;
       return A.idx - B.idx;
     });
     const frag = document.createDocumentFragment();
@@ -433,15 +417,13 @@ document.addEventListener('DOMContentLoaded', () => {
     list.appendChild(frag);
   }
 
-  // initial
   const current = sortMenu.querySelector('button[aria-selected="true"]');
   sortList(current?.dataset.sort || 'popular');
 
-  // on change
   window.addEventListener('sort-change', (e)=> sortList(e?.detail?.key || 'popular'));
 });
 
-// ===================== [FIX] Exclusive active state for sort menu =====================
+/* ==================== FIX Exclusive Active for Sort Menu ==================== */
 document.addEventListener('DOMContentLoaded', () => {
   const wrap = document.getElementById('sortMenu');
   if (!wrap) return;
@@ -453,19 +435,15 @@ document.addEventListener('DOMContentLoaded', () => {
   function setExclusiveActive(btn){
     const buttons = wrap.querySelectorAll('button.sort-btn, button[data-sort]');
     buttons.forEach(b => {
-      // remove any active-like classes
       INACTIVE_REMOVE.forEach(c => b.classList.remove(c));
-      // add inactive baseline
       INACTIVE_ADD.forEach(c => { if (!b.classList.contains(c)) b.classList.add(c); });
       b.setAttribute('aria-selected','false');
     });
-    // activate target
     INACTIVE_ADD.forEach(c => btn.classList.remove(c));
     ACTIVE.forEach(c => { if (!btn.classList.contains(c)) btn.classList.add(c); });
     btn.setAttribute('aria-selected','true');
   }
 
-  // initialize from current aria-selected or first button
   const current = wrap.querySelector('button[aria-selected="true"]') || wrap.querySelector('button.sort-btn, button[data-sort]');
   if (current) setExclusiveActive(current);
 
@@ -483,3 +461,89 @@ document.addEventListener('DOMContentLoaded', () => {
     setExclusiveActive(btn);
   }, true);
 });
+
+/* ==================== Distance Calculator ==================== */
+document.addEventListener('DOMContentLoaded', () => {
+  const list = document.getElementById('venueItems');
+  const nearScroller = document.getElementById('nearScroller');
+  if ((!list && !nearScroller) || !navigator.geolocation) return;
+
+  function toRad(deg){ return deg * Math.PI / 180; }
+  function haversineKm(lat1, lon1, lat2, lon2){
+    const R = 6371;
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+    const a =
+      Math.sin(dLat/2)**2 +
+      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+      Math.sin(dLon/2)**2;
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+  }
+
+  function updateDistanceForElement(el, baseLat, baseLon){
+    const lat = Number(el.dataset.lat);
+    const lon = Number(el.dataset.lng);
+    if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
+
+    const distKm = haversineKm(baseLat, baseLon, lat, lon);
+    const kmForSort = distKm.toFixed(2);
+    const label = distKm < 1
+      ? Math.round(distKm * 1000) + 'm.'
+      : distKm.toFixed(1) + 'km.';
+
+    // ใช้กับ sort ในลิสต์ด้านล่าง
+    el.dataset.distanceKm = kmForSort;
+
+    const badgeSpan = el.querySelector('.dist-badge span:last-child');
+    if (badgeSpan) badgeSpan.textContent = label;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+  (pos) => {
+    const baseLat = pos.coords.latitude;
+    const baseLon = pos.coords.longitude;
+
+    // 1) update distance for venueList
+    if (list) {
+      list.querySelectorAll('li[data-lat][data-lng]').forEach(li => {
+        updateDistanceForElement(li, baseLat, baseLon);
+      });
+    }
+
+    // 2) update distance for nearScroller
+    if (nearScroller) {
+      nearScroller.querySelectorAll('article[data-lat][data-lng]').forEach(card => {
+        updateDistanceForElement(card, baseLat, baseLon);
+      });
+    }
+
+    // ⭐ 3) Sort nearScroller from near → far
+    if (nearScroller) {
+      const cards = Array.from(nearScroller.querySelectorAll('article[data-distance-km]'));
+
+      cards.sort((a, b) => {
+        const da = parseFloat(a.dataset.distanceKm ?? '99999');
+        const db = parseFloat(b.dataset.distanceKm ?? '99999');
+        return da - db; // ใกล้ → ไกล
+      });
+
+      cards.forEach(card => nearScroller.appendChild(card));
+    }
+
+    // trigger sort event for list
+    try {
+      window.dispatchEvent(new CustomEvent('sort-change', { detail: { key: 'nearby' } }));
+    } catch (_) {
+      const evt = document.createEvent('CustomEvent');
+      evt.initCustomEvent('sort-change', true, true, { key: 'nearby' });
+      window.dispatchEvent(evt);
+    }
+  },
+    (err) => {
+      console.warn('Cannot get geolocation for venue distance:', err);
+    },
+    { enableHighAccuracy: true, timeout: 8000 }
+  );
+});
+

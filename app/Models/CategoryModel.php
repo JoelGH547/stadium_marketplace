@@ -13,7 +13,7 @@ class CategoryModel extends Model
     protected $returnType       = 'array';
 
     protected $allowedFields    = [
-        'name',
+        'name','emoji'
     ];
 
     protected $useTimestamps = true;
