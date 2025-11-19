@@ -28,11 +28,11 @@
                     <thead class="table-light">
                         <tr>
                             <th width="5%">ID</th>
+                            <th>Username</th>
                             <th>ชื่อสนาม/ร้านค้า</th>
                             <th>Email</th>
                             <th>เบอร์โทร</th>
-                            <th>Tax ID</th>
-                            <th width="15%">จัดการ</th>
+                            <th width="18%">จัดการ</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -40,18 +40,34 @@
                             <?php foreach($users as $user): ?>
                             <tr>
                                 <td class="text-center"><?= $user['id'] ?></td>
-                                <td class="fw-bold text-primary"><?= esc($user['vendor_name']) ?></td>
+                                <td class="fw-bold text-primary"><?= esc($user['username']) ?></td>
+                                <td class="fw-bold"><?= esc($user['vendor_name']) ?></td>
                                 <td><?= esc($user['email']) ?></td>
                                 <td><?= esc($user['phone_number'] ?? '-') ?></td>
-                                <td><?= esc($user['tax_id'] ?? '-') ?></td>
                                 <td>
-                                    <a href="<?= base_url('admin/users/edit/vendors/' . $user['id']) ?>" class="btn btn-warning btn-sm">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    <a href="<?= base_url('admin/users/delete/vendors/' . $user['id']) ?>" 
-                                       class="btn btn-danger btn-sm btn-delete">
-                                        <i class="fas fa-trash"></i>
-                                    </a>
+                                    <div class="d-flex gap-1 justify-content-center">
+                                        <a href="<?= base_url('admin/users/edit/vendors/' . $user['id']) ?>" class="btn btn-warning btn-sm" title="แก้ไข">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        
+                                        <a href="<?= base_url('admin/users/delete/vendors/' . $user['id']) ?>" 
+                                           class="btn btn-danger btn-sm btn-delete" title="ลบ">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+
+                                        <button type="button" class="btn btn-info btn-sm text-white btn-view-details" 
+                                                title="ดูรายละเอียด"
+                                                data-username="<?= esc($user['username']) ?>"
+                                                data-vendor="<?= esc($user['vendor_name']) ?>"
+                                                data-email="<?= esc($user['email']) ?>"
+                                                data-phone="<?= esc($user['phone_number'] ?? '-') ?>"
+                                                data-tax="<?= esc($user['tax_id'] ?? '-') ?>"
+                                                data-bank="<?= esc($user['bank_account'] ?? '-') ?>"
+                                                data-status="<?= esc($user['status'] ?? 'approved') ?>"
+                                                data-created="<?= esc($user['created_at']) ?>">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                             <?php endforeach; ?>
@@ -69,5 +85,89 @@
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="viewVendorModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title"><i class="fas fa-store me-2"></i>ข้อมูล Vendor รายละเอียด</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <table class="table table-borderless">
+                    <tbody>
+                        <tr>
+                            <th width="40%" class="text-muted">Username:</th>
+                            <td class="fw-bold" id="view_username"></td>
+                        </tr>
+                        <tr>
+                            <th class="text-muted">ชื่อสนาม/ร้านค้า:</th>
+                            <td class="fw-bold text-primary" id="view_vendor"></td>
+                        </tr>
+                        <tr>
+                            <th class="text-muted">อีเมล:</th>
+                            <td id="view_email"></td>
+                        </tr>
+                        <tr>
+                            <th class="text-muted">เบอร์โทรศัพท์:</th>
+                            <td id="view_phone"></td>
+                        </tr>
+                        <tr><td colspan="2"><hr class="my-1"></td></tr>
+                        <tr>
+                            <th class="text-muted">เลขผู้เสียภาษี (Tax ID):</th>
+                            <td id="view_tax" class="text-dark"></td>
+                        </tr>
+                        <tr>
+                            <th class="text-muted">เลขบัญชีธนาคาร:</th>
+                            <td id="view_bank" class="text-dark"></td>
+                        </tr>
+                        <tr>
+                            <th class="text-muted">สถานะ:</th>
+                            <td id="view_status"></td>
+                        </tr>
+                        <tr>
+                            <th class="text-muted">วันที่สมัคร:</th>
+                            <td id="view_created" class="small text-secondary"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // เมื่อกดปุ่มลูกตา
+        $('.btn-view-details').on('click', function() {
+            // ดึงข้อมูลจาก data-attribute
+            const username = $(this).data('username');
+            const vendor = $(this).data('vendor');
+            const email = $(this).data('email');
+            const phone = $(this).data('phone');
+            const tax = $(this).data('tax');
+            const bank = $(this).data('bank');
+            const status = $(this).data('status');
+            const created = $(this).data('created');
+
+            // เอาไปใส่ใน Modal
+            $('#view_username').text(username);
+            $('#view_vendor').text(vendor);
+            $('#view_email').text(email);
+            $('#view_phone').text(phone);
+            $('#view_tax').text(tax);
+            $('#view_bank').text(bank);
+            $('#view_status').html(status === 'approved' ? '<span class="badge bg-success">Approved</span>' : '<span class="badge bg-warning text-dark">Pending</span>');
+            $('#view_created').text(created);
+
+            // เปิด Modal
+            var myModal = new bootstrap.Modal(document.getElementById('viewVendorModal'));
+            myModal.show();
+        });
+    });
+</script>
 
 <?= $this->endSection() ?>

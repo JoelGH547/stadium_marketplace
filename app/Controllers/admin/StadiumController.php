@@ -26,7 +26,7 @@ class StadiumController extends BaseController
     public function index()
     {
         $stadiums = $this->stadiumModel
-            ->select('stadiums.*, categories.name AS category_name, vendors.vendor_name AS vendor_name')
+            ->select('stadiums.*, categories.name AS category_name, categories.emoji AS category_emoji, vendors.vendor_name AS vendor_name')
             ->join('categories', 'categories.id = stadiums.category_id', 'left')
             ->join('vendors', 'vendors.id = stadiums.vendor_id', 'left')
             ->orderBy('stadiums.id', 'DESC')
@@ -74,13 +74,13 @@ class StadiumController extends BaseController
         }
 
         // 1. จัดการรูปปก (Outside Image)
-        $outsideImagesJson = '[]'; // ค่า Default เป็น array ว่างแบบ JSON
+        $outsideImagesJson = '[]'; 
         $outsideFile       = $this->request->getFile('outside_image');
 
         if ($outsideFile && $outsideFile->isValid() && !$outsideFile->hasMoved()) {
             $newName = 'outside_' . time() . '_' . $outsideFile->getRandomName();
             $outsideFile->move($uploadPath, $newName);
-            $outsideImagesJson = json_encode([$newName]); // เก็บเป็น JSON Array
+            $outsideImagesJson = json_encode([$newName]); 
         }
 
         // 2. จัดการรูปภายใน (Inside Images)
@@ -140,7 +140,7 @@ class StadiumController extends BaseController
     }
 
     // =========================
-    //  UPDATE (แก้ไขข้อมูล)
+    //  UPDATE (แก้ไขข้อมูล - อัปเดตใหม่ ลบรูปได้)
     // =========================
     public function update($id = null)
     {
@@ -163,33 +163,61 @@ class StadiumController extends BaseController
         }
 
         $uploadPath = FCPATH . 'assets/uploads/stadiums/';
-        if (!is_dir($uploadPath)) {
-            mkdir($uploadPath, 0777, true);
+        if (!is_dir($uploadPath)) { mkdir($uploadPath, 0777, true); }
+
+        // --- 1. จัดการรูปปก (Outside Image) ---
+        $outsideOld = json_decode($stadium['outside_images'] ?? '[]', true) ?? [];
+        $outsideResult = $outsideOld;
+
+        // 1.1 กรณีติ๊ก "ลบรูปปก"
+        if ($this->request->getPost('delete_outside') == '1') {
+            if (!empty($outsideOld[0]) && file_exists($uploadPath . $outsideOld[0])) {
+                unlink($uploadPath . $outsideOld[0]); // ลบไฟล์
+            }
+            $outsideResult = []; // เคลียร์ค่า
         }
 
-        // 1. Outside image (ถ้ามีรูปใหม่ ให้ใช้รูปใหม่ ถ้าไม่มี ใช้รูปเดิม)
-        $outsideOld = json_decode($stadium['outside_images'] ?? '[]', true) ?? [];
-        $outside = $outsideOld;
-
+        // 1.2 กรณีอัปโหลดรูปปกใหม่ (แทนที่)
         $outsideFile = $this->request->getFile('outside_image');
         if ($outsideFile && $outsideFile->isValid() && !$outsideFile->hasMoved()) {
+            // ลบรูปเก่าทิ้งก่อน (ถ้ามี และยังไม่ได้ถูกลบใน step 1.1)
+            if (!empty($outsideResult[0]) && file_exists($uploadPath . $outsideResult[0])) {
+                 unlink($uploadPath . $outsideResult[0]);
+            }
+            
             $newName = 'outside_' . time() . '_' . $outsideFile->getRandomName();
             $outsideFile->move($uploadPath, $newName);
-            // แทนที่รูปเดิม (Cover มีได้รูปเดียว)
-            $outside = [$newName];
+            $outsideResult = [$newName];
         }
 
-        // 2. Inside multiple (เพิ่มรูปใหม่เข้าไปต่อท้ายรูปเดิม)
+        // --- 2. จัดการรูปภายใน (Inside Images) ---
         $insideOld = json_decode($stadium['inside_images'] ?? '[]', true) ?? [];
-        $inside    = $insideOld;
+        $insideResult = [];
 
+        // 2.1 รับรายชื่อรูปที่ต้องการลบ
+        $filesToDelete = $this->request->getPost('delete_inside') ?? [];
+
+        // 2.2 วนลูปรูปเก่า: เก็บเฉพาะรูปที่ไม่ได้ถูกสั่งลบ
+        foreach ($insideOld as $oldImg) {
+            if (in_array($oldImg, $filesToDelete)) {
+                // ถ้าสั่งลบ -> ลบไฟล์ทิ้ง
+                if (file_exists($uploadPath . $oldImg)) {
+                    unlink($uploadPath . $oldImg);
+                }
+            } else {
+                // ถ้าไม่ลบ -> เก็บไว้
+                $insideResult[] = $oldImg;
+            }
+        }
+
+        // 2.3 เพิ่มรูปใหม่ (ถ้ามี)
         $insideFiles = $this->request->getFileMultiple('inside_images');
-        if (!empty($insideFiles)) {
+        if ($insideFiles) {
             foreach ($insideFiles as $file) {
                 if ($file->isValid() && !$file->hasMoved()) {
                     $newName = 'inside_' . time() . '_' . $file->getRandomName();
                     $file->move($uploadPath, $newName);
-                    $inside[] = $newName;
+                    $insideResult[] = $newName;
                 }
             }
         }
@@ -210,8 +238,8 @@ class StadiumController extends BaseController
             'lat'            => $this->request->getPost('lat'),
             'lng'            => $this->request->getPost('lng'),
             'map_link'       => $this->request->getPost('map_link'),
-            'outside_images' => json_encode($outside),
-            'inside_images'  => json_encode($inside),
+            'outside_images' => json_encode(array_values($outsideResult)),
+            'inside_images'  => json_encode(array_values($insideResult)),
         ]);
 
         return redirect()->to(base_url('admin/stadiums'))
