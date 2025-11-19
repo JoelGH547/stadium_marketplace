@@ -60,7 +60,7 @@ class CategoryController extends BaseController
         // 2. Save
         $this->categoryModel->save([
             'name' => $this->request->getPost('name'),
-            'description' => $this->request->getPost('description'),
+            'emoji' => $this->request->getPost('emoji'),
         ]);
 
         return redirect()->to(base_url('admin/categories'))->with('success', 'Category created successfully.');
@@ -101,7 +101,7 @@ class CategoryController extends BaseController
         // 2. Update
         $this->categoryModel->update($id, [
             'name' => $this->request->getPost('name'),
-            'description' => $this->request->getPost('description'),
+            'emoji' => $this->request->getPost('emoji'),
         ]);
 
         return redirect()->to(base_url('admin/categories'))->with('success', 'Category updated successfully.');

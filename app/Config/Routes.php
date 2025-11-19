@@ -45,4 +45,5 @@ $routes->group('admin', ['filter' => ['auth', 'admin']], static function ($route
     $routes->get('users/delete/(:segment)/(:num)', 'admin\UserController::delete/$1/$2');
 });
 
-$routes->get('arena', 'customer\HomeController::index');
+$routes->get('sport', 'customer\HomeController::index');
+$routes->get('sport/view', 'customer\HomeController::view');

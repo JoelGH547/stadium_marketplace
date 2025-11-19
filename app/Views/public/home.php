@@ -111,112 +111,192 @@
 
 <!-- Featured (Horizontal Cards with Arrow Buttons) -->
 <section id="results" class="relative isolate z-[10] bg-[var(--primary)] py-16">
-  <!-- 🟢 subtle dot grid -->
-<div class="pointer-events-none absolute inset-0 -z-0"
-     style="
-      background-image:
-        radial-gradient(rgba(255,255,255,0.25) 1px, transparent 1px);
-      background-size: 20px 20px;
-      background-position: 0 8px;
-     ">
-</div>
-  <!-- ✨ BG decorations -->
-<div class="pointer-events-none absolute inset-0 -z-0 overflow-hidden">
-  <!-- Radial glow (จำเป็นต้องใช้ style สำหรับ radial) -->
-  <div class="absolute -top-40 left-1/2 -translate-x-1/2 w-[900px] h-[900px] rounded-full opacity-25 blur-3xl"
-       style="background: radial-gradient(ellipse at center, rgba(255,255,255,.45), rgba(14,165,164,0) 60%);"></div>
+  <!-- พื้นหลังลายจุด + แสงฟุ้ง + คลื่นด้านล่าง (ของเดิม) -->
+  <div class="pointer-events-none absolute inset-0 -z-0"
+       style="
+        background-image:
+          radial-gradient(rgba(255,255,255,0.25) 1px, transparent 1px);
+        background-size: 20px 20px;
+        background-position: 0 8px;
+       "></div>
 
-  <!-- Soft bottom wave -->
-  <svg class="absolute bottom-0 left-0 w-full h-24 opacity-15"
-       viewBox="0 0 1440 320" preserveAspectRatio="none" aria-hidden="true">
-    <path fill="#ffffff" d="M0,160 C240,200 480,120 720,160 C960,200 1200,280 1440,240 L1440,320 L0,320 Z"></path>
-  </svg>
-</div>
-  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+  <div class="pointer-events-none absolute inset-0 -z-0 overflow-hidden">
+    <div class="absolute -top-40 left-1/2 -translate-x-1/2 w-[900px] h-[900px] rounded-full opacity-25 blur-3xl"
+         style="background: radial-gradient(ellipse at center, rgba(255,255,255,.45), rgba(14,165,164,0) 60%);"></div>
+    <svg class="absolute bottom-0 left-0 w-full h-24 opacity-15"
+         viewBox="0 0 1440 320" preserveAspectRatio="none" aria-hidden="true">
+      <path fill="#ffffff" d="M0,160 C240,200 480,120 720,160 C960,200 1200,280 1440,240 L1440,320 L0,320 Z"></path>
+    </svg>
+  </div>
+
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-[5]">
     <div class="flex items-center justify-between mb-4">
       <h2 class="text-2xl font-semibold text-white">สนามใกล้คุณ</h2>
-      <a href="#search" class="text-sm text-white/90 hover:text-white transition">ดูทั้งหมด</a>
+      <a href="#venueList" class="text-sm text-white/90 hover:text-white transition">ดูทั้งหมด</a>
     </div>
 
     <?php
-      /* ==== เพิ่ม/แก้การ์ดได้ที่นี่ ==== */
-      $venues = $venues ?? [
-      ['name'=>'Greenhill Badminton','img'=>'assets/uploads/home/6.jpg','stars'=>5,  'distance'=>'0.7km', 'price'=>140, 'type'=>'แบดมินตัน','icon'=>'🏸'],
-      ['name'=>'ATK Badminton',     'img'=>'assets/uploads/home/7.jpg','stars'=>4.8,'distance'=>'3.6km', 'price'=>140, 'type'=>'แบดมินตัน','icon'=>'🏸'],
-      ['name'=>'700th Chiangmai',   'img'=>'assets/uploads/home/8.jpg','stars'=>4.6,'distance'=>'3.2km', 'price'=>250, 'type'=>'ฟุตบอล','icon'=>'⚽'],
-      ['name'=>'Central Court',     'img'=>'assets/uploads/home/9.jpg','stars'=>4.7,'distance'=>'2.1km', 'price'=>190, 'type'=>'ปิงปอง','icon'=>'🎾'],
-      ['name'=>'CMU Sport Complex', 'img'=>'assets/uploads/home/10.jpg','stars'=>4.9,'distance'=>'1.2km','price'=>200, 'type'=>'บาสเกตบอล','icon'=>'🏀'],
-      ['name'=>'North Gate Arena',  'img'=>'assets/uploads/home/11.jpg','stars'=>4.5,'distance'=>'5.0km','price'=>180, 'type'=>'วอลเลย์บอล','icon'=>'🏐'],
-      ];
+      /** @var array $venueCards */
+      $venueCards = $venueCards ?? [];
+      $nearby = array_slice($venueCards, 0, 8);
     ?>
 
     <div class="relative z-[10]">
-      <!-- Arrow Buttons -->
-      <button id="nearLeft"  class="scroller-btn scroller-left text-white hover:text-white/90"  aria-label="Left">‹</button>
-<button id="nearRight" class="scroller-btn scroller-right text-white hover:text-white/90" aria-label="Right">›</button>
+      <!-- ปุ่มเลื่อน -->
+      <button id="nearLeft"
+              class="scroller-btn scroller-left text-white hover:text-white/90"
+              aria-label="เลื่อนไปทางซ้าย">‹</button>
+      <button id="nearRight"
+              class="scroller-btn scroller-right text-white hover:text-white/90"
+              aria-label="เลื่อนไปทางขวา">›</button>
 
-      <!-- Scroller -->
       <div id="nearScroller"
            class="mt-2 -mx-4 px-4 flex gap-4 overflow-x-auto no-scrollbar scroll-smooth snap-x snap-mandatory relative z-[15]">
-           <!-- underline glow under cards -->
-<div class="pointer-events-none absolute left-4 right-4 -bottom-2 h-8 rounded-full opacity-25 blur-xl"
-     style="background: radial-gradient(ellipse at center, rgba(0,0,0,.35), rgba(0,0,0,0) 70%);"></div>
 
-        <?php foreach($venues as $v): ?>
-          <article class="relative snap-start flex-none min-w-[260px] sm:min-w-[300px] rounded-xl overflow-hidden bg-white shadow-lg hover:shadow-xl hover:-translate-y-1 transform-gpu transition-all duration-300 ease-out z-20 after:absolute after:inset-x-6 after:-bottom-3 after:h-4 after:bg-black/20 after:blur-lg after:rounded-full after:content-['']">
-            <!-- รูปภาพเต็มการ์ด (ใช้ Tailwind ล้วน: aspect-[16/9]) -->
-            <div class="relative w-full aspect-[16/9]">
-              <img src="<?= base_url($v['img']) ?>"
-                    alt="<?= esc($v['name']) ?>"
-                    class="absolute inset-0 w-full h-full object-cover select-none" draggable="false">
-
-              <!-- เบลอครึ่งล่าง -->
-              <div class="pointer-events-none absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/60 via-black/40 to-transparent backdrop-blur-md"></div>
-            </div>
-
-            <!-- เนื้อหา -->
-            <div class="absolute inset-x-0 bottom-0 p-6 text-white">
-              <h3 class="font-semibold text-lg drop-shadow line-clamp-1"><?= htmlspecialchars($v['name']) ?></h3>
-              <div class="mt-2 flex items-center gap-2">
-                <span class="inline-flex items-center gap-1 text-sm">
-                  <span>⭐</span><span><?= htmlspecialchars($v['stars']) ?></span>
-                </span>
-                <span class="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-md bg-white/25 backdrop-blur">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 21s-6-5.686-6-10a6 6 0 1 1 12 0c0 4.314-6 10-6 10z"/><circle cx="12" cy="11" r="2.5"/>
-                  </svg>
-                  <span><?= htmlspecialchars($v['distance']) ?></span>
-                </span>
-              </div>
-              <div class="mt-1 text-base font-semibold drop-shadow">฿<?= number_format((float)$v['price']) ?>/hr.</div>
-            </div>
-            <div class="pointer-events-none absolute inset-0 rounded-xl ring-1 ring-black/5"></div>
-            <!-- Badge ประเภทสนาม มุมขวาล่าง -->
+        <?php if (!empty($nearby)): ?>
+          <?php foreach ($nearby as $i => $v): ?>
             <?php
-              $typeLabel = $v['type'] ?? 'สนามกีฬาในร่ม';
-              $typeIcon  = $v['icon'] ?? '🏟️';
+              $name  = $v['name'] ?? 'ชื่อสนาม';
+              $price = isset($v['price']) ? (float) $v['price'] : 0;
+
+              $typeLabel = $v['type_label'] ?? ($v['category_name'] ?? 'สนามกีฬา');
+              $typeIcon  = $v['type_icon']  ?? ($v['category_emoji'] ?? '🏟️');
+
+              $cover    = $v['cover_image'] ?? null;
+              $coverUrl = $cover
+                ? base_url('assets/uploads/stadiums/' . $cover)
+                : base_url('assets/uploads/home/1.jpg');
+
+              $lat = $v['lat'] ?? null;
+              $lng = $v['lng'] ?? null;
+
+              $stars = isset($v['rating']) ? (float) $v['rating'] : 0.0;
+
+              // ใช้ id ไม่ซ้ำในแต่ละการ์ด เพื่อให้ SVG animation แยกกันได้
+              $uid = 'nearCard' . $i;
             ?>
-            <!-- Badge มินต์ มุมขวาล่าง -->
-<div class="pointer-events-none absolute bottom-4 right-4 z-[3]
-            inline-flex items-center gap-1
-            text-white text-[11px] font-semibold
-            px-3 py-1.5 rounded-full
-            bg-[var(--primary)]/90
-            shadow-lg shadow-[var(--primary)]/25
-            backdrop-blur-md
-            border border-white/20
-            transition-all duration-300
-            hover:scale-[1.05] hover:shadow-[var(--primary)]/40">
-    <span class="text-base leading-none drop-shadow-sm"><?= esc($typeIcon) ?></span>
-    <span class="leading-none"><?= esc($typeLabel) ?></span>
+
+            <article
+              class="relative snap-start flex-none min-w-[260px] sm:min-w-[280px] max-w-xs"
+              <?php if (!empty($lat) && !empty($lng)): ?>
+                data-lat="<?= esc($lat) ?>"
+                data-lng="<?= esc($lng) ?>"
+              <?php endif; ?>
+            >
+              <div class="near-jelly-wrap">
+                <!-- พื้นหลังเบลอ -->
+                <div class="near-jelly-bg"
+                     style="background-image:url('<?= esc($coverUrl) ?>');"></div>
+
+                <!-- การ์ดด้านหน้า -->
+                <div class="near-jelly-card"
+                     style="background-image:url('<?= esc($coverUrl) ?>');">
+                  <div class="near-jelly-footer">
+  <!-- SVG curve แบบ CodePen -->
+  <svg class="near-jelly-curve"
+       xmlns="http://www.w3.org/2000/svg">
+    <path id="<?= $uid ?>-p"
+          d="M0,200 Q80,100 400,200 V150 H0 V50"
+          transform="translate(0 300)"/>
+    <rect id="<?= $uid ?>-dummy"
+          x="0" y="0" height="450" width="400"
+          fill="transparent" />
+
+    <animate xlink:href="#<?= $uid ?>-p"
+             attributeName="d"
+             to="M0,50 Q80,100 400,50 V150 H0 V50"
+             fill="freeze"
+             begin="<?= $uid ?>-dummy.mouseover"
+             end="<?= $uid ?>-dummy.mouseout"
+             dur="0.1s" />
+    <animate xlink:href="#<?= $uid ?>-p"
+             attributeName="d"
+             to="M0,50 Q80,0 400,50 V150 H0 V50"
+             fill="freeze"
+             begin="prev.end;<?= $uid ?>-dummy.mouseover"
+             end="<?= $uid ?>-dummy.mouseout"
+             dur="0.15s" />
+    <animate xlink:href="#<?= $uid ?>-p"
+             attributeName="d"
+             to="M0,50 Q80,80 400,50 V150 H0 V50"
+             fill="freeze"
+             begin="prev.end;<?= $uid ?>-dummy.mouseover"
+             end="<?= $uid ?>-dummy.mouseout"
+             dur="0.15s" />
+    <animate xlink:href="#<?= $uid ?>-p"
+             attributeName="d"
+             to="M0,50 Q80,45 400,50 V150 H0 V50"
+             fill="freeze"
+             begin="prev.end;<?= $uid ?>-dummy.mouseover"
+             end="<?= $uid ?>-dummy.mouseout"
+             dur="0.1s" />
+    <animate xlink:href="#<?= $uid ?>-p"
+             attributeName="d"
+             to="M0,50 Q80,50 400,50 V150 H0 V50"
+             fill="freeze"
+             begin="prev.end;<?= $uid ?>-dummy.mouseover"
+             end="<?= $uid ?>-dummy.mouseout"
+             dur="0.05s" />
+    <animate xlink:href="#<?= $uid ?>-p"
+             attributeName="d"
+             to="M0,200 Q80,100 400,200 V150 H0 V50"
+             fill="freeze"
+             begin="<?= $uid ?>-dummy.mouseout"
+             dur="0.15s" />
+  </svg>
+
+  <!-- ข้อมูลสนาม -->
+  <div class="near-jelly-info">
+    <div class="near-jelly-name">
+      <?= esc($name) ?>
+    </div>
+    <div class="near-jelly-meta">
+      <span class="stars">
+        <span>⭐</span>
+        <span><?= number_format($stars, 1) ?></span>
+      </span>
+      <span class="dist-badge">
+        <svg xmlns="http://www.w3.org/2000/svg"
+             class="h-3 w-3"
+             viewBox="0 0 24 24"
+             fill="none"
+             stroke="currentColor"
+             stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round"
+                d="M12 2C8.134 2 5 5.134 5 9c0 4.5 4 9 7 11 3-2 7-6.5 7-11 0-3.866-3.134-7-7-7z" />
+          <circle cx="12" cy="9" r="2.5" />
+        </svg>
+        <span>-- km.</span>
+      </span>
+    </div>
+    <div class="near-jelly-price">
+      ฿<?= number_format($price, 0) ?>/hr.
+    </div>
+  </div>
+
+  <!-- Badge ประเภทกีฬา + emoji มุมขวาล่าง -->
+  <div class="near-jelly-sport">
+    <span class="near-jelly-sport-emoji"><?= esc($typeIcon) ?></span>
+    <span><?= esc($typeLabel) ?></span>
+  </div>
 </div>
-          </article>
-        <?php endforeach; ?>
+
+<!-- ชั้นเบลอครึ่งล่าง (ปรับแล้วด้านบน) -->
+<div class="near-jelly-blur"></div>
+
+                </div>
+              </div>
+            </article>
+          <?php endforeach; ?>
+        <?php endif; ?>
       </div>
     </div>
   </div>
 </section>
+
+
+
+
 <section id="sortMenu" class="bg-gray-50 py-6">
   <div class="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
     <div class="bg-white rounded-2xl shadow-sm flex justify-between items-center overflow-hidden border border-gray-200">
@@ -227,371 +307,131 @@
 
       <div class="w-px h-8 bg-gray-200"></div>
 
-      <button class="sort-btn flex-1 py-3 text-center text-sm font-medium text-gray-700 hover:text-[var(--primary)] hover:bg-[var(--primary)]/10"
+      <button class="sort-btn flex-1 py-3 text-center text-sm font-semibold text-gray-700 hover:text-[var(--primary)] hover:bg-[var(--primary)]/10"
               data-sort="price" aria-selected="false">ราคาถูกสุด</button>
 
       <div class="w-px h-8 bg-gray-200"></div>
 
-      <button class="sort-btn flex-1 py-3 text-center text-sm font-medium text-gray-700 hover:text-[var(--primary)] hover:bg-[var(--primary)]/10"
+      <button class="sort-btn flex-1 py-3 text-center text-sm font-semibold text-gray-700 hover:text-[var(--primary)] hover:bg-[var(--primary)]/10"
               data-sort="nearby" aria-selected="false">ใกล้ตัวเมืองที่สุด</button>
 
       <div class="w-px h-8 bg-gray-200"></div>
 
-      <button class="sort-btn flex-1 py-3 text-center text-sm font-medium text-gray-700 hover:text-[var(--primary)] hover:bg-[var(--primary)]/10"
+      <button class="sort-btn flex-1 py-3 text-center text-sm font-semibold text-gray-700 hover:text-[var(--primary)] hover:bg-[var(--primary)]/10"
               data-sort="rating" aria-selected="false">ได้คะแนนรีวิวสูง</button>
-
     </div>
   </div>
 </section>
-<section id="venueList" class=" py-4  bg-gray-50">
+
+<section id="venueList" class="py-4 bg-gray-50">
   <div class="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+    <?php
+      /** @var array $venueCards */
+      $venueCards = $venueCards ?? [];
+    ?>
     <ul id="venueItems" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <li class="relative flex items-center gap-4 bg-white rounded-2xl
-           p-4 pb-8 sm:p-5 sm:pb-10
-           transition-all duration-200 hover:shadow-lg"
-          data-price="140" data-distance-km="0.7" data-rating="5" data-popular="98">
-        <img src="https://picsum.photos/seed/greenhill/300/200" class="h-24 w-24 rounded-2xl object-cover" alt="">
-        <div class="flex-1 min-w-0">
-          <div class="flex items-start justify-between gap-2">
-            <h3 class="text-base font-extrabold text-[color:var(--ink)] truncate">Greenhill Badminton</h3>
-            <button class="flex-none h-9 w-9 rounded-full border border-[var(--primary)] text-[var(--primary)] grid place-items-center">&rsaquo;</button>
-          </div>
-          <div class="mt-1 flex flex-wrap items-center gap-2 text-sm">
-            <span class="inline-flex items-center gap-1 rounded-full bg-[var(--primary)]/10 text-[var(--primary)] px-2.5 py-0.5 dist-badge">📍 <span>0.7km.</span></span>
-            <span class="text-gray-500 truncate">Mueang Chiang Mai, Chiang Mai</span>
-          </div>
-          <div class="mt-2 flex flex-wrap items-center gap-2 text-sm">
-            <span>⭐ <strong>5</strong></span>
-            <span class="inline-flex items-center gap-1 rounded-xl border px-2.5 py-0.5 text-gray-600 border-gray-200">⏰ 09:00 – 22:00</span>
-            <span class="text-[var(--primary)] font-semibold">฿140/hr.</span>
-          </div>
-        </div>
-        <div class="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 z-[5]
-            inline-flex items-center justify-center gap-1
-            text-[var(--primary)] text-[11px] font-semibold
-            px-3 py-1 rounded-full
-            bg-white/80
-            shadow-md shadow-black/15
-            backdrop-blur-md
-            border border-white/60
-            transition-all duration-300">
-  <span class="text-sm leading-none drop-shadow-sm"><?= esc($typeIcon) ?></span>
-  <span class="leading-none"><?= esc($typeLabel) ?></span>
-</div>
-      </li>
+      <?php if (empty($venueCards)): ?>
+        <!-- fallback: ถ้าไม่มีข้อมูลจาก DB ตอนนี้ยังไม่แสดงอะไร -->
+      <?php else: ?>
+        <?php foreach ($venueCards as $idx => $v): ?>
+          <?php
+            $name    = $v['name'] ?? 'ชื่อสนาม';
+            $price   = isset($v['price']) ? (float) $v['price'] : 0;
 
-      <li class="relative flex items-center gap-4 bg-white rounded-2xl
-           p-4 pb-8 sm:p-5 sm:pb-10
-           transition-all duration-200 hover:shadow-lg"
-          data-price="140" data-distance-km="3.6" data-rating="4.8" data-popular="90">
-        <img src="https://picsum.photos/seed/atk/300/200" class="h-24 w-24 rounded-2xl object-cover" alt="">
-        <div class="flex-1 min-w-0">
-          <div class="flex items-start justify-between gap-2">
-            <h3 class="text-base font-extrabold text-[color:var(--ink)] truncate">ATK Badminton</h3>
-            <button class="flex-none h-9 w-9 rounded-full border border-[var(--primary)] text-[var(--primary)] grid place-items-center">&rsaquo;</button>
-          </div>
-          <div class="mt-1 flex flex-wrap items-center gap-2 text-sm">
-            <span class="inline-flex items-center gap-1 rounded-full bg-[var(--primary)]/10 text-[var(--primary)] px-2.5 py-0.5 dist-badge">📍 <span>3.6km.</span></span>
-            <span class="text-gray-500 truncate">Mae Rim, Chiang Mai</span>
-          </div>
-          <div class="mt-2 flex flex-wrap items-center gap-2 text-sm">
-            <span>⭐ <strong>4.8</strong></span>
-            <span class="inline-flex items-center gap-1 rounded-xl border px-2.5 py-0.5 text-gray-600 border-gray-200">⏰ 09:00 – 02:00</span>
-            <span class="text-[var(--primary)] font-semibold">฿140/hr.</span>
-          </div>
-        </div>
-        <div class="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 z-[5]
-            inline-flex items-center justify-center gap-1
-            text-[var(--primary)] text-[11px] font-semibold
-            px-3 py-1 rounded-full
-            bg-white/80
-            shadow-md shadow-black/15
-            backdrop-blur-md
-            border border-white/60
-            transition-all duration-300">
-  <span class="text-sm leading-none drop-shadow-sm"><?= esc($typeIcon) ?></span>
-  <span class="leading-none"><?= esc($typeLabel) ?></span>
-</div>
-      </li>
+            $address = trim(($v['address'] ?? '') . ' ' . ($v['province'] ?? ''));
+            $address = $address !== '' ? $address : 'ยังไม่ระบุที่อยู่';
 
-      <li class="relative flex items-center gap-4 bg-white rounded-2xl
-           p-4 pb-8 sm:p-5 sm:pb-10
-           transition-all duration-200 hover:shadow-lg"
-          data-price="150" data-distance-km="3.9" data-rating="0" data-popular="75">
-        <img src="https://picsum.photos/seed/cnx/300/200" class="h-24 w-24 rounded-2xl object-cover" alt="">
-        <div class="flex-1 min-w-0">
-          <div class="flex items-start justify-between gap-2">
-            <h3 class="text-base font-extrabold text-[color:var(--ink)] truncate">@CNX Badminton Center</h3>
-            <button class="flex-none h-9 w-9 rounded-full border border-[var(--primary)] text-[var(--primary)] grid place-items-center">&rsaquo;</button>
-          </div>
-          <div class="mt-1 flex flex-wrap items-center gap-2 text-sm">
-            <span class="inline-flex items-center gap-1 rounded-full bg-[var(--primary)]/10 text-[var(--primary)] px-2.5 py-0.5 dist-badge">📍 <span>3.9km.</span></span>
-            <span class="text-gray-500 truncate">Mae Rim, Chiang Mai</span>
-          </div>
-          <div class="mt-2 flex flex-wrap items-center gap-2 text-sm">
-            <span>⭐ <strong>0</strong></span>
-            <span class="inline-flex items-center gap-1 rounded-xl border px-2.5 py-0.5 text-gray-600 border-gray-200">⏰ 09:00 – 00:00</span>
-            <span class="text-[var(--primary)] font-semibold">฿150/hr.</span>
-          </div>
-        </div>
-        <div class="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 z-[5]
-            inline-flex items-center justify-center gap-1
-            text-[var(--primary)] text-[11px] font-semibold
-            px-3 py-1 rounded-full
-            bg-white/80
-            shadow-md shadow-black/15
-            backdrop-blur-md
-            border border-white/60
-            transition-all duration-300">
-  <span class="text-sm leading-none drop-shadow-sm"><?= esc($typeIcon) ?></span>
-  <span class="leading-none"><?= esc($typeLabel) ?></span>
-</div>
-      </li>
+            $open  = $v['open_time']  ?? null;
+            $close = $v['close_time'] ?? null;
+            if ($open  !== null && strlen($open)  >= 5) $open  = substr($open, 0, 5);
+            if ($close !== null && strlen($close) >= 5) $close = substr($close, 0, 5);
+            $timeLabel = ($open && $close) ? ($open . ' – ' . $close) : 'ยังไม่ระบุเวลา';
 
-      <li class="relative flex items-center gap-4 bg-white rounded-2xl
-           p-4 pb-8 sm:p-5 sm:pb-10
-           transition-all duration-200 hover:shadow-lg"
-          data-price="140" data-distance-km="10.9" data-rating="0" data-popular="70">
-        <img src="https://picsum.photos/seed/spirit/300/200" class="h-24 w-24 rounded-2xl object-cover" alt="">
-        <div class="flex-1 min-w-0">
-          <div class="flex items-start justify-between gap-2">
-            <h3 class="text-base font-extrabold text-[color:var(--ink)] truncate">SpiritArena</h3>
-            <button class="flex-none h-9 w-9 rounded-full border border-[var(--primary)] text-[var(--primary)] grid place-items-center">&rsaquo;</button>
-          </div>
-          <div class="mt-1 flex flex-wrap items-center gap-2 text-sm">
-            <span class="inline-flex items-center gap-1 rounded-full bg-[var(--primary)]/10 text-[var(--primary)] px-2.5 py-0.5 dist-badge">📍 <span>10.9km.</span></span>
-            <span class="text-gray-500 truncate">Hang Dong, Chiang Mai</span>
-          </div>
-          <div class="mt-2 flex flex-wrap items-center gap-2 text-sm">
-            <span>⭐ <strong>0</strong></span>
-            <span class="inline-flex items-center gap-1 rounded-xl border px-2.5 py-0.5 text-gray-600 border-gray-200">⏰ 08:00 – 22:00</span>
-            <span class="text-[var(--primary)] font-semibold">฿140/hr.</span>
-          </div>
-        </div>
-        <div class="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 z-[5]
-            inline-flex items-center justify-center gap-1
-            text-[var(--primary)] text-[11px] font-semibold
-            px-3 py-1 rounded-full
-            bg-white/80
-            shadow-md shadow-black/15
-            backdrop-blur-md
-            border border-white/60
-            transition-all duration-300">
-  <span class="text-sm leading-none drop-shadow-sm"><?= esc($typeIcon) ?></span>
-  <span class="leading-none"><?= esc($typeLabel) ?></span>
-</div>
-      </li>
+            $typeIcon  = $v['type_icon']  ?? '🏟️';
+            $typeLabel = $v['type_label'] ?? ($v['category_name'] ?? 'สนามกีฬา');
 
-      <li class="relative flex items-center gap-4 bg-white rounded-2xl
-           p-4 pb-8 sm:p-5 sm:pb-10
-           transition-all duration-200 hover:shadow-lg"
-          data-price="140" data-distance-km="10.9" data-rating="0" data-popular="70">
-        <img src="https://picsum.photos/seed/spirit/300/200" class="h-24 w-24 rounded-2xl object-cover" alt="">
-        <div class="flex-1 min-w-0">
-          <div class="flex items-start justify-between gap-2">
-            <h3 class="text-base font-extrabold text-[color:var(--ink)] truncate">SpiritArena</h3>
-            <button class="flex-none h-9 w-9 rounded-full border border-[var(--primary)] text-[var(--primary)] grid place-items-center">&rsaquo;</button>
-          </div>
-          <div class="mt-1 flex flex-wrap items-center gap-2 text-sm">
-            <span class="inline-flex items-center gap-1 rounded-full bg-[var(--primary)]/10 text-[var(--primary)] px-2.5 py-0.5 dist-badge">📍 <span>10.9km.</span></span>
-            <span class="text-gray-500 truncate">Hang Dong, Chiang Mai</span>
-          </div>
-          <div class="mt-2 flex flex-wrap items-center gap-2 text-sm">
-            <span>⭐ <strong>0</strong></span>
-            <span class="inline-flex items-center gap-1 rounded-xl border px-2.5 py-0.5 text-gray-600 border-gray-200">⏰ 08:00 – 22:00</span>
-            <span class="text-[var(--primary)] font-semibold">฿140/hr.</span>
-          </div>
-        </div>
-        <div class="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 z-[5]
-            inline-flex items-center justify-center gap-1
-            text-[var(--primary)] text-[11px] font-semibold
-            px-3 py-1 rounded-full
-            bg-white/80
-            shadow-md shadow-black/15
-            backdrop-blur-md
-            border border-white/60
-            transition-all duration-300">
-  <span class="text-sm leading-none drop-shadow-sm"><?= esc($typeIcon) ?></span>
-  <span class="leading-none"><?= esc($typeLabel) ?></span>
-</div>
-      </li>
+            $cover    = $v['cover_image'] ?? null;
+            $coverUrl = $cover
+              ? base_url('assets/uploads/stadiums/' . $cover)
+              : base_url('assets/uploads/home/1.jpg');
 
-      <li class="relative flex items-center gap-4 bg-white rounded-2xl
-           p-4 pb-8 sm:p-5 sm:pb-10
+            $lat = $v['lat'] ?? null;
+            $lng = $v['lng'] ?? null;
+          ?>
+          <li class="relative flex items-center gap-4 bg-white rounded-2xl
+           p-4 pb-8 sm:p-5 sm:pb-10 pr-16
            transition-all duration-200 hover:shadow-lg"
-          data-price="140" data-distance-km="10.9" data-rating="0" data-popular="70">
-        <img src="https://picsum.photos/seed/spirit/300/200" class="h-24 w-24 rounded-2xl object-cover" alt="">
-        <div class="flex-1 min-w-0">
-          <div class="flex items-start justify-between gap-2">
-            <h3 class="text-base font-extrabold text-[color:var(--ink)] truncate">SpiritArena</h3>
-            <button class="flex-none h-9 w-9 rounded-full border border-[var(--primary)] text-[var(--primary)] grid place-items-center">&rsaquo;</button>
-          </div>
-          <div class="mt-1 flex flex-wrap items-center gap-2 text-sm">
-            <span class="inline-flex items-center gap-1 rounded-full bg-[var(--primary)]/10 text-[var(--primary)] px-2.5 py-0.5 dist-badge">📍 <span>10.9km.</span></span>
-            <span class="text-gray-500 truncate">Hang Dong, Chiang Mai</span>
-          </div>
-          <div class="mt-2 flex flex-wrap items-center gap-2 text-sm">
-            <span>⭐ <strong>0</strong></span>
-            <span class="inline-flex items-center gap-1 rounded-xl border px-2.5 py-0.5 text-gray-600 border-gray-200">⏰ 08:00 – 22:00</span>
-            <span class="text-[var(--primary)] font-semibold">฿140/hr.</span>
-          </div>
-        </div>
-        <div class="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 z-[5]
-            inline-flex items-center justify-center gap-1
-            text-[var(--primary)] text-[11px] font-semibold
-            px-3 py-1 rounded-full
-            bg-white/80
-            shadow-md shadow-black/15
-            backdrop-blur-md
-            border border-white/60
-            transition-all duration-300">
-  <span class="text-sm leading-none drop-shadow-sm"><?= esc($typeIcon) ?></span>
-  <span class="leading-none"><?= esc($typeLabel) ?></span>
-</div>
-      </li>
+    data-price="<?= esc($price) ?>"
+    data-distance-km=""
+    data-rating="0"
+    data-popular="<?= 100 - (int) $idx ?>"
+    <?php if (!empty($lat) && !empty($lng)): ?>
+      data-lat="<?= esc($lat) ?>"
+      data-lng="<?= esc($lng) ?>"
+    <?php endif; ?>
+>
+  <img src="<?= esc($coverUrl) ?>" class="h-24 w-24 rounded-2xl object-cover" alt="">
+  <div class="flex-1 min-w-0">
+    <div class="flex items-center gap-2">
+      <h3 class="text-base font-extrabold text-[color:var(--ink)] truncate">
+        <?= esc($name) ?>
+      </h3>
+    </div>
 
-      <li class="relative flex items-center gap-4 bg-white rounded-2xl
-           p-4 pb-8 sm:p-5 sm:pb-10
-           transition-all duration-200 hover:shadow-lg"
-          data-price="140" data-distance-km="10.9" data-rating="0" data-popular="70">
-        <img src="https://picsum.photos/seed/spirit/300/200" class="h-24 w-24 rounded-2xl object-cover" alt="">
-        <div class="flex-1 min-w-0">
-          <div class="flex items-start justify-between gap-2">
-            <h3 class="text-base font-extrabold text-[color:var(--ink)] truncate">SpiritArena</h3>
-            <button class="flex-none h-9 w-9 rounded-full border border-[var(--primary)] text-[var(--primary)] grid place-items-center">&rsaquo;</button>
-          </div>
-          <div class="mt-1 flex flex-wrap items-center gap-2 text-sm">
-            <span class="inline-flex items-center gap-1 rounded-full bg-[var(--primary)]/10 text-[var(--primary)] px-2.5 py-0.5 dist-badge">📍 <span>10.9km.</span></span>
-            <span class="text-gray-500 truncate">Hang Dong, Chiang Mai</span>
-          </div>
-          <div class="mt-2 flex flex-wrap items-center gap-2 text-sm">
-            <span>⭐ <strong>0</strong></span>
-            <span class="inline-flex items-center gap-1 rounded-xl border px-2.5 py-0.5 text-gray-600 border-gray-200">⏰ 08:00 – 22:00</span>
-            <span class="text-[var(--primary)] font-semibold">฿140/hr.</span>
-          </div>
-        </div>
-        <div class="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 z-[5]
-            inline-flex items-center justify-center gap-1
-            text-[var(--primary)] text-[11px] font-semibold
-            px-3 py-1 rounded-full
-            bg-white/80
-            shadow-md shadow-black/15
-            backdrop-blur-md
-            border border-white/60
-            transition-all duration-300">
-  <span class="text-sm leading-none drop-shadow-sm"><?= esc($typeIcon) ?></span>
-  <span class="leading-none"><?= esc($typeLabel) ?></span>
-</div>
-      </li>
+    <div class="mt-1 flex flex-wrap items-center gap-2 text-sm">
+      <span class="inline-flex items-center gap-1 rounded-full dist-badge px-2.5 py-0.5">
+        📍 <span>-- km.</span>
+      </span>
+      <span class="text-gray-500 truncate"><?= esc($address) ?></span>
+    </div>
 
-      <li class="relative flex items-center gap-4 bg-white rounded-2xl
-           p-4 pb-8 sm:p-5 sm:pb-10
-           transition-all duration-200 hover:shadow-lg"
-          data-price="140" data-distance-km="10.9" data-rating="0" data-popular="70">
-        <img src="https://picsum.photos/seed/spirit/300/200" class="h-24 w-24 rounded-2xl object-cover" alt="">
-        <div class="flex-1 min-w-0">
-          <div class="flex items-start justify-between gap-2">
-            <h3 class="text-base font-extrabold text-[color:var(--ink)] truncate">SpiritArena</h3>
-            <button class="flex-none h-9 w-9 rounded-full border border-[var(--primary)] text-[var(--primary)] grid place-items-center">&rsaquo;</button>
-          </div>
-          <div class="mt-1 flex flex-wrap items-center gap-2 text-sm">
-            <span class="inline-flex items-center gap-1 rounded-full bg-[var(--primary)]/10 text-[var(--primary)] px-2.5 py-0.5 dist-badge">📍 <span>10.9km.</span></span>
-            <span class="text-gray-500 truncate">Hang Dong, Chiang Mai</span>
-          </div>
-          <div class="mt-2 flex flex-wrap items-center gap-2 text-sm">
-            <span>⭐ <strong>0</strong></span>
-            <span class="inline-flex items-center gap-1 rounded-xl border px-2.5 py-0.5 text-gray-600 border-gray-200">⏰ 08:00 – 22:00</span>
-            <span class="text-[var(--primary)] font-semibold">฿140/hr.</span>
-          </div>
-        </div>
-        <div class="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 z-[5]
-            inline-flex items-center justify-center gap-1
-            text-[var(--primary)] text-[11px] font-semibold
-            px-3 py-1 rounded-full
-            bg-white/80
-            shadow-md shadow-black/15
-            backdrop-blur-md
-            border border-white/60
-            transition-all duration-300">
-  <span class="text-sm leading-none drop-shadow-sm"><?= esc($typeIcon) ?></span>
-  <span class="leading-none"><?= esc($typeLabel) ?></span>
-</div>
-      </li>
+    <div class="mt-2 flex flex-wrap items-center gap-2 text-sm">
+      <span>⭐ <strong>0</strong></span>
+      <span class="inline-flex items-center gap-1 rounded-full border border-gray-200 px-2.5 py-0.5 text-gray-600">
+        ⏰ <?= esc($timeLabel) ?>
+      </span>
+      <span class="text-[var(--primary)] font-semibold">
+        ฿<?= number_format($price, 0) ?>/hr.
+      </span>
+    </div>
+  </div>
 
-      <li class="relative flex items-center gap-4 bg-white rounded-2xl
-           p-4 pb-8 sm:p-5 sm:pb-10
-           transition-all duration-200 hover:shadow-lg"
-          data-price="800" data-distance-km="25.6" data-rating="0" data-popular="65">
-        <img src="https://picsum.photos/seed/kickgaze/300/200" class="h-24 w-24 rounded-2xl object-cover" alt="">
-        <div class="flex-1 min-w-0">
-          <div class="flex items-start justify-between gap-2">
-            <h3 class="text-base font-extrabold text-[color:var(--ink)] truncate">Kickgaze Stadium Lamphun</h3>
-            <button class="flex-none h-9 w-9 rounded-full border border-[var(--primary)] text-[var(--primary)] grid place-items-center">&rsaquo;</button>
-          </div>
-          <div class="mt-1 flex flex-wrap items-center gap-2 text-sm">
-            <span class="inline-flex items-center gap-1 rounded-full bg-[var(--primary)]/10 text-[var(--primary)] px-2.5 py-0.5 dist-badge">📍 <span>25.6km.</span></span>
-            <span class="text-gray-500 truncate">Mueang Lamphun, Lamphun</span>
-          </div>
-          <div class="mt-2 flex flex-wrap items-center gap-2 text-sm">
-            <span>⭐ <strong>0</strong></span>
-            <span class="inline-flex items-center gap-1 rounded-xl border px-2.5 py-0.5 text-gray-600 border-gray-200">⏰ 08:00 – 01:00</span>
-            <span class="text-[var(--primary)] font-semibold">฿800/hr.</span>
-          </div>
-        </div>
-        <div class="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 z-[5]
-            inline-flex items-center justify-center gap-1
-            text-[var(--primary)] text-[11px] font-semibold
-            px-3 py-1 rounded-full
-            bg-white/80
-            shadow-md shadow-black/15
-            backdrop-blur-md
-            border border-white/60
-            transition-all duration-300">
-  <span class="text-sm leading-none drop-shadow-sm"><?= esc($typeIcon) ?></span>
-  <span class="leading-none"><?= esc($typeLabel) ?></span>
-</div>
-      </li>
+  <!-- ปุ่มลูกศร: ชิดขวากลางการ์ด -->
+  <button
+    class="absolute right-4 sm:right-5 top-1/2 -translate-y-1/2 z-[6]
+           flex h-9 w-9 items-center justify-center
+           rounded-full border border-[var(--primary)]
+           bg-white/90 text-[var(--primary)]
+           shadow-md shadow-black/10
+           hover:bg-[var(--primary)] hover:text-white
+           transition-colors"
+  >
+    &rsaquo;
+  </button>
 
-      <li class="relative flex items-center gap-4 bg-white rounded-2xl
-           p-4 pb-8 sm:p-5 sm:pb-10
-           transition-all duration-200 hover:shadow-lg"
-          data-price="180" data-distance-km="496.3" data-rating="0" data-popular="50">
-        <img src="https://picsum.photos/seed/good/300/200" class="h-24 w-24 rounded-2xl object-cover" alt="">
-        <div class="flex-1 min-w-0">
-          <div class="flex items-start justify-between gap-2">
-            <h3 class="text-base font-extrabold text-[color:var(--ink)] truncate">Goodminton</h3>
-            <button class="flex-none h-9 w-9 rounded-full border border-[var(--primary)] text-[var(--primary)] grid place-items-center">&rsaquo;</button>
-          </div>
-          <div class="mt-1 flex flex-wrap items-center gap-2 text-sm">
-            <span class="inline-flex items-center gap-1 rounded-full bg-[var(--primary)]/10 text-[var(--primary)] px-2.5 py-0.5 dist-badge">📍 <span>496.3km.</span></span>
-            <span class="text-gray-500 truncate">Sawang Daen Din, Sakon Nakhon</span>
-          </div>
-          <div class="mt-2 flex flex-wrap items-center gap-2 text-sm">
-            <span>⭐ <strong>0</strong></span>
-            <span class="inline-flex items-center gap-1 rounded-xl border px-2.5 py-0.5 text-gray-600 border-gray-200">⏰ 09:00 – 23:00</span>
-            <span class="text-[var(--primary)] font-semibold">฿180/hr.</span>
-          </div>
-        </div>
-        <div class="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 z-[5]
-            inline-flex items-center justify-center gap-1
-            text-[var(--primary)] text-[11px] font-semibold
-            px-3 py-1 rounded-full
-            bg-white/80
-            shadow-md shadow-black/15
-            backdrop-blur-md
-            border border-white/60
-            transition-all duration-300">
-  <span class="text-sm leading-none drop-shadow-sm"><?= esc($typeIcon) ?></span>
-  <span class="leading-none"><?= esc($typeLabel) ?></span>
-</div>
-      </li>
+  <div class="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 z-[5]
+              inline-flex items-center justify-center gap-1
+              text-[var(--primary)] text-[11px] font-semibold
+              px-3 py-1 rounded-full
+              bg-white/80
+              shadow-md shadow-black/15
+              backdrop-blur-md
+              border border-white/60
+              transition-all duration-300">
+    <span class="text-sm leading-none drop-shadow-sm"><?= esc($typeIcon) ?></span>
+    <span class="leading-none"><?= esc($typeLabel) ?></span>
+  </div>
+</li>
+
+        <?php endforeach; ?>
+      <?php endif; ?>
     </ul>
   </div>
 </section>
 <section id="venueSeeAll" class="bg-gray-50 py-6">
   <div class="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
     <div class="flex justify-end">
-      <a href="all-venues.php"
+      <a href="<?= site_url('sport/view') ?>"
          class="px-6 py-3 text-sm font-semibold text-[var(--primary)] hover:underline">
         ดูทั้งหมด
       </a>
