@@ -10,6 +10,10 @@
 <body class="bg-light">
 
 <div class="container mt-5" style="max-width: 700px;">
+  <a href="<?= base_url('owner/fields/step1') ?>" class="btn btn-secondary mb-3">
+    ⬅ ย้อนกลับ
+</a>
+
 
   <h3 class="fw-bold mb-3">ขั้นตอนที่ 2: ข้อมูลพื้นฐานของสนาม</h3>
   <p class="text-muted">กรอกข้อมูลสนามของคุณให้ครบถ้วน</p>
@@ -54,8 +58,18 @@
 <!-- เบอร์โทรศัพท์ -->
 <div class="mb-3">
   <label class="form-label">เบอร์ติดต่อ *</label>
-  <input type="number" name="contact_phone" class="form-control" required>
+  <input 
+      type="tel" 
+      name="contact_phone" 
+      class="form-control" 
+      required
+      maxlength="10"
+      pattern="[0-9]{10}"
+      title="กรุณากรอกเบอร์โทร 10 หลัก"
+      oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+  >
 </div>
+
 
 
     <!-- รายละเอียด -->

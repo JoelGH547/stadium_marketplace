@@ -79,4 +79,9 @@ $routes->group('owner', ['namespace' => 'App\Controllers\Owner'], function($rout
 
     $routes->get('fields/confirm', 'Field::confirm');
     $routes->post('fields/store', 'Field::store');
+
+    $routes->get('fields/edit/(:num)', 'Field::edit/$1');
+    $routes->post('fields/update/(:num)', 'Field::update/$1');
+
+
 });

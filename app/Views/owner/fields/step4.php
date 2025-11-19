@@ -22,7 +22,11 @@
 <body class="bg-light">
 
 <div class="container mt-5" style="max-width: 800px;">
-  
+  <a href="<?= base_url('owner/fields/step3') ?>" class="btn btn-secondary mb-3">
+    ⬅ ย้อนกลับ
+</a>
+
+
   <h3 class="fw-bold mb-3">ขั้นตอนที่ 4: ที่อยู่และตำแหน่งสนาม</h3>
   <p class="text-muted">กรอกที่อยู่และปักหมุดตำแหน่งสนามของคุณ</p>
 

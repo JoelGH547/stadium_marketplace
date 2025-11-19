@@ -36,6 +36,10 @@
 <body class="bg-light">
 
 <div class="container mt-5" style="max-width: 800px;">
+  <a href="<?= base_url('owner/fields/step2') ?>" class="btn btn-secondary mb-3">
+    ⬅ ย้อนกลับ
+</a>
+
 
   <h3 class="fw-bold mb-3">ขั้นตอนที่ 3: อัปโหลดรูปภาพสนาม</h3>
   <p class="text-muted">เลือกหลายรูป / ลบรูปได้</p>
@@ -44,7 +48,10 @@
     <div class="alert alert-danger"><?= session()->getFlashdata('error') ?></div>
   <?php endif; ?>
 
-  <form method="post" action="<?= base_url('owner/fields/step3') ?>" enctype="multipart/form-data">
+  <form method="post" action="<?= base_url('owner/fields/step3') ?>" 
+      enctype="multipart/form-data" 
+      onsubmit="return validateImages()">
+
 
     <!-- ภายนอก -->
     <h5>รูปภายนอก *</h5>
@@ -121,6 +128,25 @@ function setupImageUploader(inputId, previewId) {
 setupImageUploader("outsideInput", "outsidePreview");
 setupImageUploader("insideInput", "insidePreview");
 </script>
+<script>
+function validateImages() {
+    const outside = document.getElementById("outsideInput").files.length;
+    const inside = document.getElementById("insideInput").files.length;
+
+    if (outside < 1) {
+        alert("กรุณาเลือกรูปภายนอกอย่างน้อย 1 รูป");
+        return false;
+    }
+
+    if (inside < 1) {
+        alert("กรุณาเลือกรูปภายในอย่างน้อย 1 รูป");
+        return false;
+    }
+
+    return true;
+}
+</script>
+
 
 </body>
 </html>

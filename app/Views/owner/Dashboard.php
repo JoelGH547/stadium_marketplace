@@ -1,71 +1,155 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8">
-  <title>แดชบอร์ดเจ้าของสนาม</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<meta charset="UTF-8">
+<title>แดชบอร์ดเจ้าของสนาม</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
-  <style>
-    .card-menu {
+<style>
+    .facility-card img {
+        width: 180px;
+        height: 130px;
+        object-fit: cover;
+        border-radius: 6px;
+    }
+    .facility-card {
+        border: 1px solid #eee;
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 15px;
         transition: 0.2s;
-        cursor: pointer;
     }
-    .card-menu:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    .facility-card:hover {
+        background: #f8f9fc;
     }
-  </style>
-
+</style>
 </head>
 
 <body class="bg-light">
 
 <!-- Navbar -->
-<nav class="navbar navbar-dark bg-dark px-4">
-  <span class="navbar-brand mb-0 h4">
-    👋 สวัสดี, <?= session()->get('owner_name'); ?>
-  </span>
-  <a href="<?= base_url('owner/logout') ?>" class="btn btn-danger btn-sm">ออกจากระบบ</a>
+<nav class="navbar navbar-light bg-white shadow-sm px-4 py-2">
+    <h4 class="mb-0 fw-bold">eBooking • Owner</h4>
+
+    <div>
+        <span class="me-3">👋 สวัสดี <?= session()->get('owner_name'); ?></span>
+        <a href="<?= base_url('owner/logout') ?>" class="btn btn-danger btn-sm">ออกจากระบบ</a>
+    </div>
 </nav>
 
-<div class="container mt-4">
+<div class="container py-4">
 
-  <h3 class="fw-bold">แดชบอร์ดเจ้าของสนาม</h3>
-  <p class="text-muted">เลือกเมนูที่คุณต้องการใช้งาน</p>
-
-  <div class="row mt-4">
-
-    <!-- เพิ่มสนาม -->
-    <div class="col-md-4 mb-4">
-      <a href="<?= base_url('owner/fields/step1') ?>" class="text-decoration-none">
-        <div class="card card-menu p-4 text-center shadow-sm">
-          <h4>➕ เพิ่มสนาม</h4>
-          <p class="text-muted">สร้างสนามใหม่เพื่อให้ลูกค้าสามารถจองได้</p>
-        </div>
-      </a>
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center">
+        <h4 class="fw-bold">สนามของคุณ</h4>
+        <a href="<?= base_url('owner/fields/step1') ?>" class="btn btn-primary">➕ เพิ่มสนามใหม่</a>
     </div>
 
-    <!-- รายการจอง -->
-    <div class="col-md-4 mb-4">
-      <a href="#" class="text-decoration-none">
-        <div class="card card-menu p-4 text-center shadow-sm">
-          <h4>📅 การจองสนาม</h4>
-          <p class="text-muted">ดูการจองทั้งหมดตามวันและเวลา</p>
-        </div>
-      </a>
+    <hr>
+
+    <!-- Search Filters -->
+<form method="get" action="<?= base_url('owner/dashboard') ?>" class="row g-3 mb-4">
+
+    <!-- ชนิดสนาม -->
+    <div class="col-md-3">
+        <label class="form-label">ชนิดสนาม</label>
+        <select name="category" class="form-select">
+            <option value="">ทั้งหมด</option>
+            <?php foreach($categories as $c): ?>
+                <option value="<?= $c['id'] ?>"
+                    <?= (isset($_GET['category']) && $_GET['category'] == $c['id']) ? 'selected' : '' ?>>
+                    <?= esc($c['name']) ?>
+                </option>
+            <?php endforeach; ?>
+        </select>
     </div>
 
-    <!-- จัดการข้อมูลส่วนตัว -->
-    <div class="col-md-4 mb-4">
-      <a href="#" class="text-decoration-none">
-        <div class="card card-menu p-4 text-center shadow-sm">
-          <h4>👤 ข้อมูลส่วนตัว</h4>
-          <p class="text-muted">แก้ไขข้อมูลเจ้าของสนาม</p>
-        </div>
-      </a>
+    <!-- จังหวัด -->
+    <div class="col-md-3">
+        <label class="form-label">จังหวัด</label>
+        <select name="province" class="form-select">
+            <option value="">ทั้งหมด</option>
+            <?php foreach($provinces as $p): ?>
+                <option value="<?= $p ?>" 
+                    <?= (isset($_GET['province']) && $_GET['province'] == $p) ? 'selected' : '' ?>>
+                    <?= $p ?>
+                </option>
+            <?php endforeach; ?>
+        </select>
     </div>
 
-  </div>
+    <!-- ราคาเริ่มต้น -->
+    <div class="col-md-2">
+        <label class="form-label">ราคาเริ่มต้น</label>
+        <input type="number" name="price_min" class="form-control"
+               value="<?= $_GET['price_min'] ?? '' ?>">
+    </div>
+
+    <!-- ราคาสูงสุด -->
+    <div class="col-md-2">
+        <label class="form-label">ราคาสูงสุด</label>
+        <input type="number" name="price_max" class="form-control"
+               value="<?= $_GET['price_max'] ?? '' ?>">
+    </div>
+
+    <div class="col-md-2 d-flex align-items-end">
+        <button class="btn btn-primary w-100">ค้นหา</button>
+    </div>
+</form>
+
+
+
+    <!-- List -->
+    <h5 class="fw-bold mb-3"><?= count($stadiums) ?> สนาม</h5>
+
+    <?php if (empty($stadiums)): ?>
+        <div class="alert alert-info text-center">
+            ยังไม่มีสนามในระบบ 
+        </div>
+    <?php endif; ?>
+
+    <?php foreach ($stadiums as $s): ?>
+
+        <?php
+            $imgList = json_decode($s['outside_images'], true);
+            $thumbnail = $imgList[0] ?? 'no-image.jpg';
+        ?>
+
+        <div class="facility-card d-flex">
+
+            <!-- รูป -->
+            <img src="<?= base_url('uploads/stadiums/outside/'.$thumbnail) ?>" class="me-3">
+
+            <div class="w-100">
+
+                <!-- ชื่อสนาม -->
+                <h5 class="mb-1"><?= esc($s['name']) ?></h5>
+
+                <!-- ที่อยู่ -->
+                <p class="mb-1 text-muted">
+                    📍 <?= esc($s['province']) ?>, <?= esc($s['address']) ?>
+                </p>
+
+                <!-- อีเมล & เบอร์ -->
+                <p class="mb-2 text-muted">
+                    ✉️ <?= esc($s['contact_email']) ?>  
+                    • 📞 <?= esc($s['contact_phone']) ?>
+                </p>
+
+                <p class="mb-3 text-muted">
+                    <?= esc($s['price']) ?>/ชั่วโมง  
+                </p>
+
+                <div>
+                    <a href="<?= base_url('owner/fields/edit/'.$s['id']) ?>" class="btn btn-primary btn-sm me-2">แก้ไข</a>
+                    <a href="#" class="btn btn-outline-danger btn-sm">ลบ</a>
+                </div>
+
+            </div>
+
+        </div>
+
+    <?php endforeach; ?>
 
 </div>
 
