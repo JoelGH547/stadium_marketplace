@@ -246,6 +246,27 @@ class StadiumController extends BaseController
                          ->with('success', 'อัปเดตข้อมูลสนามเรียบร้อยแล้ว');
     }
 
+    public function view($id = null)
+    {
+        // ดึงข้อมูลสนาม + Join ตาราง Category และ Vendor เพื่อเอาชื่อมาโชว์
+        $stadium = $this->stadiumModel
+            ->select('stadiums.*, categories.name AS category_name, vendors.vendor_name AS vendor_name, vendors.email AS vendor_email, vendors.phone_number AS vendor_phone')
+            ->join('categories', 'categories.id = stadiums.category_id', 'left')
+            ->join('vendors', 'vendors.id = stadiums.vendor_id', 'left')
+            ->find($id);
+
+        if (!$stadium) {
+            return redirect()->to(base_url('admin/stadiums'))->with('error', 'ไม่พบข้อมูลสนาม');
+        }
+
+        $data = [
+            'title'   => 'รายละเอียดสนาม: ' . $stadium['name'],
+            'stadium' => $stadium
+        ];
+
+        return view('admin/stadiums/view', $data);
+    }
+
     public function delete($id = null)
     {
         try {

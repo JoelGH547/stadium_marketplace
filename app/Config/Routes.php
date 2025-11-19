@@ -48,7 +48,7 @@ $routes->group('admin', ['filter' => ['auth', 'admin']], static function ($route
     $routes->get('stadiums/edit/(:num)', 'admin\StadiumController::edit/$1');
     $routes->post('stadiums/update/(:num)', 'admin\StadiumController::update/$1');
     $routes->get('stadiums/delete/(:num)', 'admin\StadiumController::delete/$1');
-    
+    $routes->get('stadiums/view/(:num)', 'admin\StadiumController::view/$1');
     // --- User Management ---
     $routes->group('users', static function ($routes) {
         
@@ -92,4 +92,6 @@ $routes->group('customer', ['filter' => ['auth', 'customer']], static function (
     $routes->get('payment/checkout/(:num)', 'BookingController::checkout/$1');
     $routes->post('payment/process', 'BookingController::processPayment');
     $routes->get('payment/success/(:num)', 'BookingController::paymentSuccess/$1');
+
+    
 });
