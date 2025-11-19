@@ -3,241 +3,316 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= (isset($title) ? esc($title) : 'Stadium Booking Admin') ?></title>
+    <title>Admin Dashboard</title>
     
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Font (Prompt) -->
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- [เพิ่ม] CSS สำหรับ DataTables (ตารางค้นหาได้) -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+
     <style>
+        :root {
+            /* กำหนดตัวแปรสี Mint Theme */
+            --sidebar-bg: #111827;      /* หรือ #0f172a ถ้าชอบโทนน้ำเงินลึก */
+            --sidebar-bg-accent: #134e4a; /* สีเขียวเข้มสำหรับส่วนหัว */
+            --mint-primary: #14b8a6;    /* สีมินต์หลัก */
+            --mint-light: #ccfbf1;      /* สีมินต์อ่อน */
+            --mint-hover: #2dd4bf;      /* สีมินต์สว่างตอนเอาเมาส์ชี้ */
+            --bg-body: #f0fdfa;         /* พื้นหลังหน้าเว็บอมเขียวจางๆ */
+        }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            margin: 0;
-            display: flex;
-            height: 100vh;
-            background-color: #f4f7f6; /* สีพื้นหลังหลัก */
+            font-family: 'Prompt', sans-serif;
+            min-height: 100vh;
+            background-color: var(--bg-body);
         }
 
-        /* --- Sidebar --- */
+        /* --- Sidebar Styling --- */
         .sidebar {
-            width: 240px;
-            background-color: #2c3e50; /* สีกรมท่า */
-            color: white;
-            padding: 20px;
-            height: 100vh;
-            position: fixed;
-            left: 0;
-            top: 0;
-            box-sizing: border-box;
-            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
-        }
-        .sidebar h2 {
-            text-align: center;
-            color: #ecf0f1;
-            margin-bottom: 30px;
-        }
-        .sidebar-menu {
-            list-style: none;
-            padding: 0;
-        }
-        .sidebar-menu li a {
-            color: #ecf0f1;
-            text-decoration: none;
-            display: block;
-            padding: 12px 15px;
-            border-radius: 5px;
-            margin-bottom: 5px;
-            transition: background-color 0.3s ease;
-        }
-        .sidebar-menu li a:hover {
-            background-color: #34495e; /* สีกรมท่าเข้มขึ้น */
-        }
-        .sidebar-menu li a.active {
-            background-color: #1abc9c; /* สีเขียวมิ้นท์ */
-            color: white;
-        }
-        .sidebar-menu .logout {
-            position: absolute;
-            bottom: 20px;
-            width: 200px;
-        }
-        .sidebar-menu .logout a {
-            background-color: #e74c3c; /* สีแดง */
-            text-align: center;
-        }
-        .sidebar-menu .logout a:hover {
-            background-color: #c0392b; /* สีแดงเข้ม */
+            width: 260px;
+            min-height: 100vh;
+            background: var(--sidebar-bg);
+            color: #9ca3af;
+            transition: all 0.3s;
+            box-shadow: 4px 0 10px rgba(0,0,0,0.05);
         }
 
-        /* --- Main Content --- */
-        .main-content {
-            margin-left: 240px;
+        .sidebar-header {
+            background-color: var(--sidebar-bg-accent);
+            color: #fff;
+        }
+
+        .nav-link {
+            color: #9ca3af;
+            padding: 14px 20px;
+            border-radius: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.2s;
+            font-weight: 400;
+            border-left: 4px solid transparent;
+        }
+
+        .nav-link:hover {
+            color: #fff;
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .nav-link.active-menu {
+            color: var(--mint-hover);
+            background-color: rgba(20, 184, 166, 0.1);
+            border-left: 4px solid var(--mint-primary);
+        }
+
+        .nav-link i {
+            width: 25px;
+            font-size: 1.1rem;
+        }
+        
+        /* --- Submenu Styling --- */
+        .submenu {
+            background-color: #00000030;
+        }
+        .submenu .nav-link {
+            padding-left: 55px;
+            font-size: 0.9em;
+            border-left: none;
+        }
+        .submenu .nav-link.active-sub {
+            color: var(--mint-hover) !important;
+            font-weight: 500;
+        }
+
+        /* --- Content Area --- */
+        .content {
+            width: 100%;
             padding: 25px;
-            width: calc(100% - 240px);
             overflow-y: auto;
             height: 100vh;
-            box-sizing: border-box;
         }
-        .content-wrapper {
-            background-color: #ffffff;
-            padding: 25px;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        }
-        h1, h2, h3 {
-            color: #34495e;
-            margin-top: 0;
-        }
-
-        /* --- Table Styling (สำหรับตาราง) --- */
-        .table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-        .table th, .table td {
-            border: 1px solid #ddd;
-            padding: 12px;
-            text-align: left;
-            vertical-align: middle;
-        }
-        .table thead th {
-            background-color: #f7f9fa;
-            font-weight: 600;
-            color: #34495e;
-        }
-        .table tbody tr:nth-child(even) {
-            background-color: #fdfdfd;
-        }
-        .table tbody tr:hover {
-            background-color: #f5f5f5;
-        }
-
-        /* --- Button Styling (สำหรับปุ่ม) --- */
-        .btn {
-            display: inline-block;
-            padding: 8px 14px;
-            font-size: 0.9rem;
-            font-weight: 500;
-            text-decoration: none;
+        
+        /* --- Custom Button Theme Mint --- */
+        .btn-mint {
+            background-color: var(--mint-primary);
             color: white;
-            border-radius: 5px;
             border: none;
-            cursor: pointer;
-            transition: background-color 0.2s ease, box-shadow 0.2s ease;
-            text-align: center;
         }
-        .btn-primary {
-            background-color: #3498db; /* สีฟ้า */
-        }
-        .btn-primary:hover {
-            background-color: #2980b9;
-        }
-        .btn-warning {
-            background-color: #f39c12; /* สีส้ม */
+        .btn-mint:hover {
+            background-color: #0d9488;
             color: white;
         }
-        .btn-warning:hover {
-            background-color: #e67e22;
+
+        /* ลูกศรหมุน */
+        .collapse.show ~ .nav-link .fa-chevron-down {
+            transform: rotate(180deg);
         }
-        .btn-danger {
-            background-color: #e74c3c; /* สีแดง */
-        }
-        .btn-danger:hover {
-            background-color: #c0392b;
-        }
-        .btn-secondary {
-            background-color: #bdc3c7; /* สีเทา */
-        }
-        .btn-secondary:hover {
-            background-color: #95a5a6;
-        }
-        
-        /* (ใช้ .btn-sm สำหรับปุ่มในตาราง) */
-        .btn-sm {
-            padding: 5px 10px;
-            font-size: 0.8rem;
+        .fa-chevron-down {
+            transition: transform 0.3s;
+            font-size: 0.75em;
         }
 
-        /* --- Badge Styling (สำหรับ Role) --- */
-        .badge {
-            display: inline-block;
-            padding: 4px 10px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            border-radius: 12px;
-            color: white;
+        /* [เพิ่ม] ปรับสไตล์ DataTables ให้เข้าธีม */
+        .dataTables_wrapper {
+            padding: 1rem 0;
         }
-        .badge-admin {
-            background-color: #e74c3c; /* สีแดง */
+        .dataTables_filter input {
+            border-radius: 0.375rem !important;
+            border: 1px solid #ddd !important;
+            padding: 0.5rem 0.75rem;
         }
-        /*.badge-staff {
-            background-color: #3498db; /* สีฟ้า */
-        
-        
-        .badge-vendor {
-            background-color: #3498db; /* สีส้ม */
-        }
-
-        .badge-customer {
-            background-color: #2ecc71; /* สีเขียว */
-        }
-
-        /* --- Form Styling (สำหรับฟอร์ม) --- */
-        .form-group {
-            margin-bottom: 15px;
-        }
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 500;
-        }
-        .form-control {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            box-sizing: border-box; /* สำคัญมาก */
-        }
-        
-        /* --- Alert Messages (ข้อความแจ้งเตือน) --- */
-        .alert {
-            padding: 15px;
-            margin-bottom: 20px;
-            border: 1px solid transparent;
-            border-radius: 5px;
-        }
-        .alert-success {
-            color: #155724;
-            background-color: #d4edda;
-            border-color: #c3e6cb;
-        }
-        .alert-danger, .alert-error {
-            color: #721c24;
-            background-color: #f8d7da;
-            border-color: #f5c6cb;
+        .dataTables_length select {
+            border-radius: 0.375rem !important;
+            border: 1px solid #ddd !important;
+            padding: 0.5rem 0.75rem;
         }
     </style>
-    </head>
-<body>
+</head>
+<body class="d-flex">
 
-    <div class="sidebar">
-        <h2>Stadium Booking</h2>
-        <ul class="sidebar-menu">
-            <li><a href="<?= base_url('admin/dashboard') ?>">Dashboard</a></li>
-            <li><a href="<?= base_url('admin/categories') ?>">จัดการหมวดหมู่</a></li>
-            <li><a href="<?= base_url('admin/stadiums') ?>">จัดการสนามกีฬา</a></li>
-            <hr>
-            <li><a href="<?= base_url('admin/users') ?>">จัดการผู้ใช้งาน</a></li>
+    <?php 
+        $uri = service('uri');
+        $currentUrl = $uri->getPath(); 
+    ?>
+
+    <!-- Sidebar -->
+    <div class="sidebar d-flex flex-column p-0 flex-shrink-0">
+        <div class="p-4 text-center sidebar-header border-bottom border-secondary border-opacity-25">
+            <h4 class="m-0 fw-bold tracking-wide">
+                <i class="fas fa-leaf me-2 text-white"></i>Stadium<span style="color: var(--mint-hover);">Admin</span>
+            </h4>
+        </div>
+
+        <ul class="nav flex-column mt-3">
             
-            <li class="logout">
-    <a href="<?= base_url('admin/logout') ?>">ออกจากระบบ</a>
-</li>
-        </ul>
-    </div>
+            <li class="nav-item">
+                <a href="<?= base_url('admin/dashboard') ?>" 
+                   class="nav-link <?= (strpos($currentUrl, 'dashboard') !== false) ? 'active-menu' : '' ?>">
+                    <div><i class="fas fa-chart-pie"></i> Dashboard</div>
+                </a>
+            </li>
 
-    <div class="main-content">
-        <div class="content-wrapper">
-            <?= $this->renderSection('content') ?>
+            <li class="nav-item">
+                <a href="<?= base_url('admin/categories') ?>" 
+                   class="nav-link <?= (strpos($currentUrl, 'categories') !== false) ? 'active-menu' : '' ?>">
+                    <div><i class="fas fa-layer-group"></i> จัดการหมวดหมู่</div>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a href="<?= base_url('admin/stadiums') ?>" 
+                   class="nav-link <?= (strpos($currentUrl, 'stadiums') !== false) ? 'active-menu' : '' ?>">
+                    <div><i class="fas fa-map-location-dot"></i> จัดการสนามกีฬา</div>
+                </a>
+            </li>
+
+            <?php 
+                $isUserMenu = (strpos($currentUrl, 'admin/users') !== false || strpos($currentUrl, 'admin/vendors/pending') !== false);
+            ?>
+            <li class="nav-item">
+                <a class="nav-link <?= $isUserMenu ? 'active-menu' : 'collapsed' ?>" 
+                   href="#userSubmenu" 
+                   data-bs-toggle="collapse" 
+                   role="button" 
+                   aria-expanded="<?= $isUserMenu ? 'true' : 'false' ?>" 
+                   aria-controls="userSubmenu">
+                    <div><i class="fas fa-users-cog"></i> จัดการผู้ใช้งาน</div>
+                    <i class="fas fa-chevron-down"></i>
+                </a>
+                
+                <div class="collapse <?= $isUserMenu ? 'show' : '' ?>" id="userSubmenu">
+                    <ul class="nav flex-column submenu">
+                        <li class="nav-item">
+                            <a href="<?= base_url('admin/users/admins') ?>" 
+                               class="nav-link <?= (strpos($currentUrl, 'users/admins') !== false) ? 'active-sub' : '' ?>">
+                                • Admins (ผู้ดูแล)
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="<?= base_url('admin/users/vendors') ?>" 
+                               class="nav-link <?= (strpos($currentUrl, 'users/vendors') !== false && strpos($currentUrl, 'pending') === false) ? 'active-sub' : '' ?>">
+                                • Vendors (เจ้าของ)
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="<?= base_url('admin/users/customers') ?>" 
+                               class="nav-link <?= (strpos($currentUrl, 'users/customers') !== false) ? 'active-sub' : '' ?>">
+                                • Customers (ลูกค้า)
+                            </a>
+                        </li>
+                         <li class="nav-item">
+                            <a href="<?= base_url('admin/vendors/pending') ?>" 
+                               class="nav-link <?= (strpos($currentUrl, 'vendors/pending') !== false) ? 'active-sub' : '' ?>">
+                                • อนุมัติ Vendor
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
+        </ul>
+        
+        <div class="mt-auto p-3 border-top border-secondary border-opacity-25">
+            <a href="<?= base_url('admin/logout') ?>" class="btn btn-outline-danger w-100">
+                <i class="fas fa-power-off me-2"></i> ออกจากระบบ
+            </a>
         </div>
     </div>
 
+    <!-- Content Area -->
+    <div class="content">
+        <?= $this->renderSection('content') ?>
+    </div>
+
+    <!-- ========================================================== -->
+    <!-- [เพิ่ม] SCRIPT ZONE (SweetAlert + DataTables) -->
+    <!-- ========================================================== -->
+    
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- jQuery (จำเป็นสำหรับ DataTables) -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    
+    <!-- DataTables (ตารางค้นหาได้) -->
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
+    <!-- SweetAlert2 (แจ้งเตือนสวยๆ) -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        $(document).ready(function() {
+            // 1. แปลงตารางธรรมดา ให้เป็น DataTables (ค้นหาได้ + แบ่งหน้า)
+            // เราใช้ class .table-datatable แทน .table เพื่อไม่ให้กระทบตารางอื่นที่ไม่อยากให้ค้นหา
+            $('.table-datatable').DataTable({
+                "language": {
+                    "search": "ค้นหา:",
+                    "lengthMenu": "แสดง _MENU_ รายการ",
+                    "info": "แสดง _START_ ถึง _END_ จาก _TOTAL_ รายการ",
+                    "paginate": {
+                        "first": "หน้าแรก",
+                        "last": "หน้าสุดท้าย",
+                        "next": "ถัดไป",
+                        "previous": "ก่อนหน้า"
+                    },
+                    "zeroRecords": "ไม่พบข้อมูลที่ค้นหา",
+                    "infoEmpty": "ไม่มีข้อมูล",
+                    "infoFiltered": "(กรองจากทั้งหมด _MAX_ รายการ)"
+                },
+                "ordering": false // ปิดการเรียงลำดับอัตโนมัติ
+            });
+
+            // 2. แจ้งเตือน Success (ดึงจาก Session Flashdata)
+            <?php if(session()->getFlashdata('success')): ?>
+                Swal.fire({
+                    icon: 'success',
+                    title: 'สำเร็จ!',
+                    text: '<?= session()->getFlashdata('success') ?>',
+                    confirmButtonColor: '#14b8a6', // สีมิ้นต์
+                    timer: 3000, // ปิดเองใน 3 วิ
+                    timerProgressBar: true
+                });
+            <?php endif; ?>
+
+            // 3. แจ้งเตือน Error
+            <?php if(session()->getFlashdata('error')): ?>
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    text: '<?= session()->getFlashdata('error') ?>',
+                    confirmButtonColor: '#ef4444' // สีแดง
+                });
+            <?php endif; ?>
+
+            // 4. ระบบยืนยันการลบ (Confirm Delete)
+            // ดักจับการคลิกที่ปุ่มที่มี class 'btn-delete'
+            $(document).on('click', '.btn-delete', function(e) {
+                e.preventDefault(); // ห้ามลิ้งค์ทำงานทันที
+                const href = $(this).attr('href'); // เก็บลิ้งค์ไว้ก่อน
+
+                Swal.fire({
+                    title: 'คุณแน่ใจหรือไม่?',
+                    text: "ข้อมูลที่ลบจะไม่สามารถกู้คืนได้!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#ef4444', // สีแดง
+                    cancelButtonColor: '#6b7280', // สีเทา
+                    confirmButtonText: 'ใช่, ลบเลย!',
+                    cancelButtonText: 'ยกเลิก'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // ถ้ากดยืนยัน ให้วิ่งไปที่ลิ้งค์ลบ
+                        window.location.href = href;
+                    }
+                });
+            });
+        });
+    </script>
+
 </body>
 </html>
-
