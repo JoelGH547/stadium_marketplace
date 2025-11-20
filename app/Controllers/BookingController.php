@@ -34,7 +34,7 @@ class BookingController extends BaseController
         return view('customer/booking_form', $data);
     }
 
-    // --- 2. ประมวลผลการจอง (คำนวณราคา & เวลา) ---
+    // --- 2. ประมวลผลการจอง ---
     public function processBooking()
     {
         // Validation
@@ -55,28 +55,20 @@ class BookingController extends BaseController
         $time = $this->request->getPost('start_time');
         $hours = (int) $this->request->getPost('hours');
 
-        // 1. รวมวันที่+เวลา เป็น format 'Y-m-d H:i:s' (เพื่อลง DB)
+        // คำนวณวันเวลา
         $startDateTime = date('Y-m-d H:i:s', strtotime("$date $time"));
-        
-        // 2. คำนวณเวลาจบ (Start + Hours)
         $endDateTime = date('Y-m-d H:i:s', strtotime("$startDateTime + $hours hours"));
 
-        // ดึงข้อมูลสนามเพื่อเอา ราคา และ Vendor ID
         $stadium = $this->stadiumModel->find($stadiumId);
-        
-        // 3. คำนวณราคารวม
         $totalPrice = $stadium['price'] * $hours;
 
         $data = [
             'stadium_id' => $stadiumId,
             'customer_id' => session()->get('user_id'),
-            'vendor_id' => $stadium['vendor_id'], // (สำคัญ: ต้องมีเพื่อแก้ Error Foreign Key)
-            
-            // ใช้ชื่อคอลัมน์ตาม Database ของคุณ
+            'vendor_id' => $stadium['vendor_id'],
             'booking_start_time' => $startDateTime,
             'booking_end_time'   => $endDateTime,
             'total_price' => $totalPrice,
-            
             'status' => 'pending', 
             'is_viewed_by_admin' => 0, 
         ];
@@ -88,7 +80,7 @@ class BookingController extends BaseController
                          ->with('success', 'การจองถูกสร้างเรียบร้อย! กรุณาตรวจสอบและชำระเงิน');
     }
 
-    // --- 3. หน้า Checkout (ตรวจสอบรายการ) ---
+    // --- 3. หน้า Checkout ---
     public function checkout($booking_id = null)
     {
         $booking = $this->bookingModel
@@ -100,16 +92,13 @@ class BookingController extends BaseController
              return redirect()->to('customer/dashboard')->with('error', 'ไม่พบรายการ หรือรายการนี้ถูกดำเนินการไปแล้ว');
         }
 
-        // 4. แปลงข้อมูลกลับมาเป็นรูปแบบที่ View เข้าใจง่ายๆ 
-        // (เพราะ View เราใช้ $booking['booking_date'], $booking['start_time'])
+        // แปลงวันที่เวลา
         $start = strtotime($booking['booking_start_time']);
         $end   = strtotime($booking['booking_end_time']);
 
         $booking['booking_date'] = date('d/m/Y', $start);
         $booking['start_time']   = date('H:i', $start);
         $booking['end_time']     = date('H:i', $end);
-        
-        // คำนวณจำนวนชั่วโมงเพื่อโชว์ในหน้า View
         $booking['hours_count']  = ($end - $start) / 3600;
 
         $data = [
@@ -120,24 +109,37 @@ class BookingController extends BaseController
         return view('customer/payment_checkout', $data);
     }
 
-    // --- 4. ประมวลผลการจ่ายเงิน (จำลอง) ---
+    // --- 4. [แก้ไขใหม่] ประมวลผลการจ่ายเงิน (อัปโหลดสลิป) ---
     public function processPayment()
     {
         $booking_id = $this->request->getPost('booking_id');
         
-        // (จำลองการจ่ายเงินสำเร็จ)
-        $payment_success = true; 
+        // 1. ตรวจสอบว่ามีการอัปโหลดไฟล์รูปภาพมาหรือไม่
+        $file = $this->request->getFile('slip_image');
 
-        if ($payment_success) {
-            // อัปเดตสถานะเป็น confirmed
+        // ตรวจสอบความถูกต้องของไฟล์ (ต้องมีไฟล์, เป็นรูปภาพ, และยังไม่ได้ย้าย)
+        if ($file && $file->isValid() && !$file->hasMoved()) {
+            
+            // สร้างชื่อไฟล์ใหม่แบบสุ่ม (เพื่อไม่ให้ชื่อซ้ำกัน)
+            $newName = $file->getRandomName();
+
+            // ย้ายไฟล์ไปที่ public/uploads/slips
+            // ** หมายเหตุ: ระบบจะสร้างโฟลเดอร์ให้เองถ้ายังไม่มี **
+            $file->move(ROOTPATH . 'public/uploads/slips', $newName);
+
+            // 2. อัปเดตฐานข้อมูล
             $this->bookingModel->update($booking_id, [
-                'status' => 'confirmed'
+                'slip_image' => $newName,
+                'status' => 'pending' // สถานะยังคงรอตรวจสอบ (เพื่อให้ Admin มากด Approve)
             ]);
             
-            // Redirect ทันที (ไม่มี echo เพื่อแก้หน้าขาว)
+            // ไปหน้าสำเร็จ
             return redirect()->to('customer/payment/success/' . $booking_id);
+
         } else {
-            return redirect()->back()->with('error', 'การชำระเงินล้มเหลว');
+            // กรณีไม่ได้แนบไฟล์ หรือไฟล์ผิดพลาด
+            return redirect()->back()
+                ->with('error', 'กรุณาแนบสลิปโอนเงินให้ถูกต้อง (รองรับไฟล์ภาพเท่านั้น)');
         }
     }
 

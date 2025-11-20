@@ -2,7 +2,6 @@
 
 <?= $this->section('content') ?>
 
-<!-- Leaflet CSS (สำหรับแผนที่) -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
 <div class="container-fluid p-0">
@@ -26,90 +25,67 @@
         </div>
         <div class="card-body">
             <div class="table-responsive">
-                <table class="table table-bordered table-hover table-datatable align-middle" width="100%">
-                    <thead class="table-light text-center">
+                <table class="table table-bordered table-hover align-middle" width="100%">
+                    <thead class="table-light">
                         <tr>
                             <th width="5%">ID</th>
                             <th width="10%">Cover</th>
-                            <th class="text-start">Name</th>
+                            <th>Name</th>
                             <th>Category</th>
                             <th>Vendor</th>
                             <th>Price/Hour</th>
-                            <th width="5%">Map</th>
-                            <th width="15%">Actions</th> <!-- จัดการความกว้างช่องนี้ -->
+                            <th width="5%" class="text-center">Map</th>
+                            <th width="15%">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if(!empty($stadiums)): ?>
                             <?php foreach($stadiums as $stadium): ?>
                                 <?php 
+                                    // ดึงรูปปก
                                     $images = json_decode($stadium['outside_images'] ?? '[]', true);
                                     $cover = !empty($images) ? $images[0] : null;
                                 ?>
                             <tr>
                                 <td class="text-center"><?= $stadium['id'] ?></td>
-                                <td class="text-center">
+                                <td>
                                     <?php if($cover): ?>
                                         <img src="<?= base_url('assets/uploads/stadiums/' . $cover) ?>" 
                                              class="img-fluid rounded shadow-sm" 
-                                             style="width: 60px; height: 40px; object-fit: cover;">
+                                             style="width: 80px; height: 60px; object-fit: cover;">
                                     <?php else: ?>
-                                        <span class="text-muted text-xs"><i class="fas fa-image"></i></span>
+                                        <span class="text-muted small">No image</span>
                                     <?php endif; ?>
                                 </td>
                                 <td class="fw-bold text-dark"><?= esc($stadium['name']) ?></td>
+                                <td><span class="badge bg-info text-dark bg-opacity-25"><?= esc($stadium['category_name']) ?></span></td>
+                                <td><?= esc($stadium['vendor_name']) ?></td>
+                                <td class="fw-bold text-success">฿<?= number_format($stadium['price'], 2) ?></td>
                                 
-                                <!-- แสดง Emoji + ชื่อ Category -->
-                                <td>
-                                    <span class="me-1"><?= $stadium['category_emoji'] ?? '' ?></span>
-                                    <?= esc($stadium['category_name']) ?>
-                                </td>
-                                
-                                <td><small class="text-muted"><?= esc($stadium['vendor_name']) ?></small></td>
-                                <td class="fw-bold text-success text-end">฿<?= number_format($stadium['price'], 0) ?></td>
-                                
-                                <!-- ปุ่ม Map -->
                                 <td class="text-center">
                                     <?php if(!empty($stadium['lat']) && !empty($stadium['lng'])): ?>
                                         <button type="button" 
-                                                class="btn btn-sm btn-outline-primary btn-map border-0"
+                                                class="btn btn-sm btn-outline-primary btn-map"
                                                 data-lat="<?= $stadium['lat'] ?>"
                                                 data-lng="<?= $stadium['lng'] ?>"
                                                 data-name="<?= esc($stadium['name']) ?>"
                                                 data-bs-toggle="modal" 
-                                                data-bs-target="#mapModal"
-                                                title="ดูแผนที่">
-                                            <i class="fas fa-map-marker-alt fa-lg"></i>
+                                                data-bs-target="#mapModal">
+                                            <i class="fas fa-map-marked-alt fa-lg"></i>
                                         </button>
                                     <?php else: ?>
                                         <span class="text-muted text-xs">-</span>
                                     <?php endif; ?>
                                 </td>
 
-                                <!-- [แก้ไข] ส่วน Actions: จัดเรียงใหม่เป็นแนวนอน + ใช้ไอคอน -->
                                 <td>
-                                    <div class="d-flex justify-content-center gap-2">
-                                        <!-- 1. View (ดูรายละเอียด) -->
-                                        <a href="<?= base_url('admin/stadiums/view/' . $stadium['id']) ?>" 
-                                           class="btn btn-info btn-sm text-white shadow-sm" 
-                                           title="ดูรายละเอียด">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
-
-                                        <!-- 2. Edit (แก้ไข) -->
-                                        <a href="<?= base_url('admin/stadiums/edit/' . $stadium['id']) ?>" 
-                                           class="btn btn-warning btn-sm shadow-sm"
-                                           title="แก้ไข">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                        
-                                        <!-- 3. Delete (ลบ) -->
-                                        <a href="<?= base_url('admin/stadiums/delete/' . $stadium['id']) ?>" 
-                                           class="btn btn-danger btn-sm btn-delete shadow-sm"
-                                           title="ลบ">
-                                            <i class="fas fa-trash"></i>
-                                        </a>
-                                    </div>
+                                    <a href="<?= base_url('admin/stadiums/edit/' . $stadium['id']) ?>" class="btn btn-warning btn-sm">
+                                        Edit
+                                    </a>
+                                    <a href="<?= base_url('admin/stadiums/delete/' . $stadium['id']) ?>" 
+                                       class="btn btn-danger btn-sm btn-delete">
+                                        Delete
+                                    </a>
                                 </td>
                             </tr>
                             <?php endforeach; ?>
@@ -123,37 +99,39 @@
     </div>
 </div>
 
-<!-- Modal แผนที่ -->
 <div class="modal fade" id="mapModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content rounded-4 border-0 overflow-hidden">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title"><i class="fas fa-map-marked-alt me-2"></i><span id="mapModalTitle">Location</span></h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title"><i class="fas fa-map-marker-alt text-danger me-2"></i><span id="mapModalTitle">Location</span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body p-0">
-                <div id="viewMap" style="width: 100%; height: 400px;"></div>
+                <div id="viewMap" style="width: 100%; height: 450px;"></div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
     let map = null;
     let marker = null;
 
+    // เมื่อ Modal กำลังจะแสดง
     const mapModal = document.getElementById('mapModal');
     mapModal.addEventListener('shown.bs.modal', function (event) {
+        // 1. ดึงค่าจากปุ่มที่กด
         const button = event.relatedTarget;
         const lat = button.getAttribute('data-lat');
         const lng = button.getAttribute('data-lng');
         const name = button.getAttribute('data-name');
 
+        // 2. ตั้งชื่อหัวข้อ Modal
         document.getElementById('mapModalTitle').innerText = name;
 
+        // 3. สร้างแผนที่ (ถ้ายังไม่มี)
         if (!map) {
             map = L.map('viewMap');
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -161,15 +139,22 @@
             }).addTo(map);
         }
 
+        // 4. อัปเดตพิกัด และ ปักหมุด
         const latLng = [parseFloat(lat), parseFloat(lng)];
-        map.setView(latLng, 15);
-
-        if (marker) map.removeLayer(marker);
         
+        map.setView(latLng, 15); // Zoom level 15
+
+        // ถ้ามีหมุดเก่า ให้ลบก่อน
+        if (marker) {
+            map.removeLayer(marker);
+        }
+        
+        // ปักหมุดใหม่
         marker = L.marker(latLng).addTo(map)
             .bindPopup("<b>" + name + "</b><br>อยู่ที่นี่")
             .openPopup();
 
+        // *สำคัญ* แก้บั๊กแผนที่โหลดไม่เต็มจอใน Modal
         setTimeout(function(){ map.invalidateSize();}, 10);
     });
 </script>

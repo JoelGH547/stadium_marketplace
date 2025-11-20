@@ -48,6 +48,7 @@ $routes->group('admin', ['filter' => ['auth', 'admin']], static function ($route
     $routes->get('stadiums/edit/(:num)', 'admin\StadiumController::edit/$1');
     $routes->post('stadiums/update/(:num)', 'admin\StadiumController::update/$1');
     $routes->get('stadiums/delete/(:num)', 'admin\StadiumController::delete/$1');
+    $routes->get('stadiums/view/(:num)', 'admin\StadiumController::view/$1');
     
     // --- User Management ---
     $routes->group('users', static function ($routes) {
@@ -76,8 +77,12 @@ $routes->group('admin', ['filter' => ['auth', 'admin']], static function ($route
     $routes->get('vendors/reject/(:num)', 'admin\UserController::rejectVendor/$1');
 
     // --- Bookings ---
+    // [แก้ไข] เพิ่มบรรทัดนี้ เพื่อแก้ 404 admin/bookings
+    $routes->get('bookings', 'admin\BookingController::index'); 
+    
     $routes->get('bookings/new', 'admin\BookingController::indexNew');
     $routes->get('bookings/pending', 'admin\BookingController::indexPending');
+    $routes->get('bookings/approve/(:num)', 'admin\BookingController::approve/$1');
     $routes->get('bookings/cancel/(:num)', 'admin\BookingController::cancel/$1');
 });
 
@@ -93,7 +98,3 @@ $routes->group('customer', ['filter' => ['auth', 'customer']], static function (
     $routes->post('payment/process', 'BookingController::processPayment');
     $routes->get('payment/success/(:num)', 'BookingController::paymentSuccess/$1');
 });
-
-$routes->get('sport', 'customer\HomeController::index');
-$routes->get('sport/view', 'customer\HomeController::view');
-$routes->get('sport/show/(:num)', 'customer\HomeController::show/$1');

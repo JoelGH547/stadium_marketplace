@@ -142,12 +142,14 @@ class UserController extends BaseController
             $data['username'] = $this->request->getPost('username');
         } 
         elseif ($role == 'vendors') {
+            $data['username']     = $this->request->getPost('username');
             $data['vendor_name']  = $this->request->getPost('vendor_name');
             $data['tax_id']       = $this->request->getPost('tax_id');
             $data['bank_account'] = $this->request->getPost('bank_account');
             $data['phone_number'] = $this->request->getPost('phone');
         } 
         elseif ($role == 'customers') {
+            $data['username']     = $this->request->getPost('username');
             $data['full_name']    = $this->request->getPost('full_name');
             $data['phone_number'] = $this->request->getPost('phone');
         }

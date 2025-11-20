@@ -5,14 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard</title>
     
-    <!-- Bootstrap 5 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Font (Prompt) -->
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
     
-    <!-- [เพิ่ม] CSS สำหรับ DataTables (ตารางค้นหาได้) -->
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
 
     <style>
@@ -117,7 +113,7 @@
             font-size: 0.75em;
         }
 
-        /* [เพิ่ม] ปรับสไตล์ DataTables ให้เข้าธีม */
+        /* ปรับสไตล์ DataTables ให้เข้าธีม */
         .dataTables_wrapper {
             padding: 1rem 0;
         }
@@ -140,7 +136,6 @@
         $currentUrl = $uri->getPath(); 
     ?>
 
-    <!-- Sidebar -->
     <div class="sidebar d-flex flex-column p-0 flex-shrink-0">
         <div class="p-4 text-center sidebar-header border-bottom border-secondary border-opacity-25">
             <h4 class="m-0 fw-bold tracking-wide">
@@ -168,6 +163,13 @@
                 <a href="<?= base_url('admin/stadiums') ?>" 
                    class="nav-link <?= (strpos($currentUrl, 'stadiums') !== false) ? 'active-menu' : '' ?>">
                     <div><i class="fas fa-map-location-dot"></i> จัดการสนามกีฬา</div>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a href="<?= base_url('admin/bookings') ?>" 
+                   class="nav-link <?= (strpos($currentUrl, 'bookings') !== false) ? 'active-menu' : '' ?>">
+                    <div><i class="fas fa-calendar-check"></i> จัดการการจอง</div>
                 </a>
             </li>
 
@@ -223,32 +225,22 @@
         </div>
     </div>
 
-    <!-- Content Area -->
     <div class="content">
         <?= $this->renderSection('content') ?>
     </div>
 
-    <!-- ========================================================== -->
-    <!-- [เพิ่ม] SCRIPT ZONE (SweetAlert + DataTables) -->
-    <!-- ========================================================== -->
-    
-    <!-- Bootstrap 5 JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
-    <!-- jQuery (จำเป็นสำหรับ DataTables) -->
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     
-    <!-- DataTables (ตารางค้นหาได้) -->
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
 
-    <!-- SweetAlert2 (แจ้งเตือนสวยๆ) -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
         $(document).ready(function() {
             // 1. แปลงตารางธรรมดา ให้เป็น DataTables (ค้นหาได้ + แบ่งหน้า)
-            // เราใช้ class .table-datatable แทน .table เพื่อไม่ให้กระทบตารางอื่นที่ไม่อยากให้ค้นหา
             $('.table-datatable').DataTable({
                 "language": {
                     "search": "ค้นหา:",
@@ -267,7 +259,7 @@
                 "ordering": false // ปิดการเรียงลำดับอัตโนมัติ
             });
 
-            // 2. แจ้งเตือน Success (ดึงจาก Session Flashdata)
+            // 2. แจ้งเตือน Success
             <?php if(session()->getFlashdata('success')): ?>
                 Swal.fire({
                     icon: 'success',
@@ -289,24 +281,22 @@
                 });
             <?php endif; ?>
 
-            // 4. ระบบยืนยันการลบ (Confirm Delete)
-            // ดักจับการคลิกที่ปุ่มที่มี class 'btn-delete'
+            // 4. ระบบยืนยันการลบ
             $(document).on('click', '.btn-delete', function(e) {
-                e.preventDefault(); // ห้ามลิ้งค์ทำงานทันที
-                const href = $(this).attr('href'); // เก็บลิ้งค์ไว้ก่อน
+                e.preventDefault(); 
+                const href = $(this).attr('href'); 
 
                 Swal.fire({
                     title: 'คุณแน่ใจหรือไม่?',
                     text: "ข้อมูลที่ลบจะไม่สามารถกู้คืนได้!",
                     icon: 'warning',
                     showCancelButton: true,
-                    confirmButtonColor: '#ef4444', // สีแดง
-                    cancelButtonColor: '#6b7280', // สีเทา
+                    confirmButtonColor: '#ef4444', 
+                    cancelButtonColor: '#6b7280', 
                     confirmButtonText: 'ใช่, ลบเลย!',
                     cancelButtonText: 'ยกเลิก'
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        // ถ้ากดยืนยัน ให้วิ่งไปที่ลิ้งค์ลบ
                         window.location.href = href;
                     }
                 });

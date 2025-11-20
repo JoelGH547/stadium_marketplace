@@ -7,7 +7,7 @@
 
 <p>
     <a href="<?= base_url('admin/stadiums') ?>" class="btn btn-secondary">
-        &laquo; Back to Stadium List
+        « Back to Stadium List
     </a>
 </p>
 
@@ -143,7 +143,6 @@
 
     <hr>
 
-    <!-- แผนที่ปักหมุด (แก้ไขได้) -->
     <div class="form-group">
         <label>Stadium Location (คลิกบนแผนที่เพื่อปักหมุด / ย้ายหมุด)</label>
         <div id="stadiumMap" style="width:100%; height:350px; border-radius:6px; border:1px solid #ddd;"></div>
@@ -152,7 +151,6 @@
         </small>
     </div>
 
-    <!-- hidden lat / lng -->
     <input type="hidden" id="lat" name="lat" value="<?= old('lat', $stadium['lat']) ?>">
     <input type="hidden" id="lng" name="lng" value="<?= old('lng', $stadium['lng']) ?>">
 
@@ -174,9 +172,18 @@
     <div class="form-group">
         <label>Current Outside Cover Image</label><br>
         <?php if (!empty($outsideArr)): ?>
-            <img src="<?= base_url('assets/uploads/stadiums/' . $outsideArr[0]) ?>"
-                 alt="Current Cover"
-                 style="width: 120px; height: 80px; object-fit: cover; border-radius: 4px;">
+            <div class="border p-2 d-inline-block rounded">
+                <img src="<?= base_url('assets/uploads/stadiums/' . $outsideArr[0]) ?>"
+                     alt="Current Cover"
+                     style="width: 150px; height: 100px; object-fit: cover; border-radius: 4px; display:block; margin-bottom:5px;">
+                
+                <div class="custom-control custom-checkbox">
+                    <input type="checkbox" class="custom-control-input" id="delete_outside" name="delete_outside" value="1">
+                    <label class="custom-control-label text-danger" for="delete_outside">
+                        <i class="fas fa-trash-alt"></i> ลบรูปปกนี้
+                    </label>
+                </div>
+            </div>
         <?php else: ?>
             <span class="text-muted">No cover image</span>
         <?php endif; ?>
@@ -190,22 +197,32 @@
 
     <div class="form-group">
         <label>Current Inside Images</label>
-        <div class="d-flex flex-wrap">
+        <div class="row">
             <?php if (!empty($insideArr)): ?>
                 <?php foreach ($insideArr as $img): ?>
-                    <div style="margin-right:8px; margin-bottom:8px;">
-                        <img src="<?= base_url('assets/uploads/stadiums/' . $img) ?>"
-                             alt="Inside"
-                             style="width: 90px; height: 60px; object-fit: cover; border-radius: 4px;">
+                    <div class="col-md-3 col-sm-4 mb-3">
+                        <div class="border p-2 rounded h-100 text-center">
+                            <img src="<?= base_url('assets/uploads/stadiums/' . $img) ?>"
+                                 alt="Inside"
+                                 class="img-fluid mb-2"
+                                 style="height: 100px; object-fit: cover; border-radius: 4px;">
+                            
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" class="custom-control-input" 
+                                       id="del_<?= md5($img) ?>" 
+                                       name="delete_inside[]" 
+                                       value="<?= esc($img) ?>">
+                                <label class="custom-control-label text-danger" for="del_<?= md5($img) ?>">
+                                    <small>ลบรูปนี้</small>
+                                </label>
+                            </div>
+                        </div>
                     </div>
                 <?php endforeach; ?>
             <?php else: ?>
-                <span class="text-muted">No inside images</span>
+                <div class="col-12"><span class="text-muted">No inside images</span></div>
             <?php endif; ?>
         </div>
-        <small class="form-text text-muted">
-            (ตอนนี้ยังไม่มีปุ่มลบทีละรูป ถ้าต้องการเดี๋ยวค่อยเพิ่มได้)
-        </small>
     </div>
 
     <div class="form-group">
@@ -245,7 +262,7 @@
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
-            attribution: '&copy; OpenStreetMap contributors'
+            attribution: '© OpenStreetMap contributors'
         }).addTo(map);
 
         var marker = null;
