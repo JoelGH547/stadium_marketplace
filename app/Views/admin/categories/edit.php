@@ -1,42 +1,63 @@
 <?= $this->extend('layouts/admin') ?>
 
-<!-- 2. เริ่ม Section Content -->
 <?= $this->section('content') ?>
 
-    <h1><?= esc($title ?? 'Edit Category') ?></h1>
-    <p><a href="<?= base_url('admin/categories') ?>">
-        <button>&laquo; Back to Category List</button>
-    </a></p>
+<h1><?= esc($title ?? 'Edit Category') ?></h1>
 
-    <!-- 🛑 แสดง Validation Errors (ถ้ามี) 🛑 -->
-    <?php $validation = session()->getFlashdata('validation'); ?>
-    <?php if ($validation): ?>
-        <div style="color: red; border: 1px solid red; padding: 10px; margin-bottom: 15px; border-radius: 4px;">
-            <ul style="margin: 0; padding-left: 20px;">
+<p>
+    <a href="<?= base_url('admin/categories') ?>">
+        <button type="button" class="btn btn-secondary">&laquo; Back to Category List</button>
+    </a>
+</p>
+
+<?php $validation = session()->getFlashdata('validation'); ?>
+<?php if ($validation): ?>
+    <div style="color:#b91c1c; border:1px solid #fecaca; background:#fef2f2; padding:10px; margin-bottom:15px; border-radius:4px;">
+        <ul style="margin:0; padding-left:20px;">
             <?php foreach ($validation->getErrors() as $error): ?>
                 <li><?= esc($error) ?></li>
             <?php endforeach; ?>
-            </ul>
+        </ul>
+    </div>
+<?php endif; ?>
+
+<form action="<?= base_url('admin/categories/update/' . $category['id']) ?>" method="post" style="max-width:480px;">
+    <?= csrf_field() ?>
+
+    <div style="margin-bottom: 15px;">
+        <label for="name" style="display:block; font-weight:600; margin-bottom:4px;">Category Name:</label>
+        <input
+            type="text"
+            id="name"
+            name="name"
+            value="<?= old('name', $category['name'] ?? '') ?>"
+            required
+            style="width:100%; padding:8px 10px; box-sizing:border-box; border-radius:6px; border:1px solid #d1d5db;">
+    </div>
+
+    <div style="margin-bottom: 15px;">
+        <label for="emoji" style="display:block; font-weight:600; margin-bottom:4px;">
+            Emoji (ประเภทกีฬา):
+        </label>
+        <input
+            type="text"
+            id="emoji"
+            name="emoji"
+            maxlength="8"
+            value="<?= old('emoji', $category['emoji'] ?? '') ?>"
+            placeholder=""
+            style="width:120px; padding:6px 10px; box-sizing:border-box; border-radius:6px; border:1px solid #d1d5db; font-size:1.3rem; text-align:center;">
+        <div style="margin-top:4px; font-size:12px; color:#6b7280;">
+            แนะนำ: ใส่หรือแก้ emoji ที่ใช้แทนประเภทสนามของหมวดหมู่นี้
         </div>
-    <?php endif; ?>
+    </div>
 
-    <!-- TForm (Action ชี้ไปที่ 'admin/categories/update/ID') T-->
-    <form action="<?= base_url('admin/categories/update/' . $category['id']) ?>" method="post">
-        
-        <?= csrf_field() ?>
+    <div style="margin-top: 20px;">
+        <button type="submit"
+                style="background-color:#22c55e; color:white; padding:8px 16px; border:none; border-radius:6px; cursor:pointer;">
+            Update Category
+        </button>
+    </div>
+</form>
 
-        <div style="margin-bottom: 15px;">
-            <label for="name">Category Name:</label>
-            <!-- Tแสดงค่าเก่าจาก $category['name'] T-->
-            <input type="text" id="name" name="name" value="<?= old('name', $category['name']) ?>" required style="width: 100%; padding: 8px; box-sizing: border-box;">
-        </div>
-
-        <!-- ‼️ ลบช่อง "Description" ออกไปแล้ว ‼️ -->
-        
-        <div>
-            <button type="submit" style="background-color: #28a745; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer;">Update Category</button>
-        </div>
-    </form>
-
-<!-- 3. จบ Section Content -->
 <?= $this->endSection() ?>
