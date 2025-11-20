@@ -201,7 +201,12 @@ class Field extends BaseController
             'inside_images'  => session()->get('inside_images'),
         ]);
 
-        session()->destroy();
+        session()->remove([
+        'category_id', 'name', 'price', 'open_time', 'close_time',
+        'description', 'contact_email', 'contact_phone',
+        'province', 'address', 'lat', 'lng', 'map_link',
+        'outside_images', 'inside_images'
+    ]);
 
         return redirect()->to(base_url('owner/dashboard'))
                          ->with('success','เพิ่มสนามสำเร็จแล้ว!');
