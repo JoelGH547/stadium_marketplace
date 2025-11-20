@@ -47,7 +47,7 @@ class StadiumModel extends Model
      */
     public function getStadiumsWithCategory($id = null)
     {
-        $builder = $this->select('stadiums.*, categories.name as category_name')
+        $builder = $this->select('stadiums.*, categories.name as category_name, categories.emoji as category_emoji')
                         ->join('categories', 'categories.id = stadiums.category_id', 'left');
 
         if ($id !== null) {

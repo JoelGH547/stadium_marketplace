@@ -93,3 +93,7 @@ $routes->group('customer', ['filter' => ['auth', 'customer']], static function (
     $routes->post('payment/process', 'BookingController::processPayment');
     $routes->get('payment/success/(:num)', 'BookingController::paymentSuccess/$1');
 });
+
+$routes->get('sport', 'customer\HomeController::index');
+$routes->get('sport/view', 'customer\HomeController::view');
+$routes->get('sport/show/(:num)', 'customer\HomeController::show/$1');

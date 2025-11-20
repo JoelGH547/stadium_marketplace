@@ -199,66 +199,245 @@ const Balls=(function(){
   });
 })();
 
-/* ==================== Sort Menu Controller ==================== */
-document.addEventListener('DOMContentLoaded', function () {
-  const wrap = document.getElementById('sortMenu');
-  if (!wrap) return;
 
-  wrap.classList.add('relative', 'z-10');
+/* ============ Nearby distance + limit 8/20 ============ */
+document.addEventListener('DOMContentLoaded', () => {
+  const nearScroller = document.getElementById('nearScroller');
+  const listEl       = document.getElementById('venueItems');
 
-  const getButtons = () => wrap.querySelectorAll('button.sort-btn, button[data-sort]');
+  if (!nearScroller && !listEl) return;
+
+  let userLocation = null;
+
+  function haversine(lat1, lon1, lat2, lon2) {
+    const toRad = (deg) => (deg * Math.PI) / 180;
+    const R = 6371; // km
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  }
+
+  function formatDistance(d) {
+    if (!isFinite(d)) return '-- km.';
+    return d < 1 ? (d * 1000).toFixed(0) + ' m.' : d.toFixed(1) + ' km.';
+  }
+
+    function applyRanking() {
+    // จัดการรายการหลักด้านล่าง
+    if (listEl) {
+      const items = Array.from(listEl.querySelectorAll('li'));
+      items.forEach((li) => {
+        const lat = parseFloat(li.dataset.lat || '');
+        const lng = parseFloat(li.dataset.lng || '');
+        let dist  = Number.POSITIVE_INFINITY;
+
+        if (userLocation && !isNaN(lat) && !isNaN(lng)) {
+          dist = haversine(userLocation.lat, userLocation.lng, lat, lng);
+        }
+
+        li.dataset.distanceKm = dist.toString();
+        li.dataset.distance   = dist.toString();
+
+        if (userLocation) {
+          const badge = li.querySelector('.dist-badge span:last-child');
+          if (badge) badge.textContent = formatDistance(dist);
+        }
+      });
+
+      const sorted = items.slice().sort((a, b) => {
+        const da = parseFloat(a.dataset.distanceKm || '999999');
+        const db = parseFloat(b.dataset.distanceKm || '999999');
+        return da - db;
+      });
+
+      sorted.forEach((li, idx) => {
+        listEl.appendChild(li);
+        if (idx < 20) li.classList.remove('hidden');
+        else          li.classList.add('hidden');
+      });
+    }
+
+    // จัดการ section สนามใกล้คุณ
+    if (nearScroller) {
+      const cards = Array.from(nearScroller.querySelectorAll('article'));
+      cards.forEach((card) => {
+        const lat = parseFloat(card.dataset.lat || '');
+        const lng = parseFloat(card.dataset.lng || '');
+        let dist  = Number.POSITIVE_INFINITY;
+
+        if (userLocation && !isNaN(lat) && !isNaN(lng)) {
+          dist = haversine(userLocation.lat, userLocation.lng, lat, lng);
+        }
+
+        card.dataset.distanceKm = dist.toString();
+        card.dataset.distance   = dist.toString();
+
+        if (userLocation) {
+          const badge = card.querySelector('.dist-badge span:last-child');
+          if (badge) badge.textContent = formatDistance(dist);
+        }
+      });
+
+      const sortedCards = cards.slice().sort((a, b) => {
+        const da = parseFloat(a.dataset.distanceKm || '999999');
+        const db = parseFloat(b.dataset.distanceKm || '999999');
+        return da - db;
+      });
+
+      sortedCards.forEach((card, idx) => {
+        nearScroller.appendChild(card);
+        if (idx < 12) card.classList.remove('hidden');
+        else         card.classList.add('hidden');
+      });
+    }
+
+    // ✅ แจ้ง overlay/pager ว่า “ลำดับเปลี่ยนแล้วนะ”
+    try {
+      window.dispatchEvent(new CustomEvent('sort-change', { detail: { key: 'distance' } }));
+    } catch (_) {
+      const e = document.createEvent('CustomEvent');
+      e.initCustomEvent('sort-change', true, true, { key: 'distance' });
+      window.dispatchEvent(e);
+    }
+  }
+
+
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        userLocation = {
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+        };
+        applyRanking();
+      },
+      (err) => {
+        console.warn('Geolocation error on home:', err.message);
+        // ไม่มีตำแหน่ง: อย่างน้อยให้จำกัดจำนวน 8/20 ตามลำดับเดิม
+        applyRanking();
+      },
+      {
+        enableHighAccuracy: false,
+        timeout: 8000,
+        maximumAge: 600000,
+      }
+    );
+  } else {
+    // browser ไม่รองรับ geolocation: จำกัดจำนวน 8/20 ตามลำดับเดิม
+    applyRanking();
+  }
+});
+
+/* ============ เก็บลำดับเดิมของการ์ด (ใช้กับยอดนิยม/ดีฟอลต์) ============ */
+document.addEventListener('DOMContentLoaded', () => {
+  const listEl = document.getElementById('venueItems');
+  if (!listEl) return;
+
+  const items = Array.from(listEl.querySelectorAll('li'));
+  items.forEach((li, idx) => {
+    if (!li.dataset.originalIndex) {
+      li.dataset.originalIndex = String(idx); // ใช้เป็นลำดับ default
+    }
+  });
+});
+/* ============ เมนูเรียงลำดับด้านล่าง (home) ============ */
+document.addEventListener('DOMContentLoaded', () => {
+  const sortMenu = document.getElementById('sortMenu');
+  const listEl   = document.getElementById('venueItems');
+  if (!sortMenu || !listEl) return;
+
+  const buttons = Array.from(sortMenu.querySelectorAll('button.sort-btn'));
 
   function setActive(btn) {
-    const buttons = getButtons();
-    buttons.forEach(function (b) {
-      b.classList.remove('bg-gray-900', 'text-white', 'font-semibold');
-      b.classList.add('text-gray-700');
+    buttons.forEach(b => {
+      b.classList.remove('bg-[var(--primary)]', 'text-white', 'font-semibold');
+      b.classList.add('text-gray-700', 'hover:text-[var(--primary)]', 'hover:bg-[var(--primary)]/10');
       b.setAttribute('aria-selected', 'false');
     });
 
+    btn.classList.remove('text-gray-700', 'hover:text-[var(--primary)]', 'hover:bg-[var(--primary)]/10');
     btn.classList.add('bg-[var(--primary)]', 'text-white', 'font-semibold');
-    btn.classList.remove('text-gray-700');
     btn.setAttribute('aria-selected', 'true');
   }
 
-  var current =
-    wrap.querySelector('button[aria-selected="true"]') ||
-    getButtons()[0];
+  function sortListBy(sortKey) {
+    const items  = Array.from(listEl.querySelectorAll('li'));
+    const sorted = items.slice();
 
-  if (current) setActive(current);
-
-  wrap.addEventListener('click', function (e) {
-    const btn = e.target.closest('button.sort-btn, button[data-sort]');
-    if (!btn || !wrap.contains(btn)) return;
-
-    e.preventDefault();
-    setActive(btn);
-
-    const key = btn.dataset.sort || '';
-    try {
-      window.dispatchEvent(new CustomEvent('sort-change', { detail: { key: key } }));
-    } catch (_) {
-      const evt = document.createEvent('CustomEvent');
-      evt.initCustomEvent('sort-change', true, true, { key: key });
-      window.dispatchEvent(evt);
+    if (sortKey === 'price') {
+      // ราคาถูกสุด
+      sorted.sort((a, b) => {
+        const pa = parseFloat(a.dataset.price || '0');
+        const pb = parseFloat(b.dataset.price || '0');
+        return pa - pb;
+      });
+    } else if (sortKey === 'nearby') {
+      // ใช้ปุ่มนี้เป็น "ราคาสุดหรู" (แพงสุดก่อน) — เปลี่ยนแค่ข้อความใน home.php อย่าเปลี่ยน data-sort
+      sorted.sort((a, b) => {
+        const pa = parseFloat(a.dataset.price || '0');
+        const pb = parseFloat(b.dataset.price || '0');
+        return pb - pa;
+      });
+    } else if (sortKey === 'rating') {
+      // ได้คะแนนรีวิวสูง — ตอนนี้ rating ยัง 0 หมด เลยจะเรียงเหมือนเดิม
+      sorted.sort((a, b) => {
+        const ra = parseFloat(a.dataset.rating || '0');
+        const rb = parseFloat(b.dataset.rating || '0');
+        if (rb !== ra) return rb - ra; // สูง → ต่ำ
+        const ia = parseInt(a.dataset.originalIndex || '0', 10);
+        const ib = parseInt(b.dataset.originalIndex || '0', 10);
+        return ia - ib;
+      });
+    } else {
+      // ยอดนิยม (หรือค่าอื่น ๆ) = ลำดับเดิมตาม originalIndex
+      sorted.sort((a, b) => {
+        const ia = parseInt(a.dataset.originalIndex || '0', 10);
+        const ib = parseInt(b.dataset.originalIndex || '0', 10);
+        return ia - ib;
+      });
     }
+
+    // จัด DOM ใหม่ตามลำดับที่เรียงแล้ว
+    sorted.forEach(li => listEl.appendChild(li));
+
+    // แจ้งให้ระบบ overlay (ดูเพิ่มเติม) รู้ว่ามีการเรียงใหม่ → มันจะ re-apply 4 แถว + แถว 5 เบลอให้อัตโนมัติ
+    try {
+      window.dispatchEvent(new CustomEvent('sort-change', { detail: { key: sortKey } }));
+    } catch (_) {
+      const e = document.createEvent('CustomEvent');
+      e.initCustomEvent('sort-change', true, true, { key: sortKey });
+      window.dispatchEvent(e);
+    }
+  }
+
+  // ตั้งค่าตอนเริ่มต้นตาม aria-selected (ปุ่มยอดนิยมเป็น true อยู่แล้ว)
+  const initial = buttons.find(b => b.getAttribute('aria-selected') === 'true') || buttons[0];
+  if (initial) {
+    setActive(initial);
+    sortListBy(initial.dataset.sort || 'popular');
+  }
+
+  // คลิกปุ่มเมนู
+  sortMenu.addEventListener('click', (ev) => {
+    const btn = ev.target.closest('button.sort-btn');
+    if (!btn || !sortMenu.contains(btn)) return;
+    setActive(btn);
+    sortListBy(btn.dataset.sort || 'popular');
   });
 
-  wrap.addEventListener('keydown', function (e) {
-    if (e.key !== 'Enter' && e.key !== ' ') return;
-    const btn = e.target.closest('button.sort-btn, button[data-sort]');
-    if (!btn) return;
-    e.preventDefault();
+  // รองรับกด Enter / Spacebar บนปุ่ม
+  sortMenu.addEventListener('keydown', (ev) => {
+    if (ev.key !== 'Enter' && ev.key !== ' ') return;
+    const btn = ev.target.closest('button.sort-btn');
+    if (!btn || !sortMenu.contains(btn)) return;
+    ev.preventDefault();
     setActive(btn);
-
-    const key = btn.dataset.sort || '';
-    try {
-      window.dispatchEvent(new CustomEvent('sort-change', { detail: { key: key } }));
-    } catch (_) {
-      const evt = document.createEvent('CustomEvent');
-      evt.initCustomEvent('sort-change', true, true, { key: key });
-      window.dispatchEvent(evt);
-    }
+    sortListBy(btn.dataset.sort || 'popular');
   });
 });
 
@@ -272,9 +451,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const ROWS_PREVIEW  = 5;
   const ROWS_EXPANDED = 10;
 
-  const INITIAL       = ROWS_INITIAL  * PER_ROW;
-  const PREVIEW_LIMIT = ROWS_PREVIEW  * PER_ROW;
-  const EXPAND_LIMIT  = ROWS_EXPANDED * PER_ROW;
+  const INITIAL       = ROWS_INITIAL  * PER_ROW;   // 4 แถวแรก = 8 การ์ด
+  const PREVIEW_LIMIT = ROWS_PREVIEW  * PER_ROW;   // แถวที่ 5   = 10 การ์ด
+  const EXPAND_LIMIT  = ROWS_EXPANDED * PER_ROW;   // แถว 1–10   = 20 การ์ด
+
+  // จำว่าเคยกด "ดูเพิ่มเติม" แล้วหรือยัง
+  let isExpanded = false;
 
   const css = `
   .vp-partial {
@@ -299,6 +481,7 @@ document.addEventListener('DOMContentLoaded', () => {
   style.textContent = css;
   document.head.appendChild(style);
 
+  // ห่อ ul ด้วย .vp-wrap หนึ่งชั้น (กันซ้อน)
   if (!ul.parentElement.classList.contains('vp-wrap')) {
     const wrapDiv = document.createElement('div');
     wrapDiv.className = 'vp-wrap';
@@ -309,33 +492,53 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function applyPaging() {
     const items = Array.from(ul.children).filter(el => el.tagName === 'LI');
+    const total = items.length;
+
+    // reset ทั้งหมดก่อน
     items.forEach(li => {
       li.classList.remove('vp-partial', 'hidden');
       li.style.removeProperty('maxHeight');
     });
 
-    const total = items.length;
-
-    if (total <= INITIAL) {
+    // ถ้าการ์ดมีไม่ถึง 5 แถว (<= 10 ใบ) → แสดงหมด, ไม่ต้องมีปุ่ม / ไม่ต้องเบลอ
+    if (total <= PREVIEW_LIMIT) {
       const b = wrap.querySelector('#btnMoreOverlay');
       if (b) b.remove();
       return;
     }
 
+    // ถ้าเคยกดดูเพิ่มเติมแล้ว → เปิดแถว 1–10 เต็ม, ที่เหลือซ่อน, และไม่แสดงปุ่มอีกเลย
+    if (isExpanded) {
+      const max = Math.min(EXPAND_LIMIT, total);
+      for (let i = 0; i < total; i++) {
+        if (i < max) items[i].classList.remove('hidden', 'vp-partial');
+        else         items[i].classList.add('hidden');
+      }
+      const btn = wrap.querySelector('#btnMoreOverlay');
+      if (btn) btn.classList.add('hidden');
+      return;
+    }
+
+    // ===== สถานะปกติ (ยังไม่เคยกดดูเพิ่มเติม) =====
+
+    // ซ่อนการ์ดเกินแถวที่ 10
     for (let i = EXPAND_LIMIT; i < total; i++) {
       items[i].classList.add('hidden');
     }
 
+    // ทำแถวที่ 5 ให้เบลอ (ใบ index 8–9)
     const previewEnd = Math.min(PREVIEW_LIMIT, total);
     for (let i = INITIAL; i < previewEnd; i++) {
       items[i].classList.add('vp-partial');
     }
 
+    // ซ่อนแถวที่ 6–10 (ใบ index 10–19)
     const expandEnd = Math.min(EXPAND_LIMIT, total);
-    for (let i = previewEnd; i < expandEnd; i++) {
+    for (let i = PREVIEW_LIMIT; i < expandEnd; i++) {
       items[i].classList.add('hidden');
     }
 
+    // สร้าง / แสดงปุ่ม "ดูเพิ่มเติม"
     let btn = wrap.querySelector('#btnMoreOverlay');
     if (!btn) {
       btn = document.createElement('button');
@@ -352,198 +555,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function expandToLimit() {
     const items = Array.from(ul.children).filter(el => el.tagName === 'LI');
-    const max = Math.min(EXPAND_LIMIT, items.length);
+    const total = items.length;
+    const max   = Math.min(EXPAND_LIMIT, total);
 
     for (let i = INITIAL; i < max; i++) {
       items[i].classList.remove('hidden', 'vp-partial');
     }
 
-    const btn = wrap.querySelector('#btnMoreOverlay');
+    const btn = ul.parentElement.querySelector('#btnMoreOverlay');
     if (btn) btn.classList.add('hidden');
+
+    // ตั้ง flag ว่าได้ขยายแล้ว → sort-change ครั้งต่อไปจะไม่กลับมาเบลอแถว 5
+    isExpanded = true;
   }
 
+  // เรียกตอนโหลดครั้งแรก
   applyPaging();
 
+  // เวลา sort เปลี่ยน → re-apply layout ตามสถานะ isExpanded
   window.addEventListener('sort-change', () => {
     requestAnimationFrame(() => applyPaging());
   });
 });
-
-/* ==================== Venue DOM Sorter ==================== */
-document.addEventListener('DOMContentLoaded', () => {
-  const list = document.getElementById('venueItems');
-  const sortMenu = document.getElementById('sortMenu');
-  if (!list || !sortMenu) return;
-
-  Array.from(list.children).forEach((li, i) => { if (!li.dataset._idx) li.dataset._idx = String(i); });
-
-  const toNum = (v, d=0) => {
-    const n = Number(v);
-    return Number.isFinite(n) ? n : d;
-  };
-
-  function readMetrics(li){
-    let price   = li.dataset.price ?? '';
-    let distKm  = li.dataset.distanceKm ?? li.dataset['distance-km'] ?? li.dataset.dist ?? '';
-    let rating  = li.dataset.rating ?? '';
-    let popular = li.dataset.popular ?? '';
-
-    if (price === '')  price  = (li.textContent.match(/฿\s*([\d,]+)/)?.[1] || '').replace(/,/g,'');
-    if (distKm === '') distKm = (li.textContent.match(/([\d.]+)\s*km/i)?.[1] || '');
-    if (rating === '') rating = (li.textContent.match(/⭐\s*([\d.]+)/)?.[1] || '');
-    if (popular === '') popular = rating || '0';
-
-    return {
-      price:   toNum(price,   0),
-      distKm:  toNum(distKm,  1e6),
-      rating:  toNum(rating,  0),
-      popular: toNum(popular, 0),
-      idx:     toNum(li.dataset._idx, 0),
-    };
-  }
-
-  function sortList(key){
-    const items = Array.from(list.children);
-    items.sort((a,b)=>{
-      const A = readMetrics(a), B = readMetrics(b);
-      if (key==='price'  && A.price  != B.price)  return A.price - B.price;
-      if (key==='nearby' && A.distKm != B.distKm) return A.distKm - B.distKm;
-      if (key==='rating' && A.rating != B.rating) return B.rating - A.rating;
-      if (key!=='price' && key!=='nearby' && key!=='rating' && A.popular != B.popular) return B.popular - A.popular;
-      return A.idx - B.idx;
-    });
-    const frag = document.createDocumentFragment();
-    items.forEach(li=> frag.appendChild(li));
-    list.appendChild(frag);
-  }
-
-  const current = sortMenu.querySelector('button[aria-selected="true"]');
-  sortList(current?.dataset.sort || 'popular');
-
-  window.addEventListener('sort-change', (e)=> sortList(e?.detail?.key || 'popular'));
-});
-
-/* ==================== FIX Exclusive Active for Sort Menu ==================== */
-document.addEventListener('DOMContentLoaded', () => {
-  const wrap = document.getElementById('sortMenu');
-  if (!wrap) return;
-
-  const ACTIVE = ['bg-[var(--primary)]','text-white','font-semibold'];
-  const INACTIVE_ADD = ['text-gray-700','hover:text-[var(--primary)]','hover:bg-[var(--primary)]/10'];
-  const INACTIVE_REMOVE = ['bg-[var(--primary)]','text-white','font-semibold','bg-gray-900','hover:text-gray-900','hover:bg-gray-50'];
-
-  function setExclusiveActive(btn){
-    const buttons = wrap.querySelectorAll('button.sort-btn, button[data-sort]');
-    buttons.forEach(b => {
-      INACTIVE_REMOVE.forEach(c => b.classList.remove(c));
-      INACTIVE_ADD.forEach(c => { if (!b.classList.contains(c)) b.classList.add(c); });
-      b.setAttribute('aria-selected','false');
-    });
-    INACTIVE_ADD.forEach(c => btn.classList.remove(c));
-    ACTIVE.forEach(c => { if (!btn.classList.contains(c)) btn.classList.add(c); });
-    btn.setAttribute('aria-selected','true');
-  }
-
-  const current = wrap.querySelector('button[aria-selected="true"]') || wrap.querySelector('button.sort-btn, button[data-sort]');
-  if (current) setExclusiveActive(current);
-
-  wrap.addEventListener('click', (e) => {
-    const btn = e.target.closest('button.sort-btn, button[data-sort]');
-    if (!btn || !wrap.contains(btn)) return;
-    setExclusiveActive(btn);
-  }, true);
-
-  wrap.addEventListener('keydown', (e) => {
-    if (e.key !== 'Enter' && e.key !== ' ') return;
-    const btn = e.target.closest('button.sort-btn, button[data-sort]');
-    if (!btn || !wrap.contains(btn)) return;
-    e.preventDefault();
-    setExclusiveActive(btn);
-  }, true);
-});
-
-/* ==================== Distance Calculator ==================== */
-document.addEventListener('DOMContentLoaded', () => {
-  const list = document.getElementById('venueItems');
-  const nearScroller = document.getElementById('nearScroller');
-  if ((!list && !nearScroller) || !navigator.geolocation) return;
-
-  function toRad(deg){ return deg * Math.PI / 180; }
-  function haversineKm(lat1, lon1, lat2, lon2){
-    const R = 6371;
-    const dLat = toRad(lat2 - lat1);
-    const dLon = toRad(lon2 - lon1);
-    const a =
-      Math.sin(dLat/2)**2 +
-      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
-      Math.sin(dLon/2)**2;
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    return R * c;
-  }
-
-  function updateDistanceForElement(el, baseLat, baseLon){
-    const lat = Number(el.dataset.lat);
-    const lon = Number(el.dataset.lng);
-    if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
-
-    const distKm = haversineKm(baseLat, baseLon, lat, lon);
-    const kmForSort = distKm.toFixed(2);
-    const label = distKm < 1
-      ? Math.round(distKm * 1000) + 'm.'
-      : distKm.toFixed(1) + 'km.';
-
-    // ใช้กับ sort ในลิสต์ด้านล่าง
-    el.dataset.distanceKm = kmForSort;
-
-    const badgeSpan = el.querySelector('.dist-badge span:last-child');
-    if (badgeSpan) badgeSpan.textContent = label;
-  }
-
-  navigator.geolocation.getCurrentPosition(
-  (pos) => {
-    const baseLat = pos.coords.latitude;
-    const baseLon = pos.coords.longitude;
-
-    // 1) update distance for venueList
-    if (list) {
-      list.querySelectorAll('li[data-lat][data-lng]').forEach(li => {
-        updateDistanceForElement(li, baseLat, baseLon);
-      });
-    }
-
-    // 2) update distance for nearScroller
-    if (nearScroller) {
-      nearScroller.querySelectorAll('article[data-lat][data-lng]').forEach(card => {
-        updateDistanceForElement(card, baseLat, baseLon);
-      });
-    }
-
-    // ⭐ 3) Sort nearScroller from near → far
-    if (nearScroller) {
-      const cards = Array.from(nearScroller.querySelectorAll('article[data-distance-km]'));
-
-      cards.sort((a, b) => {
-        const da = parseFloat(a.dataset.distanceKm ?? '99999');
-        const db = parseFloat(b.dataset.distanceKm ?? '99999');
-        return da - db; // ใกล้ → ไกล
-      });
-
-      cards.forEach(card => nearScroller.appendChild(card));
-    }
-
-    // trigger sort event for list
-    try {
-      window.dispatchEvent(new CustomEvent('sort-change', { detail: { key: 'nearby' } }));
-    } catch (_) {
-      const evt = document.createEvent('CustomEvent');
-      evt.initCustomEvent('sort-change', true, true, { key: 'nearby' });
-      window.dispatchEvent(evt);
-    }
-  },
-    (err) => {
-      console.warn('Cannot get geolocation for venue distance:', err);
-    },
-    { enableHighAccuracy: true, timeout: 8000 }
-  );
-});
-

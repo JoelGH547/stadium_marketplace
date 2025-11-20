@@ -164,7 +164,7 @@ html.dark .dist-badge{background:rgba(14,165,164,.18);}
     left: 0;
     right: 0;
     bottom: 0;
-    height: 55%; /* ครึ่งล่าง + นิดหน่อย */
+    height: 80%; /* ครึ่งล่าง + นิดหน่อย */
     background:
       linear-gradient(to top, rgba(0,0,0,0.92), rgba(0,0,0,0.3) 55%, transparent),
       radial-gradient(ellipse at bottom, rgba(0,0,0,0.85), transparent 65%);
@@ -296,5 +296,6 @@ html.dark .dist-badge{background:rgba(14,165,164,.18);}
 
 <script src="<?= base_url('assets/home.js') ?>"></script>
 <script src="<?= base_url('assets/view.js') ?>"></script>
+<script src="<?= base_url('assets/show.js') ?>"></script>
 </body>
 </html>

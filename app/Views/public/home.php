@@ -138,7 +138,7 @@
     <?php
       /** @var array $venueCards */
       $venueCards = $venueCards ?? [];
-      $nearby = array_slice($venueCards, 0, 8);
+      $nearby = $venueCards;
     ?>
 
     <div class="relative z-[10]">
@@ -156,6 +156,10 @@
         <?php if (!empty($nearby)): ?>
           <?php foreach ($nearby as $i => $v): ?>
             <?php
+              $id        = $v['id'] ?? null; // << เพิ่ม
+              $detailUrl = $id
+                ? site_url('sport/show/' . $id)// ถ้าหน้า detail คือ /sport/stadium/{id}
+                : site_url('sport/show');// fallback ไปหน้า show รวมสนาม
               $name  = $v['name'] ?? 'ชื่อสนาม';
               $price = isset($v['price']) ? (float) $v['price'] : 0;
 
@@ -177,20 +181,24 @@
             ?>
 
             <article
-              class="relative snap-start flex-none min-w-[260px] sm:min-w-[280px] max-w-xs"
-              <?php if (!empty($lat) && !empty($lng)): ?>
-                data-lat="<?= esc($lat) ?>"
-                data-lng="<?= esc($lng) ?>"
-              <?php endif; ?>
-            >
-              <div class="near-jelly-wrap">
-                <!-- พื้นหลังเบลอ -->
-                <div class="near-jelly-bg"
-                     style="background-image:url('<?= esc($coverUrl) ?>');"></div>
+  class="relative snap-start flex-none min-w-[260px] sm:min-w-[280px] max-w-xs cursor-pointer"
+  <?php if (!empty($lat) && !empty($lng)): ?>
+    data-lat="<?= esc($lat) ?>"
+    data-lng="<?= esc($lng) ?>"
+  <?php endif; ?>
+  <?php if (!empty($id) && !empty($detailUrl)): ?>
+    onclick="window.location.href='<?= esc($detailUrl) ?>'"
+  <?php endif; ?>
+>
+  <div class="near-jelly-wrap">
+    <!-- พื้นหลังเบลอ -->
+    <div class="near-jelly-bg"
+         style="background-image:url('<?= esc($coverUrl) ?>');"></div>
 
-                <!-- การ์ดด้านหน้า -->
-                <div class="near-jelly-card"
-                     style="background-image:url('<?= esc($coverUrl) ?>');">
+    <!-- การ์ดด้านหน้า -->
+    <div class="near-jelly-card"
+         style="background-image:url('<?= esc($coverUrl) ?>');">
+    <div class="near-jelly-blur"></div>
                   <div class="near-jelly-footer">
   <!-- SVG curve แบบ CodePen -->
   <svg class="near-jelly-curve"
@@ -275,18 +283,13 @@
   </div>
 
   <!-- Badge ประเภทกีฬา + emoji มุมขวาล่าง -->
-  <div class="near-jelly-sport">
-    <span class="near-jelly-sport-emoji"><?= esc($typeIcon) ?></span>
-    <span><?= esc($typeLabel) ?></span>
+  <!-- Badge ประเภทกีฬา -->
+    <div class="near-jelly-sport">
+      <span class="near-jelly-sport-emoji"><?= esc($typeIcon) ?></span>
+      <span><?= esc($typeLabel) ?></span>
+    </div>
   </div>
-</div>
-
-<!-- ชั้นเบลอครึ่งล่าง (ปรับแล้วด้านบน) -->
-<div class="near-jelly-blur"></div>
-
-                </div>
-              </div>
-            </article>
+</article>
           <?php endforeach; ?>
         <?php endif; ?>
       </div>
@@ -313,7 +316,7 @@
       <div class="w-px h-8 bg-gray-200"></div>
 
       <button class="sort-btn flex-1 py-3 text-center text-sm font-semibold text-gray-700 hover:text-[var(--primary)] hover:bg-[var(--primary)]/10"
-              data-sort="nearby" aria-selected="false">ใกล้ตัวเมืองที่สุด</button>
+              data-sort="nearby" aria-selected="false">ราคาสุดหรู</button>
 
       <div class="w-px h-8 bg-gray-200"></div>
 
@@ -335,6 +338,11 @@
       <?php else: ?>
         <?php foreach ($venueCards as $idx => $v): ?>
           <?php
+          $id        = $v['id'] ?? null; // << เพิ่ม
+          $detailUrl = $id
+            ? site_url('sport/show/' . $id)// ถ้าหน้า detail คือ /sport/stadium/{id}
+            : site_url('sport/show');// fallback ไปหน้า show รวมสนาม
+
             $name    = $v['name'] ?? 'ชื่อสนาม';
             $price   = isset($v['price']) ? (float) $v['price'] : 0;
 
@@ -360,7 +368,7 @@
           ?>
           <li class="relative flex items-center gap-4 bg-white rounded-2xl
            p-4 pb-8 sm:p-5 sm:pb-10 pr-16
-           transition-all duration-200 hover:shadow-lg"
+           transition-all duration-200 hover:shadow-lg" 
     data-price="<?= esc($price) ?>"
     data-distance-km=""
     data-rating="0"
@@ -370,6 +378,11 @@
       data-lng="<?= esc($lng) ?>"
     <?php endif; ?>
 >
+  <?php if (!empty($detailUrl)): ?>
+    <a href="<?= esc($detailUrl) ?>" class="absolute inset-0 z-[5]" aria-label="ดูรายละเอียดสนาม <?= esc($name) ?>">
+      <span class="sr-only">ดูรายละเอียดสนาม</span>
+    </a>
+  <?php endif; ?>
   <img src="<?= esc($coverUrl) ?>" class="h-24 w-24 rounded-2xl object-cover" alt="">
   <div class="flex-1 min-w-0">
     <div class="flex items-center gap-2">
@@ -397,7 +410,9 @@
   </div>
 
   <!-- ปุ่มลูกศร: ชิดขวากลางการ์ด -->
-  <button
+  <?php if (!empty($detailUrl)): ?>
+  <a
+    href="<?= esc($detailUrl) ?>"
     class="absolute right-4 sm:right-5 top-1/2 -translate-y-1/2 z-[6]
            flex h-9 w-9 items-center justify-center
            rounded-full border border-[var(--primary)]
@@ -407,7 +422,9 @@
            transition-colors"
   >
     &rsaquo;
-  </button>
+  </a>
+  <?php endif; ?>
+
 
   <div class="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 z-[5]
               inline-flex items-center justify-center gap-1

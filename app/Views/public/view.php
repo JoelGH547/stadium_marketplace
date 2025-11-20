@@ -222,6 +222,9 @@
               $lat        = $v['lat'] ?? null;
               $lng        = $v['lng'] ?? null;
 
+              $id        = $v['id'] ?? null;
+              $detailUrl = $id ? site_url('sport/show/' . $id) : null;
+
               // tag ทำเลแบบง่ายจาก address / province
               $areaTag = 'suburb';
               $addrLower = mb_strtolower($addressFull, 'UTF-8');
@@ -244,6 +247,11 @@
               data-lng="<?= esc($lng) ?>"
               data-area="<?= esc($areaTag) ?>"
             >
+              <?php if (!empty($detailUrl)): ?>
+                <a href="<?= esc($detailUrl) ?>" class="absolute inset-0 z-[5]" aria-label="ดูรายละเอียดสนาม <?= esc($name) ?>">
+                  <span class="sr-only">ดูรายละเอียดสนาม</span>
+                </a>
+              <?php endif; ?>
               <img
                 src="<?= esc($coverUrl) ?>"
                 alt="<?= esc($name) ?>"
@@ -282,8 +290,9 @@
               </div>
 
               <!-- ปุ่มดูรายละเอียด -->
-              <button
-                type="button"
+              <?php if (!empty($detailUrl)): ?>
+              <a
+                href="<?= esc($detailUrl) ?>"
                 class="absolute right-3 top-1/2 -translate-y-1/2 z-[10]
                        h-9 w-9 rounded-full flex items-center justify-center
                        bg-white text-[var(--primary)]
@@ -293,7 +302,9 @@
                        transition-colors"
               >
                 &rsaquo;
-              </button>
+              </a>
+              <?php endif; ?>
+
             </li>
           <?php endforeach; ?>
         </ul>

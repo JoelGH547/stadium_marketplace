@@ -16,7 +16,7 @@ class HomeController extends BaseController
             ->select('stadiums.*, categories.name AS category_name, categories.emoji AS category_emoji')
             ->join('categories', 'categories.id = stadiums.category_id', 'left')
             ->orderBy('stadiums.id', 'DESC')
-            ->findAll(20);
+            ->findAll();
 
         foreach ($venueCards as &$v) {
             // ชื่อประเภท
@@ -93,5 +93,44 @@ class HomeController extends BaseController
     ];
 
     return view('public/view', $data);
+    }
+    // ===== หน้า Stadium Detail (public) =====
+    public function show($id = null)
+    {
+        $stadiumModel = new \App\Models\StadiumModel();
+        $stadium      = $stadiumModel->getStadiumsWithCategory($id);
+
+        if (!$stadium) {
+            throw new \CodeIgniter\Exceptions\PageNotFoundException('ไม่พบสนามที่ต้องการ');
+        }
+
+        // เตรียมข้อมูลพื้นฐานให้ view ใช้งานง่าย
+        $cover    = $stadium['cover_image'] ?? null;
+        $coverUrl = $cover
+            ? base_url('assets/uploads/stadiums/' . $cover)
+            : base_url('assets/uploads/home/1.jpg');
+
+        $addressParts = array_filter([
+            $stadium['address']  ?? null,
+            $stadium['district'] ?? null,
+            $stadium['province'] ?? null,
+        ]);
+        $addressFull = $addressParts ? implode(' ', $addressParts) : 'ยังไม่ระบุที่อยู่';
+
+        $open  = $stadium['open_time']  ?? null;
+        $close = $stadium['close_time'] ?? null;
+        if ($open  && strlen($open)  >= 5) $open  = substr($open, 0, 5);
+        if ($close && strlen($close) >= 5) $close = substr($close, 0, 5);
+        $timeLabel = ($open && $close) ? ($open . ' – ' . $close) : 'ยังไม่ระบุเวลาเปิด–ปิด';
+
+        $data = [
+            'siteName' => 'Stadium Marketplace',
+            'stadium'  => $stadium,
+            'coverUrl' => $coverUrl,
+            'addressFull' => $addressFull,
+            'timeLabel'   => $timeLabel,
+        ];
+
+        return view('public/show', $data);
     }
 }
