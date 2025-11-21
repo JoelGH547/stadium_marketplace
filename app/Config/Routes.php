@@ -83,5 +83,6 @@ $routes->group('owner', ['namespace' => 'App\Controllers\Owner'], function($rout
     $routes->get('fields/edit/(:num)', 'Field::edit/$1');
     $routes->post('fields/update/(:num)', 'Field::update/$1');
 
+    $routes->get('fields/delete/(:num)', 'Field::delete/$1');
 
 });

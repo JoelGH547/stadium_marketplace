@@ -179,7 +179,12 @@
                     <a href="<?= base_url('owner/fields/edit/'.$s['id']) ?>"
                        class="btn btn-mint btn-sm me-2">แก้ไข</a>
 
-                    <a href="#" class="btn btn-outline-danger btn-sm">ลบ</a>
+                    <a href="<?= base_url('owner/fields/delete/'.$s['id']) ?>" 
+                        class="btn btn-outline-danger btn-sm"
+                        onclick="return confirm('ยืนยันการลบสนามนี้? การลบนี้ไม่สามารถย้อนกลับได้!')">
+                        ลบ
+                    </a>
+
                 </div>
 
             </div>

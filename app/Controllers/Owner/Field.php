@@ -323,4 +323,41 @@ class Field extends BaseController
                          ->with('success','แก้ไขสนามสำเร็จแล้ว!');
     }
 
+    public function delete($id)
+{
+    if (!session()->get('owner_login'))
+        return redirect()->to(base_url('owner/login'));
+
+    $model = new OwnerStadiumModel();
+
+    // เช็คว่าสนามเป็นของเจ้าของคนนี้จริงไหม
+    $stadium = $model
+        ->where('vendor_id', session()->get('owner_id'))
+        ->where('id', $id)
+        ->first();
+
+    if (!$stadium)
+        return redirect()->to(base_url('owner/dashboard'))->with('error', 'ไม่พบสนามนี้');
+
+    // ลบรูปภาพเก่า
+    $outside = json_decode($stadium['outside_images'], true) ?? [];
+    $inside  = json_decode($stadium['inside_images'], true) ?? [];
+
+    foreach ($outside as $img) {
+        $file = FCPATH . 'uploads/stadiums/outside/' . $img;
+        if (file_exists($file)) unlink($file);
+    }
+
+    foreach ($inside as $img) {
+        $file = FCPATH . 'uploads/stadiums/inside/' . $img;
+        if (file_exists($file)) unlink($file);
+    }
+
+    // ลบจากฐานข้อมูล
+    $model->delete($id);
+
+    return redirect()->to(base_url('owner/dashboard'))
+                     ->with('success', 'ลบสนามสำเร็จแล้ว!');
+}
+
 }
