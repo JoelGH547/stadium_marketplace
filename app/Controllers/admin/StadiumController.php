@@ -267,20 +267,57 @@ class StadiumController extends BaseController
         return view('admin/stadiums/view', $data);
     }
 
+    // =========================
+    //  DELETE (ลบสนาม + ลบรูปภาพทิ้ง)
+    // =========================
     public function delete($id = null)
     {
+        // 1. ค้นหาข้อมูลสนามก่อน เพื่อจะเอารายชื่อรูปภาพ
+        $stadium = $this->stadiumModel->find($id);
+
+        if (!$stadium) {
+            return redirect()->to(base_url('admin/stadiums'))->with('error', 'ไม่พบข้อมูลสนามที่ต้องการลบ');
+        }
+
         try {
+            // กำหนด Path ที่เก็บรูป (ใช้ FCPATH ตามที่คุณใช้ในฟังก์ชัน store/update)
+            $uploadPath = FCPATH . 'assets/uploads/stadiums/';
+
+            // --- ส่วนที่ 1: ลบรูปปก (Outside Images) ---
+            $outsideImages = json_decode($stadium['outside_images'] ?? '[]', true);
+            if (!empty($outsideImages)) {
+                foreach ($outsideImages as $img) {
+                    // เช็คว่ามีไฟล์อยู่จริงไหม แล้วสั่งลบ
+                    if (file_exists($uploadPath . $img)) {
+                        unlink($uploadPath . $img);
+                    }
+                }
+            }
+
+            // --- ส่วนที่ 2: ลบรูปภายใน (Inside Images) ---
+            $insideImages = json_decode($stadium['inside_images'] ?? '[]', true);
+            if (!empty($insideImages)) {
+                foreach ($insideImages as $img) {
+                    if (file_exists($uploadPath . $img)) {
+                        unlink($uploadPath . $img);
+                    }
+                }
+            }
+
+            // --- ส่วนที่ 3: ลบข้อมูลใน Database ---
             $this->stadiumModel->delete($id);
+            
             return redirect()->to(base_url('admin/stadiums'))
-                             ->with('success', 'ลบสนามเรียบร้อยแล้ว');
+                             ->with('success', 'ลบข้อมูลสนามและไฟล์รูปภาพเรียบร้อยแล้ว');
 
         } catch (DatabaseException $e) {
+            // ดักจับ Error กรณีลบไม่ได้ (เช่น มีการจองค้างอยู่ แล้วติด Foreign Key)
             if ($e->getCode() == 1451) {
                 return redirect()->to(base_url('admin/stadiums'))
-                    ->with('error', 'ไม่สามารถลบสนาม (ID: ' . esc($id) . ') เนื่องจากมีข้อมูลอื่นอ้างอิงอยู่');
+                    ->with('error', 'ไม่สามารถลบสนามนี้ได้ เนื่องจากมีประวัติการจองหรือข้อมูลอื่นอ้างอิงอยู่ (Foreign Key Constraint)');
             }
             return redirect()->to(base_url('admin/stadiums'))
-                ->with('error', 'Database Error: ' . $e->getMessage());
+                ->with('error', 'เกิดข้อผิดพลาดฐานข้อมูล: ' . $e->getMessage());
         }
     }
 
