@@ -50,6 +50,12 @@ $routes->group('admin', ['filter' => ['auth', 'admin']], static function ($route
     $routes->get('stadiums/delete/(:num)', 'admin\StadiumController::delete/$1');
     $routes->get('stadiums/view/(:num)', 'admin\StadiumController::view/$1');
     
+
+    // --- Stadium Fields (จัดการสนามย่อย) ---
+    $routes->get('stadiums/fields/(:num)', 'admin\StadiumController::fields/$1');
+    $routes->post('stadiums/fields/create', 'admin\StadiumController::createField');
+    $routes->get('stadiums/fields/delete/(:num)', 'admin\StadiumController::deleteField/$1');
+    $routes->post('stadiums/fields/update', 'admin\StadiumController::updateField');
     // --- User Management ---
     $routes->group('users', static function ($routes) {
         

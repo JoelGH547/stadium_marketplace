@@ -25,7 +25,7 @@
         <h3 class="text-danger">ราคา: <?= esc(number_format($stadium['price'], 2)) ?> บาท/ชั่วโมง</h3>
         <hr>
 
-        <h4>กรุณาเลือกวันและเวลาที่ต้องการจอง</h4>
+        <h4>กรุณาเลือกข้อมูลการจอง</h4>
         
         <?php if (session()->getFlashdata('errors')): ?>
             <div class="alert alert-danger">
@@ -41,6 +41,23 @@
             <?= csrf_field() ?>
             <input type="hidden" name="stadium_id" value="<?= esc($stadium['id']) ?>">
 
+            <div class="form-group">
+                <label for="field_id" class="font-weight-bold text-primary">เลือกสนามย่อย / โซน:</label>
+                <select name="field_id" id="field_id" class="form-control" required>
+                    <option value="" disabled selected>-- กรุณาเลือกสนามที่ต้องการ --</option>
+                    
+                    <?php if (!empty($fields)): ?>
+                        <?php foreach ($fields as $field): ?>
+                            <option value="<?= $field['id'] ?>">
+                                <?= esc($field['name']) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <option value="" disabled>ไม่มีข้อมูลสนามย่อย</option>
+                    <?php endif; ?>
+                </select>
+                <small class="form-text text-muted">เช่น สนาม 1, สนาม 2, หรือ โต๊ะ VIP</small>
+            </div>
             <div class="form-row">
                 <div class="form-group col-md-4">
                     <label for="booking_date">วันที่จอง:</label>
@@ -57,11 +74,12 @@
                         <option value="2">2 ชั่วโมง</option>
                         <option value="3">3 ชั่วโมง</option>
                         <option value="4">4 ชั่วโมง</option>
+                        <option value="5">5 ชั่วโมง</option>
                     </select>
                 </div>
             </div>
 
-            <button type="submit" class="btn btn-success btn-lg mt-3">ยืนยันการจอง (รอดำเนินการ)</button>
+            <button type="submit" class="btn btn-success btn-lg mt-3 btn-block">ยืนยันการจอง (รอดำเนินการ)</button>
         </form>
     </div>
 

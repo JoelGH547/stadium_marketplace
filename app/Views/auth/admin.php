@@ -1,4 +1,4 @@
-<?= $this->extend('layouts/auth') ?>
+<?= $this->extend('layouts/LoginAdmin_auth') ?>
 <?= $this->section('content') ?>
 
 <div class="auth-card">
