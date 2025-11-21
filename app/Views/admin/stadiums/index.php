@@ -87,30 +87,35 @@
                                 </td>
 
                                 <!-- [แก้ไข] ส่วน Actions: จัดเรียงใหม่เป็นแนวนอน + ใช้ไอคอน -->
-                                <td>
-                                    <div class="d-flex justify-content-center gap-2">
-                                        <!-- 1. View (ดูรายละเอียด) -->
-                                        <a href="<?= base_url('admin/stadiums/view/' . $stadium['id']) ?>" 
-                                           class="btn btn-info btn-sm text-white shadow-sm" 
-                                           title="ดูรายละเอียด">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
+                              <td>
+    <div class="d-flex justify-content-center gap-2">
+        
+        <a href="<?= base_url('admin/stadiums/fields/' . $stadium['id']) ?>" 
+           class="btn btn-primary btn-sm shadow-sm" 
+           title="จัดการสนามย่อย (เช่น สนาม 1, สนาม 2)">
+            <i class="fas fa-layer-group"></i> สนามย่อย
+        </a>
 
-                                        <!-- 2. Edit (แก้ไข) -->
-                                        <a href="<?= base_url('admin/stadiums/edit/' . $stadium['id']) ?>" 
-                                           class="btn btn-warning btn-sm shadow-sm"
-                                           title="แก้ไข">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                        
-                                        <!-- 3. Delete (ลบ) -->
-                                        <a href="<?= base_url('admin/stadiums/delete/' . $stadium['id']) ?>" 
-                                           class="btn btn-danger btn-sm btn-delete shadow-sm"
-                                           title="ลบ">
-                                            <i class="fas fa-trash"></i>
-                                        </a>
-                                    </div>
-                                </td>
+        <a href="<?= base_url('admin/stadiums/view/' . $stadium['id']) ?>" 
+           class="btn btn-info btn-sm text-white shadow-sm" 
+           title="ดูรายละเอียด">
+            <i class="fas fa-eye"></i>
+        </a>
+
+        <a href="<?= base_url('admin/stadiums/edit/' . $stadium['id']) ?>" 
+           class="btn btn-warning btn-sm shadow-sm"
+           title="แก้ไข">
+            <i class="fas fa-edit"></i>
+        </a>
+        
+        <a href="<?= base_url('admin/stadiums/delete/' . $stadium['id']) ?>" 
+           class="btn btn-danger btn-sm btn-delete shadow-sm"
+           title="ลบ"
+           onclick="return confirm('ยืนยันการลบสนามนี้? ข้อมูลสนามย่อยและการจองทั้งหมดจะถูกลบไปด้วย');">
+            <i class="fas fa-trash"></i>
+        </a>
+    </div>
+</td>
                             </tr>
                             <?php endforeach; ?>
                         <?php else: ?>

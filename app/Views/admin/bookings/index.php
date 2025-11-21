@@ -41,6 +41,10 @@
                                 </td>
                                 <td>
                                     <div class="text-primary fw-bold"><?= esc($row['stadium_name']) ?></div>
+                                    <?php if(!empty($row['field_name'])): ?>
+                                    <span class="badge bg-info text-dark border">
+                                    <i class="fas fa-map-marker me-1"></i> <?= esc($row['field_name']) ?></span>
+                                    <?php endif; ?>
                                     <small class="text-muted">By: <?= esc($row['vendor_name']) ?></small>
                                 </td>
                                 <td>
