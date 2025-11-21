@@ -577,3 +577,124 @@ document.addEventListener('DOMContentLoaded', () => {
     requestAnimationFrame(() => applyPaging());
   });
 });
+
+/* ==================== Login Overlay สำหรับ guest ==================== */
+(function () {
+  const loggedIn = !!window.CUSTOMER_LOGGED_IN;
+  const backdrop = document.getElementById('loginBackdrop');
+  const panel    = document.getElementById('loginPanel');
+
+  if (!backdrop || !panel) return;
+
+  function openOverlay() {
+    if (loggedIn) return false; // ถ้าล็อกอินแล้ว ไม่ทำอะไร
+    backdrop.classList.remove('hidden');
+    panel.classList.remove('hidden');
+    // ไม่ล็อก body เพื่อให้ยัง scroll หน้าได้
+    return true;
+  }
+
+  function closeOverlay() {
+    backdrop.classList.add('hidden');
+    panel.classList.add('hidden');
+  }
+
+  // ปุ่มปิดทั้งหมด (รวมกากบาท + ปุ่ม/ลิงก์ที่ใส่ data-login-overlay-close)
+  panel.querySelectorAll('[data-login-overlay-close]').forEach(el => {
+    el.addEventListener('click', (e) => {
+      e.preventDefault();
+      closeOverlay();
+    });
+  });
+
+  // คลิกเงาดำด้านหลัง = ปิด
+  backdrop.addEventListener('click', closeOverlay);
+
+  // 1) ปุ่มค้นหาสนามใน hero (#openSearch)
+  const heroSearchBtn = document.getElementById('openSearch');
+  if (heroSearchBtn) {
+    heroSearchBtn.addEventListener('click', (e) => {
+      if (!loggedIn) {
+        e.preventDefault();
+        e.stopImmediatePropagation(); // กัน handler search เดิม
+        openOverlay();
+      }
+    }, { capture: true });
+  }
+
+  // 2) เมนู "ค้นหาสนาม" ที่ header (ลิงก์ที่มี #search)
+  document.querySelectorAll('a[href*="#search"]').forEach(a => {
+    a.addEventListener('click', (e) => {
+      if (!loggedIn) {
+        e.preventDefault();
+        openOverlay();
+      }
+    });
+  });
+
+  // 3) การ์ด "สนามใกล้คุณ" → ใช้ article ใน #nearScroller
+  document.querySelectorAll('#nearScroller article').forEach(card => {
+    card.addEventListener('click', (e) => {
+      if (!loggedIn) {
+        e.preventDefault();
+        e.stopImmediatePropagation(); // กัน JS เดิมที่พาไป sport/show
+        openOverlay();
+      }
+    }, { capture: true });
+  });
+
+  // 4) การ์ดในรายการหลัก (#venueItems) ถ้ามี <a href="sport/show/...">
+  document.querySelectorAll('#venueItems a[href*="sport/show"]').forEach(a => {
+    a.addEventListener('click', (e) => {
+      if (!loggedIn) {
+        e.preventDefault();
+        openOverlay();
+      }
+    });
+  });
+
+  // 5) ปุ่ม "ดูทั้งหมด" สนามใกล้คุณ
+  function findNearViewAll() {
+    const scroller = document.getElementById('nearScroller');
+    if (!scroller) return null;
+    // หา section หรือ wrapper ที่ครอบ nearScroller
+    const section = scroller.closest('section') || scroller.parentElement;
+    if (!section) return null;
+
+    const candidates = section.querySelectorAll('a,button');
+    for (const el of candidates) {
+      if (!el.textContent) continue;
+      const text = el.textContent.trim();
+      if (text === 'ดูทั้งหมด' || text.includes('ดูทั้งหมด')) {
+        return el;
+      }
+    }
+    return null;
+  }
+
+   const nearViewAll = findNearViewAll();
+  if (nearViewAll) {
+    nearViewAll.addEventListener('click', (e) => {
+      // ถ้าล็อกอินแล้ว → ปล่อยให้ลิงก์ทำงานตามปกติ
+      if (loggedIn) return;
+
+      // ถ้ายังไม่ล็อกอิน → กัน navigation แล้วเปิด hover login
+      e.preventDefault();
+      openOverlay();
+    });
+  }
+
+  // 6) ปุ่ม "ดูทั้งหมด" อันล่าง (section id="venueSeeAll")
+  const bottomViewAll = document.querySelector('#venueSeeAll a');
+
+  if (bottomViewAll) {
+    bottomViewAll.addEventListener('click', (e) => {
+      // ถ้าล็อกอินแล้ว → ปล่อยให้ทำงานตามปกติ
+      if (loggedIn) return;
+
+      // ถ้ายังไม่ล็อกอิน → เปิด hover login
+      e.preventDefault();
+      openOverlay();
+    });
+  }
+})();

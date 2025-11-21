@@ -39,10 +39,8 @@ class Filters extends BaseFilters
         'performance' => PerformanceMetrics::class,
 
         // 4. ⬇️ (เพิ่ม) Alias ของเรา (เหมือนเดิม) ⬇️
-        'auth'       => AuthFilter::class,
         'admin'      => AdminFilter::class,
         'customer'   => CustomerFilter::class,
-        // (ในอนาคต: 'vendor' => \App\Filters\VendorFilter::class,)
     ];
 
     /**

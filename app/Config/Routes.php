@@ -9,31 +9,39 @@ use CodeIgniter\Router\RouteCollection;
  */
 
 // ==========================================================
-// --- 1. PUBLIC ROUTES (หน้าแรก & Login ลูกค้า) ---
+//  PUBLIC CUSTOMER AND LOGIN REGISTER
 // ==========================================================
+
+// เข้าเว็บครั้งแรก → ไปหน้า home (ตอนนี้ใช้ route sport เดิมของคุณ)
 $routes->get('/', static function () {
-    return redirect()->to('/login');
+    return redirect()->to('/sport');
 });
 
-$routes->get('login', 'AuthController::login');
-$routes->post('login', 'AuthController::processLogin');
-$routes->get('register', 'AuthController::register');
-$routes->post('register', 'AuthController::processRegister');
-$routes->get('logout', 'AuthController::logout');
+$routes->get('customer/login',  'customer\CustomerAuthController::login');
+$routes->post('customer/login', 'customer\CustomerAuthController::processLogin');
+$routes->get('customer/register',  'customer\CustomerAuthController::register');
+$routes->post('customer/register', 'customer\CustomerAuthController::processRegister');
+$routes->get('customer/logout', 'customer\CustomerAuthController::logout');
+
+$routes->get('sport', 'customer\HomeController::index');
+
+$routes->group('sport', ['filter' => 'customer'], static function ($routes) {
+    $routes->get('view', 'customer\HomeController::view');
+    $routes->get('show/(:num)', 'customer\HomeController::show/$1');
+});
 
 
 // ==========================================================
-// --- 2. ADMIN SECTION (ต้อง Login เป็น Admin) ---
+// --- 2. ADMIN DASHBOARD AND LOGIN ---
 // ==========================================================
 $routes->get('admin/login', 'admin\AdminAuthController::login');
 $routes->post('admin/login', 'admin\AdminAuthController::processLogin');
 $routes->get('admin/logout', 'admin\AdminAuthController::logout');
 
-$routes->group('admin', ['filter' => ['auth', 'admin']], static function ($routes) {
+$routes->group('admin', ['filter' => [ 'admin']], static function ($routes) {
     
     $routes->get('dashboard', 'admin\DashboardController::index');
 
-    // --- Categories ---
     $routes->get('categories', 'admin\CategoryController::index');
     $routes->get('categories/new', 'admin\CategoryController::new');
     $routes->post('categories/create', 'admin\CategoryController::create');
@@ -41,7 +49,6 @@ $routes->group('admin', ['filter' => ['auth', 'admin']], static function ($route
     $routes->post('categories/update/(:num)', 'admin\CategoryController::update/$1');
     $routes->get('categories/delete/(:num)', 'admin\CategoryController::delete/$1');
 
-    // --- Stadiums ---
     $routes->get('stadiums', 'admin\StadiumController::index');
     $routes->get('stadiums/create', 'admin\StadiumController::create');
     $routes->post('stadiums', 'admin\StadiumController::store');
@@ -50,18 +57,15 @@ $routes->group('admin', ['filter' => ['auth', 'admin']], static function ($route
     $routes->get('stadiums/delete/(:num)', 'admin\StadiumController::delete/$1');
     $routes->get('stadiums/view/(:num)', 'admin\StadiumController::view/$1');
     
-    // --- User Management ---
     $routes->group('users', static function ($routes) {
         
-        // 1. หน้าแสดงรายการ (Read)
         $routes->get('admins', 'admin\UserController::admins');
         $routes->get('vendors', 'admin\UserController::vendors');
         $routes->get('customers', 'admin\UserController::customers');
         
-        // [เพิ่มใหม่] หน้าลูกค้าใหม่ (24 ชม.)
         $routes->get('new_customers', 'admin\UserController::newCustomers');
 
-        // 2. CRUD (Create, Edit, Delete)
+
         $routes->get('create/(:segment)', 'admin\UserController::create/$1');
         $routes->post('store/(:segment)', 'admin\UserController::store/$1');
 
@@ -71,15 +75,12 @@ $routes->group('admin', ['filter' => ['auth', 'admin']], static function ($route
         $routes->get('delete/(:segment)/(:num)', 'admin\UserController::delete/$1/$2');
     });
     
-    // --- Vendor Approval ---
     $routes->get('vendors/pending', 'admin\UserController::pendingList');
     $routes->get('vendors/approve/(:num)', 'admin\UserController::approveVendor/$1');
     $routes->get('vendors/reject/(:num)', 'admin\UserController::rejectVendor/$1');
 
-    // --- Bookings ---
-    // [แก้ไข] เพิ่มบรรทัดนี้ เพื่อแก้ 404 admin/bookings
-    $routes->get('bookings', 'admin\BookingController::index'); 
     
+    $routes->get('bookings', 'admin\BookingController::index'); 
     $routes->get('bookings/new', 'admin\BookingController::indexNew');
     $routes->get('bookings/pending', 'admin\BookingController::indexPending');
     $routes->get('bookings/approve/(:num)', 'admin\BookingController::approve/$1');
@@ -88,13 +89,5 @@ $routes->group('admin', ['filter' => ['auth', 'admin']], static function ($route
 
 
 // ==========================================================
-// --- 3. CUSTOMER SECTION (Frontend) ---
+// --- 3. VENDOR ---
 // ==========================================================
-$routes->group('customer', ['filter' => ['auth', 'customer']], static function ($routes) {
-    $routes->get('dashboard', 'CustomerController::index');
-    $routes->get('booking/stadium/(:num)', 'BookingController::viewStadium/$1');
-    $routes->post('booking/process', 'BookingController::processBooking');
-    $routes->get('payment/checkout/(:num)', 'BookingController::checkout/$1');
-    $routes->post('payment/process', 'BookingController::processPayment');
-    $routes->get('payment/success/(:num)', 'BookingController::paymentSuccess/$1');
-});

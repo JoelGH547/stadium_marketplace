@@ -23,7 +23,7 @@ class AdminAuthController extends BaseController
     public function login()
     {
         // (เราจะสร้าง View นี้ในขั้นตอนต่อไป)
-        return view('auth/admin'); 
+        return view('auth/login_admin'); 
     }
 
     /**

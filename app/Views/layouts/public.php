@@ -293,7 +293,9 @@ html.dark .dist-badge{background:rgba(14,165,164,.18);}
 </main>
 
 <?= $this->include('layouts/public_footer') ?>
-
+<script>
+  window.CUSTOMER_LOGGED_IN = <?= session('customer_logged_in') ? 'true' : 'false' ?>;
+</script>
 <script src="<?= base_url('assets/home.js') ?>"></script>
 <script src="<?= base_url('assets/view.js') ?>"></script>
 <script src="<?= base_url('assets/show.js') ?>"></script>
