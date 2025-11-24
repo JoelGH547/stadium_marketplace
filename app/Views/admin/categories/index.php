@@ -28,7 +28,7 @@
             <th style="width: 70px;">ID</th>
             <th style="width: 90px;">Emoji</th>
             <th>Name</th>
-            <th style="width: 200px;">Created At</th>
+            
             <th style="width: 180px;">Actions</th>
         </tr>
     </thead>
@@ -43,7 +43,7 @@
                         </span>
                     </td>
                     <td><?= esc($category['name']) ?></td>
-                    <td><?= esc($category['created_at'] ?? '-') ?></td>
+                    
                     <td>
                         <a href="<?= base_url('admin/categories/edit/' . $category['id']) ?>"
                         class="btn btn-sm btn-warning">

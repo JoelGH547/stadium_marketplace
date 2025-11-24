@@ -68,6 +68,7 @@
             <div class="stat-card p-4 d-flex align-items-center justify-content-between">
                 <div>
                     <div class="card-title-text mb-2">ลูกค้าใหม่ (24 ชม.)</div>
+                    <!-- ตรงนี้คุณทำถูกแล้ว -->
                     <div class="card-value-text text-primary"><?= number_format($newCustomerCount) ?></div>
                     <a href="<?= base_url('admin/users/new_customers') ?>" class="text-decoration-none small text-muted mt-2 d-block">
                         ดูรายชื่อ <i class="fas fa-arrow-right ms-1"></i>
@@ -81,8 +82,9 @@
             <div class="stat-card p-4 d-flex align-items-center justify-content-between">
                 <div>
                     <div class="card-title-text mb-2">ยอดจอง (วันนี้)</div>
-                    <div class="card-value-text">0</div>
-                    <span class="badge bg-light text-muted mt-2">Coming Soon</span>
+                    <!-- [แก้ไข] ใส่ตัวแปร $todayBookings และลบ Coming Soon ออก -->
+                    <div class="card-value-text text-dark"><?= number_format($todayBookings ?? 0) ?></div>
+                    <span class="text-muted small mt-2 d-block">รายการ</span>
                 </div>
                 <div class="stat-icon-box bg-blue-light"><i class="fas fa-calendar-day"></i></div>
             </div>
@@ -114,18 +116,22 @@
                     <table class="table table-custom table-hover align-middle mb-0">
                         <thead><tr><th>ชื่อร้าน/สนาม</th><th>สถานะ</th></tr></thead>
                         <tbody>
-                            <?php foreach ($recentVendors as $v): ?>
-                            <tr>
-                                <td class="fw-bold text-dark"><?= esc($v['vendor_name']) ?></td>
-                                <td>
-                                    <?php if(($v['status'] ?? '') == 'pending'): ?>
-                                        <span class="badge bg-warning text-dark rounded-pill">รออนุมัติ</span>
-                                    <?php else: ?>
-                                        <span class="badge bg-success rounded-pill">อนุมัติแล้ว</span>
-                                    <?php endif; ?>
-                                </td>
-                            </tr>
-                            <?php endforeach; ?>
+                            <?php if(!empty($recentVendors)): ?>
+                                <?php foreach ($recentVendors as $v): ?>
+                                <tr>
+                                    <td class="fw-bold text-dark"><?= esc($v['vendor_name']) ?></td>
+                                    <td>
+                                        <?php if(($v['status'] ?? '') == 'pending'): ?>
+                                            <span class="badge bg-warning text-dark rounded-pill">รออนุมัติ</span>
+                                        <?php else: ?>
+                                            <span class="badge bg-success rounded-pill">อนุมัติแล้ว</span>
+                                        <?php endif; ?>
+                                    </td>
+                                </tr>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <tr><td colspan="2" class="text-center text-muted">ไม่มีข้อมูล</td></tr>
+                            <?php endif; ?>
                         </tbody>
                     </table>
                 </div>
@@ -142,19 +148,23 @@
                     <table class="table table-custom table-hover align-middle mb-0">
                         <thead><tr><th>ชื่อลูกค้า</th><th>เบอร์โทร</th></tr></thead>
                         <tbody>
-                            <?php foreach ($recentCustomers as $c): ?>
-                            <tr>
-                                <td>
-                                    <div class="d-flex align-items-center">
-                                        <div class="bg-light rounded-circle d-flex justify-content-center align-items-center me-2" style="width:32px; height:32px;">
-                                            <i class="fas fa-user text-secondary small"></i>
+                            <?php if(!empty($recentCustomers)): ?>
+                                <?php foreach ($recentCustomers as $c): ?>
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="bg-light rounded-circle d-flex justify-content-center align-items-center me-2" style="width:32px; height:32px;">
+                                                <i class="fas fa-user text-secondary small"></i>
+                                            </div>
+                                            <span class="fw-bold text-dark"><?= esc($c['full_name']) ?></span>
                                         </div>
-                                        <span class="fw-bold text-dark"><?= esc($c['full_name']) ?></span>
-                                    </div>
-                                </td>
-                                <td class="text-muted"><?= esc($c['phone_number'] ?? '-') ?></td>
-                            </tr>
-                            <?php endforeach; ?>
+                                    </td>
+                                    <td class="text-muted"><?= esc($c['phone_number'] ?? '-') ?></td>
+                                </tr>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <tr><td colspan="2" class="text-center text-muted">ไม่มีข้อมูล</td></tr>
+                            <?php endif; ?>
                         </tbody>
                     </table>
                 </div>
