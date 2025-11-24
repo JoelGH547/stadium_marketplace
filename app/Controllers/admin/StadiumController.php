@@ -343,34 +343,51 @@ class StadiumController extends BaseController
     public function createField()
     {
         $fieldModel = new \App\Models\StadiumFieldModel();
-        
         $stadium_id = $this->request->getPost('stadium_id');
         
         $fieldModel->save([
             'stadium_id' => $stadium_id,
-            'name'       => $this->request->getPost('name'), // เช่น "สนาม 1 (หญ้าเทียม)"
-            'status' => $this->request->getPost('status')
+            'name'       => $this->request->getPost('name'),
+            'description'=> $this->request->getPost('description'),
+            'status'     => $this->request->getPost('status')
         ]);
 
         return redirect()->to('admin/stadiums/fields/' . $stadium_id)->with('success', 'เพิ่มสนามย่อยเรียบร้อย');
     }
 
-    // ฟังก์ชันอัปเดตข้อมูลสนามย่อย
+    // 2. แก้ไขสนามย่อย
     public function updateField()
     {
         $fieldModel = new \App\Models\StadiumFieldModel();
         
-        $id = $this->request->getPost('id'); // ID ของสนามย่อยที่จะแก้
-        $stadium_id = $this->request->getPost('stadium_id'); // ID สนามหลัก (เอาไว้ Redirect กลับ)
+        $id = $this->request->getPost('id');
+        $stadium_id = $this->request->getPost('stadium_id');
         
         $fieldModel->update($id, [
             'name'       => $this->request->getPost('name'),
             'description'=> $this->request->getPost('description'),
-            'status' => $this->request->getPost('status')
+            'status'     => $this->request->getPost('status')
         ]);
 
         return redirect()->to('admin/stadiums/fields/' . $stadium_id)->with('success', 'แก้ไขข้อมูลเรียบร้อย');
     }
-    
+
+    // 3. ลบสนามย่อย
+    public function deleteField($id)
+    {
+        $fieldModel = new \App\Models\StadiumFieldModel();
+        $field = $fieldModel->find($id);
+        
+        if ($field) {
+            // ไม่ต้องลบรูปแล้ว เพราะไม่ได้เก็บ
+            $fieldModel->delete($id);
+            
+            return redirect()->to('admin/stadiums/fields/' . $field['stadium_id'])
+                             ->with('success', 'ลบสนามย่อยเรียบร้อยแล้ว');
+        }
+
+        return redirect()->back()->with('error', 'ไม่พบข้อมูลสนามย่อย');
+    }
+
     // ... (เพิ่มฟังก์ชันลบ หรือ แก้ไขตามต้องการ) ...
 }
