@@ -42,7 +42,6 @@ class HomeController extends BaseController
         unset($v);
 
         $data = [
-            'siteName'   => 'Stadium Marketplace',
             'heroUrl'    => 'assets/images/batminton.webp',
             'title'      => 'จองสนามกีฬาออนไลน์',
             'venueCards' => $venueCards,
@@ -91,7 +90,6 @@ class HomeController extends BaseController
             ->findAll();
 
         $data = [
-            'siteName'   => 'Stadium Marketplace',
             'venueCards' => $venueCards,
             'categories' => $categories,
         ];
@@ -138,8 +136,44 @@ class HomeController extends BaseController
         if ($close && strlen($close) >= 5) $close = substr($close, 0, 5);
         $timeLabel = ($open && $close) ? ($open . ' – ' . $close) : 'ยังไม่ระบุเวลาเปิด–ปิด';
 
+        // MOCK: ไอเทมของสนาม (ชั่วคราว - รอเชื่อม DB ฝั่ง vendor)
+        $items = [
+            [
+                'id'       => 1,
+                'name'     => 'ไม้แบด Yonex Pro',
+                'price'    => 50,
+                'unit'     => 'ชม.',
+                'category' => 'อุปกรณ์กีฬา',
+                'desc'     => 'ให้เช่าไม้แบดคุณภาพสูง 1 ชั่วโมง',
+            ],
+            [
+                'id'       => 2,
+                'name'     => 'ลูกแบดฝึกซ้อม (1 กระป๋อง)',
+                'price'    => 80,
+                'unit'     => 'ชุด',
+                'category' => 'อุปกรณ์กีฬา',
+                'desc'     => 'ลูกแบดสำหรับการซ้อมทั่วไป 1 กระป๋อง',
+            ],
+            [
+                'id'       => 3,
+                'name'     => 'นวดนักกีฬา 60 นาที',
+                'price'    => 300,
+                'unit'     => 'ครั้ง',
+                'category' => 'บริการเสริม',
+                'desc'     => 'บริการนวดคลายกล้ามเนื้อหลังการเล่นกีฬา',
+            ],
+            [
+                'id'       => 4,
+                'name'     => 'ห้องพักนักกีฬา (2 ชั่วโมง)',
+                'price'    => 200,
+                'unit'     => 'ครั้ง',
+                'category' => 'ห้องพัก',
+                'desc'     => 'ห้องพักผ่อนพร้อมแอร์สำหรับนักกีฬา',
+            ],
+        ];
+
+
         $data = [
-            'siteName'    => 'Stadium Marketplace',
             'stadium'     => $stadium,
             'coverUrl'    => $coverUrl,
             'addressFull' => $addressFull,
@@ -147,6 +181,7 @@ class HomeController extends BaseController
             'fields'      => $fields,
             'contactPhone'  => $contactPhone,
             'contactEmail'  => $contactEmail,
+            'items'        => $items,
         ];
 
         return view('public/show', $data);

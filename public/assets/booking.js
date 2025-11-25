@@ -73,7 +73,6 @@ document.addEventListener('DOMContentLoaded', function () {
             updateFieldUI();
             syncBookingUI();
         });
-        // เรียกครั้งแรก
         updateFieldUI();
     }
 
@@ -99,7 +98,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const y = date.getFullYear();
         const m = String(date.getMonth() + 1).padStart(2, '0');
         const d = String(date.getDate()).padStart(2, '0');
-        return `${y}-${m}-${d}`;
+        return y + '-' + m + '-' + d;
     }
 
     const todayStr = getLocalYMD(new Date());
@@ -117,7 +116,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function minutesToLabel(mins) {
         const h = Math.floor(mins / 60);
         const m = mins % 60;
-        return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+        return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
     }
 
     function clearSelectOptions(selectEl, placeholder) {
@@ -265,10 +264,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // ====== 3) ปุ่ม show schedule ======
     const btnShowSchedule = document.getElementById('btnShowSchedule');
-    if (btnShowSchedule && fieldSelect) {
+    if (btnShowSchedule) {
         btnShowSchedule.addEventListener('click', function () {
-            // หากยังไม่มีสนามย่อย หรือ dropdown ถูกปิด ก็ไม่ต้องบังคับเลือก field
-            if (!fieldSelect.disabled) {
+            // หากมีสนามย่อยและ select ไม่ disabled ให้ตรวจว่ามีการเลือก field แล้ว
+            if (fieldSelect && !fieldSelect.disabled) {
                 const opt = fieldSelect.options[fieldSelect.selectedIndex];
                 if (!opt || !opt.value) {
                     alert('กรุณาเลือกสนามย่อย (court) ก่อนดูตารางเวลา');
@@ -293,9 +292,8 @@ document.addEventListener('DOMContentLoaded', function () {
             const baseUrl = this.dataset.baseUrl || '';
             if (!baseUrl) return;
 
-            // ถ้ามีสนามย่อย ให้ส่ง field id ไปด้วย
             let url = baseUrl;
-            if (!fieldSelect.disabled) {
+            if (fieldSelect && !fieldSelect.disabled) {
                 const opt = fieldSelect.options[fieldSelect.selectedIndex];
                 if (opt && opt.value) {
                     url += '?field=' + encodeURIComponent(opt.value);
@@ -305,11 +303,174 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // ====== 4) สรุปราคา + ปุ่ม "จองเลย" ======
+    // ====== 4) สรุปราคา + ปุ่ม "จองเลย" + ตะกร้าไอเทม ======
     const bookingHoursLabel = document.getElementById('bookingHoursLabel');
     const bookingFieldPrice = document.getElementById('bookingFieldPrice');
     const bookingServiceFee = document.getElementById('bookingServiceFee');
     const bookBtn = document.getElementById('btnBookNow');
+    const bookingItemsSummary = document.getElementById('bookingItemsSummary');
+    const bookingItemsList = document.getElementById('bookingItemsList');
+    const bookingOverlay = document.getElementById('bookingOverlay');
+    const bookingOverlayClose = document.getElementById('bookingOverlayClose');
+
+    const itemButtons = document.querySelectorAll('.add-item-btn');
+
+    let cartItems = [];
+    let cartTotal = 0;
+
+    function updateItemsSummary() {
+        if (!bookingItemsSummary) return;
+        if (!cartItems.length) {
+            bookingItemsSummary.textContent = 'ยังไม่ได้เลือกไอเทม';
+            return;
+        }
+        const totalQty = cartItems.reduce(function (sum, item) {
+            return sum + item.qty;
+        }, 0);
+        bookingItemsSummary.textContent =
+            totalQty +
+            ' รายการ — ' +
+            cartTotal.toLocaleString('th-TH', { maximumFractionDigits: 2 }) +
+            '฿';
+    }
+
+    function renderItemsList() {
+        if (!bookingItemsList) return;
+
+        while (bookingItemsList.firstChild) {
+            bookingItemsList.removeChild(bookingItemsList.firstChild);
+        }
+
+        if (!cartItems.length) {
+            const li = document.createElement('li');
+            li.className = 'text-xs text-gray-400';
+            li.textContent = 'ยังไม่มีไอเทมในตะกร้า';
+            bookingItemsList.appendChild(li);
+            return;
+        }
+
+        cartItems.forEach(function (item) {
+            const li = document.createElement('li');
+            li.className = 'flex items-center justify-between text-xs text-gray-700';
+
+            const left = document.createElement('div');
+            left.className = 'flex-1';
+            left.textContent =
+                item.name +
+                ' x' +
+                item.qty +
+                ' — ' +
+                (item.price * item.qty).toLocaleString('th-TH', { maximumFractionDigits: 2 }) +
+                '฿';
+
+            const right = document.createElement('div');
+            right.className = 'ml-2 flex items-center gap-1';
+
+            const btnDec = document.createElement('button');
+            btnDec.type = 'button';
+            btnDec.textContent = '−';
+            btnDec.className =
+                'h-6 w-6 rounded border border-gray-300 text-gray-700 hover:bg-gray-100';
+            btnDec.dataset.action = 'dec';
+            btnDec.dataset.itemId = item.id;
+
+            const btnInc = document.createElement('button');
+            btnInc.type = 'button';
+            btnInc.textContent = '+';
+            btnInc.className =
+                'h-6 w-6 rounded border border-gray-300 text-gray-700 hover:bg-gray-100';
+            btnInc.dataset.action = 'inc';
+            btnInc.dataset.itemId = item.id;
+
+            const btnRemove = document.createElement('button');
+            btnRemove.type = 'button';
+            btnRemove.textContent = 'ลบ';
+            btnRemove.className = 'text-[10px] text-red-500 hover:underline';
+            btnRemove.dataset.action = 'remove';
+            btnRemove.dataset.itemId = item.id;
+
+            right.appendChild(btnDec);
+            right.appendChild(btnInc);
+            right.appendChild(btnRemove);
+
+            li.appendChild(left);
+            li.appendChild(right);
+
+            bookingItemsList.appendChild(li);
+        });
+    }
+
+    function recalcCartTotal() {
+        cartTotal = cartItems.reduce(function (sum, item) {
+            return sum + item.price * item.qty;
+        }, 0);
+        updateItemsSummary();
+        renderItemsList();
+    }
+
+    if (itemButtons && itemButtons.length > 0) {
+        itemButtons.forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                const id = btn.dataset.itemId;
+                const name = btn.dataset.itemName || '';
+                const price = parseFloat(btn.dataset.itemPrice || '0') || 0;
+
+                if (!id || !price) {
+                    return;
+                }
+
+                const found = cartItems.find(function (it) {
+                    return it.id === id;
+                });
+
+                if (found) {
+                    found.qty += 1;
+                } else {
+                    cartItems.push({
+                        id: id,
+                        name: name,
+                        price: price,
+                        qty: 1
+                    });
+                }
+
+                recalcCartTotal();
+                syncBookingUI();
+            });
+        });
+    }
+
+    if (bookingItemsList) {
+        bookingItemsList.addEventListener('click', function (e) {
+            const target = e.target;
+            if (!target.dataset || !target.dataset.action) return;
+
+            const action = target.dataset.action;
+            const id = target.dataset.itemId;
+            if (!id) return;
+
+            const foundIndex = cartItems.findIndex(function (it) {
+                return it.id === id;
+            });
+            if (foundIndex === -1) return;
+
+            const item = cartItems[foundIndex];
+
+            if (action === 'inc') {
+                item.qty += 1;
+            } else if (action === 'dec') {
+                item.qty -= 1;
+                if (item.qty <= 0) {
+                    cartItems.splice(foundIndex, 1);
+                }
+            } else if (action === 'remove') {
+                cartItems.splice(foundIndex, 1);
+            }
+
+            recalcCartTotal();
+            syncBookingUI();
+        });
+    }
 
     function setBookingDefault() {
         if (bookingHoursLabel) {
@@ -320,6 +481,18 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         if (bookingServiceFee) {
             bookingServiceFee.textContent = '--฿';
+        }
+        if (bookingItemsSummary) {
+            bookingItemsSummary.textContent = 'ยังไม่ได้เลือกไอเทม';
+        }
+        if (bookingItemsList) {
+            while (bookingItemsList.firstChild) {
+                bookingItemsList.removeChild(bookingItemsList.firstChild);
+            }
+            const li = document.createElement('li');
+            li.className = 'text-xs text-gray-400';
+            li.textContent = 'ยังไม่มีไอเทมในตะกร้า';
+            bookingItemsList.appendChild(li);
         }
         if (bookBtn) {
             bookBtn.disabled = true;
@@ -346,14 +519,12 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function syncBookingUI() {
-        // ถ้าไม่มี element พวกนี้ก็ไม่ต้องทำอะไร
         if (!bookingFieldPrice && !bookingServiceFee && !bookBtn && !bookingHoursLabel) {
             return;
         }
 
         let ready = true;
 
-        // 1) ถ้ามีสนามย่อยและ select ไม่ disabled ต้องเลือกสนามย่อยที่ active
         if (fieldSelect && !fieldSelect.disabled) {
             const opt = fieldSelect.options[fieldSelect.selectedIndex];
             if (!opt || !opt.value) {
@@ -366,12 +537,10 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
 
-        // 2) ต้องมีวันที่
         if (!dateInput || !dateInput.value) {
             ready = false;
         }
 
-        // 3) ต้องมีเวลาเริ่ม/สิ้นสุดที่ถูกต้อง
         if (!startSelect || !endSelect || !startSelect.value || !endSelect.value) {
             ready = false;
         }
@@ -381,7 +550,6 @@ document.addEventListener('DOMContentLoaded', function () {
             ready = false;
         }
 
-        // 4) ต้องมีราคา/ชั่วโมง
         if (!pricePerHour || pricePerHour <= 0) {
             ready = false;
         }
@@ -391,12 +559,12 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        // คำนวณราคา
-        const bookingPrice = hours * pricePerHour;
+        const basePrice = hours * pricePerHour;
+        const bookingPrice = basePrice + cartTotal;
         const serviceFee = bookingPrice * 0.05;
 
         if (bookingHoursLabel) {
-            bookingHoursLabel.textContent = `${hours} ชั่วโมง`;
+            bookingHoursLabel.textContent = hours + ' ชั่วโมง';
         }
 
         if (bookingFieldPrice) {
@@ -412,21 +580,41 @@ document.addEventListener('DOMContentLoaded', function () {
         enableBookBtn();
     }
 
-    // ตั้งค่า default ตอนโหลดหน้า
     setBookingDefault();
+    updateItemsSummary();
+    renderItemsList();
+    syncBookingUI();
 
-    // ปุ่ม "จองเลย" — ตอนนี้ให้เป็น handler ว่าง ๆ ไว้ก่อน (ตามข้อ 3)
     if (bookBtn) {
         bookBtn.addEventListener('click', function (e) {
             if (bookBtn.disabled) {
                 e.preventDefault();
                 return;
             }
-            // TODO: เว้นไว้ให้ทำต่อ (เช่น เปิด popup, ส่งฟอร์ม, ฯลฯ)
-            console.log('Book button clicked (placeholder)');
+
+            // ถ้ามี cart URL ให้ไปที่หน้าตะกร้า
+            const cartUrl = bookBtn.dataset.cartUrl;
+            if (cartUrl) {
+                window.location.href = cartUrl;
+                return;
+            }
+
+            // ถ้าไม่ได้ตั้งค่า cart URL ไว้ ใช้ overlay เป็น fallback
+            if (bookingOverlay) {
+                bookingOverlay.classList.remove('hidden');
+            }
+        });
+    }
+    if (bookingOverlay && bookingOverlayClose) {
+        bookingOverlayClose.addEventListener('click', function () {
+            bookingOverlay.classList.add('hidden');
+        });
+
+        bookingOverlay.addEventListener('click', function (e) {
+            if (e.target === bookingOverlay) {
+                bookingOverlay.classList.add('hidden');
+            }
         });
     }
 
-    // เรียก syncBookingUI ครั้งแรกเผื่อกรณีมีค่า default จาก server
-    syncBookingUI();
 });

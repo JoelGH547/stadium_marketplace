@@ -17,7 +17,7 @@ $rating = isset($stadium['rating']) ? (float) $stadium['rating'] : 5.0;
 $district = trim($stadium['district'] ?? '');
 $province = trim($stadium['province'] ?? '');
 $locationShort = trim($district . ($district && $province ? ', ' : '') . $province)
-  ?: 'ยังไม่ระบุพื้นที่';
+    ?: 'ยังไม่ระบุพื้นที่';
 
 // ข้อมูลติดต่อ
 $contactPhone = trim($stadium['contact_phone'] ?? '');
@@ -34,38 +34,38 @@ $maxBooking = date('Y-m-d', strtotime('+5 years'));
 // รูปหลัก (cover) สำหรับ fallback และ thumbnail แรก
 $coverImage = trim($stadium['cover_image'] ?? '');
 $coverUrl   = $coverImage !== ''
-  ? base_url('assets/uploads/stadiums/' . $coverImage)
-  : base_url('assets/uploads/home/1.jpg');
+    ? base_url('assets/uploads/stadiums/' . $coverImage)
+    : base_url('assets/uploads/home/1.jpg');
 
 // เตรียมรูปสำหรับแกลเลอรี: รวม outside + inside images
 $galleryImages = [];
 
 if (!empty($stadium['outside_images'])) {
-  $decoded = json_decode($stadium['outside_images'], true);
-  if (is_array($decoded)) {
-    foreach ($decoded as $img) {
-      $img = trim((string) $img);
-      if ($img !== '') {
-        $galleryImages[] = base_url('assets/uploads/stadiums/' . $img);
-      }
+    $decoded = json_decode($stadium['outside_images'], true);
+    if (is_array($decoded)) {
+        foreach ($decoded as $img) {
+            $img = trim((string) $img);
+            if ($img !== '') {
+                $galleryImages[] = base_url('assets/uploads/stadiums/' . $img);
+            }
+        }
     }
-  }
 }
 
 if (!empty($stadium['inside_images'])) {
-  $decoded = json_decode($stadium['inside_images'], true);
-  if (is_array($decoded)) {
-    foreach ($decoded as $img) {
-      $img = trim((string) $img);
-      if ($img !== '') {
-        $galleryImages[] = base_url('assets/uploads/stadiums/' . $img);
-      }
+    $decoded = json_decode($stadium['inside_images'], true);
+    if (is_array($decoded)) {
+        foreach ($decoded as $img) {
+            $img = trim((string) $img);
+            if ($img !== '') {
+                $galleryImages[] = base_url('assets/uploads/stadiums/' . $img);
+            }
+        }
     }
-  }
 }
 
 if (empty($galleryImages)) {
-  $galleryImages[] = $coverUrl;
+    $galleryImages[] = $coverUrl;
 }
 
 // สนามย่อย (สำหรับ dropdown)
@@ -73,10 +73,10 @@ $fieldsRaw      = isset($fields) && is_array($fields) ? $fields : [];
 $hasAnyField    = !empty($fieldsRaw);
 $hasActiveField = false;
 foreach ($fieldsRaw as $f) {
-  if (($f['status'] ?? 'active') === 'active') {
-    $hasActiveField = true;
-    break;
-  }
+    if (($f['status'] ?? 'active') === 'active') {
+        $hasActiveField = true;
+        break;
+    }
 }
 ?>
 <main class="bg-gray-50 min-h-screen pb-10">
@@ -193,8 +193,8 @@ foreach ($fieldsRaw as $f) {
                         <h2 class="text-lg font-semibold text-gray-900">Booking Conditions</h2>
                         <div class="mt-3 text-sm text-gray-700 leading-relaxed whitespace-pre-line">
                             <?= $description !== ''
-                ? nl2br(esc($description))
-                : 'ยังไม่ได้ระบุเงื่อนไขการจอง' ?>
+                                ? nl2br(esc($description))
+                                : 'ยังไม่ได้ระบุเงื่อนไขการจอง' ?>
                         </div>
                     </div>
 
@@ -238,6 +238,59 @@ foreach ($fieldsRaw as $f) {
                             </dl>
                         </div>
                     </aside>
+                    <!-- รายการไอเทม / บริการของสนาม -->
+                    <?php if (!empty($items)): ?>
+                    <section class="mt-10">
+                        <div class="flex items-center justify-between gap-3 mb-4">
+                            <h2 class="text-lg font-semibold text-gray-900">
+                                บริการและไอเทมของสนาม
+                            </h2>
+                            <p class="text-xs sm:text-sm text-gray-500">
+                                เลือกไอเทมที่ต้องการใช้งานร่วมกับการจองสนาม เช่น ไม้แบด, ห้องพัก, นวด ฯลฯ
+                            </p>
+                        </div>
+
+                        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                            <?php foreach ($items as $item): ?>
+                            <article
+                                class="flex flex-col justify-between rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+                                <div class="space-y-1">
+                                    <h3 class="text-sm font-semibold text-gray-900">
+                                        <?= esc($item['name']) ?>
+                                    </h3>
+                                    <?php if (!empty($item['category'])): ?>
+                                    <p class="text-xs text-gray-500">
+                                        <?= esc($item['category']) ?>
+                                    </p>
+                                    <?php endif; ?>
+                                    <?php if (!empty($item['desc'])): ?>
+                                    <p class="mt-1 text-xs text-gray-600 line-clamp-2">
+                                        <?= esc($item['desc']) ?>
+                                    </p>
+                                    <?php endif; ?>
+                                </div>
+
+                                <div class="mt-3 flex items-center justify-between">
+                                    <div class="text-sm font-semibold text-gray-900">
+                                        <?= number_format((float) $item['price'], 2) ?>฿
+                                        <span class="text-xs font-normal text-gray-500">
+                                            / <?= esc($item['unit'] ?? 'ครั้ง') ?>
+                                        </span>
+                                    </div>
+
+                                    <button type="button" class="inline-flex items-center rounded-xl bg-[var(--primary)] px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-teal-600 transition
+                                           add-item-btn" data-item-id="<?= (int) $item['id'] ?>"
+                                        data-item-name="<?= esc($item['name']) ?>"
+                                        data-item-price="<?= (float) $item['price'] ?>">
+                                        + เพิ่มลงตะกร้า
+                                    </button>
+                                </div>
+                            </article>
+                            <?php endforeach; ?>
+                        </div>
+                    </section>
+                    <?php endif; ?>
+
                 </section>
                 <!-- ปุ่ม Select courts / show schedule -->
                 <section class="mt-10 border-t border-dashed border-gray-200 pt-6">
@@ -268,12 +321,12 @@ foreach ($fieldsRaw as $f) {
                                             <option value="">— เลือกสนามย่อย —</option>
                                             <?php foreach ($fieldsRaw as $field): ?>
                                             <?php
-                          $fieldId   = $field['id'] ?? null;
-                          $fieldName = trim($field['name'] ?? '');
-                          $fieldDesc = trim($field['description'] ?? '');
-                          $status    = $field['status'] ?? 'active';
-                          $isActive  = ($status === 'active');
-                          ?>
+                                                    $fieldId   = $field['id'] ?? null;
+                                                    $fieldName = trim($field['name'] ?? '');
+                                                    $fieldDesc = trim($field['description'] ?? '');
+                                                    $status    = $field['status'] ?? 'active';
+                                                    $isActive  = ($status === 'active');
+                                                    ?>
                                             <option value="<?= esc($fieldId) ?>"
                                                 data-name="<?= esc($fieldName, 'attr') ?>"
                                                 data-desc="<?= esc($fieldDesc, 'attr') ?>"
@@ -420,6 +473,16 @@ foreach ($fieldsRaw as $f) {
                                             <span id="bookingFieldPrice"
                                                 class="text-sm font-semibold text-gray-900">--฿</span>
                                         </div>
+
+                                        <div class="flex items-center justify-between">
+                                            <span class="text-xs text-gray-500">
+                                                ไอเทมที่เลือก
+                                            </span>
+                                            <span id="bookingItemsSummary" class="text-xs font-medium text-gray-700">
+                                                ยังไม่ได้เลือกไอเทม
+                                            </span>
+                                        </div>
+
                                         <div class="flex items-center justify-between">
                                             <span class="text-xs text-gray-500">
                                                 ค่าบริการ (5%)
@@ -429,12 +492,42 @@ foreach ($fieldsRaw as $f) {
                                         </div>
                                     </div>
 
-                                    <button type="button" id="btnBookNow" class="mt-3 inline-flex w-full items-center justify-center rounded-xl
-                           bg-gray-300 px-4 py-2.5 text-sm font-semibold text-gray-600 shadow-sm
-                           transition cursor-not-allowed opacity-50 hover:bg-gray-300">
+                                    <div class="mt-3 border-t pt-2">
+                                        <p class="mb-1 text-xs text-gray-500">รายการไอเทมในตะกร้า</p>
+                                        <ul id="bookingItemsList" class="space-y-1 max-h-28 overflow-auto pr-1">
+                                            <li class="text-xs text-gray-400">ยังไม่มีไอเทมในตะกร้า</li>
+                                        </ul>
+                                    </div>
+
+                                    <button type="button" id="btnBookNow"
+                                        data-cart-url="<?= route_to('customer.cart') ?>" class="mt-3 inline-flex w-full items-center justify-center rounded-xl
+           bg-gray-300 px-4 py-2.5 text-sm font-semibold text-gray-600 shadow-sm
+           transition cursor-not-allowed opacity-50 hover:bg-gray-300">
                                         จองเลย
                                     </button>
+
                                 </aside>
+                                <!-- Overlay ว่าง ๆ หลังจากกดปุ่ม "จองเลย" (placeholder) -->
+                                <div id="bookingOverlay"
+                                    class="fixed inset-0 z-[60] hidden items-center justify-center bg-black/40">
+                                    <div class="mx-4 w-full max-w-md rounded-2xl bg-white p-5 shadow-xl">
+                                        <div class="mb-3 flex items-center justify-between gap-3">
+                                            <h2 class="text-sm font-semibold text-gray-900">
+                                                พื้นที่สำหรับขั้นตอนการจองถัดไป
+                                            </h2>
+                                            <button type="button" id="bookingOverlayClose"
+                                                class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-xs font-semibold text-gray-600 hover:bg-gray-200">
+                                                ✕
+                                            </button>
+                                        </div>
+                                        <p class="text-xs text-gray-600">
+                                            ตรงนี้จะใช้สำหรับหน้าถัดไปของการจอง (เช่น กรอกข้อมูลผู้จอง / ยืนยันรายการ
+                                            ฯลฯ)
+                                            ตอนนี้แสดงเป็นกล่องว่าง ๆ ไว้ก่อนตามคอนเซปต์ที่วางไว้
+                                        </p>
+                                    </div>
+                                </div>
+
                                 <?php endif; ?>
                             </div>
                         </div>
