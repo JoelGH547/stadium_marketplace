@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', function () {
-    // ====== Booking: อ่านข้อมูลจาก article (เวลาเปิด-ปิด + ราคา/ชม.) ======
+    // ====== อ่านข้อมูลหลักจาก article ======
     const article = document.getElementById('stadiumDetail');
     let openTimeRaw = '';
     let closeTimeRaw = '';
@@ -11,17 +11,33 @@ document.addEventListener('DOMContentLoaded', function () {
         pricePerHour = parseFloat(article.dataset.priceHour || '0') || 0;
     }
 
-    // ====== 1. เลือกสนามย่อย + tooltip ======
+    // ====== 1) สนามย่อย + tooltip ปุ่ม i ======
     const fieldSelect = document.getElementById('stadiumFieldSelect');
-    const btnShowSchedule = document.getElementById('btnShowSchedule');
     const infoBtn = document.getElementById('fieldInfoBtn');
     const tooltip = document.getElementById('fieldInfoTooltip');
     const tooltipTitle = document.getElementById('fieldInfoTitle');
     const tooltipBody = document.getElementById('fieldInfoBody');
     const statusLabel = document.getElementById('fieldStatusLabel');
 
+    function clearFieldTooltip() {
+        if (tooltipTitle) tooltipTitle.textContent = '';
+        if (tooltipBody) tooltipBody.textContent = '';
+        if (tooltip) tooltip.classList.add('hidden');
+        if (infoBtn) infoBtn.disabled = true;
+    }
+
     function updateFieldUI() {
         if (!fieldSelect) return;
+
+        // กรณีไม่มีสนามย่อยให้เลือก (dropdown ซีด ๆ)
+        if (fieldSelect.disabled) {
+            if (statusLabel) {
+                statusLabel.textContent = '';
+                statusLabel.className = 'text-xs font-medium text-gray-500';
+            }
+            clearFieldTooltip();
+            return;
+        }
 
         const opt = fieldSelect.options[fieldSelect.selectedIndex];
         if (!opt || !opt.value) {
@@ -29,12 +45,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 statusLabel.textContent = '';
                 statusLabel.className = 'text-xs font-medium text-gray-500';
             }
-            if (infoBtn) {
-                infoBtn.disabled = true;
-            }
-            if (tooltipTitle) tooltipTitle.textContent = '';
-            if (tooltipBody) tooltipBody.textContent = '';
-            if (tooltip) tooltip.classList.add('hidden');
+            clearFieldTooltip();
             return;
         }
 
@@ -44,10 +55,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (tooltipTitle) tooltipTitle.textContent = name;
         if (tooltipBody) tooltipBody.textContent = desc || 'ไม่มีรายละเอียดเพิ่มเติม';
-
-        if (infoBtn) {
-            infoBtn.disabled = !desc;
-        }
+        if (infoBtn) infoBtn.disabled = !desc;
 
         if (!statusLabel) return;
 
@@ -61,25 +69,26 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     if (fieldSelect) {
-        fieldSelect.addEventListener('change', () => {
+        fieldSelect.addEventListener('change', function () {
             updateFieldUI();
             syncBookingUI();
         });
+        // เรียกครั้งแรก
         updateFieldUI();
     }
 
     if (infoBtn && tooltip) {
-        infoBtn.addEventListener('mouseenter', () => {
+        infoBtn.addEventListener('mouseenter', function () {
             if (infoBtn.disabled) return;
             if (!tooltipBody || !tooltipBody.textContent.trim()) return;
             tooltip.classList.remove('hidden');
         });
-        infoBtn.addEventListener('mouseleave', () => {
+        infoBtn.addEventListener('mouseleave', function () {
             tooltip.classList.add('hidden');
         });
     }
 
-    // ====== 2. เลือกวันที่และเวลา (ตามกติกา) ======
+    // ====== 2) วันที่ + เวลาเริ่ม/สิ้นสุด ======
     const dateInput = document.getElementById('bookingDate');
     const startSelect = document.getElementById('startTimeSelect');
     const endSelect = document.getElementById('endTimeSelect');
@@ -141,6 +150,7 @@ document.addEventListener('DOMContentLoaded', function () {
         let openMinutes = parseTimeToMinutes(openTimeRaw);
         let closeMinutes = parseTimeToMinutes(closeTimeRaw);
 
+        // fallback ถ้าตั้งค่าเวลาเปิดปิดไม่ถูกต้อง
         if (openMinutes === null || closeMinutes === null || closeMinutes <= openMinutes) {
             openMinutes = 9 * 60;
             closeMinutes = 22 * 60;
@@ -172,6 +182,10 @@ document.addEventListener('DOMContentLoaded', function () {
         if (timeErrorText) {
             timeErrorText.textContent = '';
             timeErrorText.classList.add('hidden');
+        }
+
+        if (timeHelpText) {
+            timeHelpText.textContent = 'เลือกเวลาเริ่มต้นและเวลาสิ้นสุดตามช่วงที่สนามเปิดให้บริการ';
         }
 
         for (let t = startBase; t <= closeMinutes - 60; t += 60) {
@@ -234,34 +248,37 @@ document.addEventListener('DOMContentLoaded', function () {
 
         buildTimeOptionsForDate(dateInput.value);
 
-        dateInput.addEventListener('change', () => {
+        dateInput.addEventListener('change', function () {
             buildTimeOptionsForDate(dateInput.value);
             syncBookingUI();
         });
 
-        startSelect.addEventListener('change', () => {
+        startSelect.addEventListener('change', function () {
             rebuildEndTimeOptions();
             syncBookingUI();
         });
 
-        endSelect.addEventListener('change', () => {
+        endSelect.addEventListener('change', function () {
             syncBookingUI();
         });
     }
 
-    // ====== 3. ปุ่ม show schedule (ใช้ field + วันเวลา) ======
+    // ====== 3) ปุ่ม show schedule ======
+    const btnShowSchedule = document.getElementById('btnShowSchedule');
     if (btnShowSchedule && fieldSelect) {
         btnShowSchedule.addEventListener('click', function () {
-            const opt = fieldSelect.options[fieldSelect.selectedIndex];
-            if (!opt || !opt.value) {
-                alert('กรุณาเลือกสนามย่อย (court) ก่อนดูตารางเวลา');
-                return;
-            }
-
-            const status = (opt.dataset.status || 'active').toLowerCase();
-            if (status !== 'active') {
-                alert('สนามย่อยนี้กำลังปิดปรับปรุง กรุณาเลือกสนามอื่น');
-                return;
+            // หากยังไม่มีสนามย่อย หรือ dropdown ถูกปิด ก็ไม่ต้องบังคับเลือก field
+            if (!fieldSelect.disabled) {
+                const opt = fieldSelect.options[fieldSelect.selectedIndex];
+                if (!opt || !opt.value) {
+                    alert('กรุณาเลือกสนามย่อย (court) ก่อนดูตารางเวลา');
+                    return;
+                }
+                const status = (opt.dataset.status || 'active').toLowerCase();
+                if (status !== 'active') {
+                    alert('สนามย่อยนี้กำลังปิดปรับปรุง กรุณาเลือกสนามอื่น');
+                    return;
+                }
             }
 
             if (dateInput && (!dateInput.value || dateInput.value.trim() === '')) {
@@ -274,40 +291,46 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             const baseUrl = this.dataset.baseUrl || '';
-            const fieldId = opt.value;
             if (!baseUrl) return;
 
-            const url = baseUrl + '?field=' + encodeURIComponent(fieldId);
+            // ถ้ามีสนามย่อย ให้ส่ง field id ไปด้วย
+            let url = baseUrl;
+            if (!fieldSelect.disabled) {
+                const opt = fieldSelect.options[fieldSelect.selectedIndex];
+                if (opt && opt.value) {
+                    url += '?field=' + encodeURIComponent(opt.value);
+                }
+            }
             window.location.href = url;
         });
     }
 
-    // ====== 4. Summary การจอง + ปุ่ม "จองเลย" ======
-    // หมายเหตุ: ต้องมี element เหล่านี้ใน HTML ตาม id ที่ระบุ
-    // - <span id="bookingPriceLine">ค่าจองสนาม (ต่อชั่วโมง) --฿</span>
-    // - <span id="bookingFeeLine">ค่าบริการ --฿</span>
-    // - <button id="btnBookNow">จองเลย</button>
-    const bookingPriceLine = document.getElementById('bookingPriceLine');
-    const bookingFeeLine = document.getElementById('bookingFeeLine');
+    // ====== 4) สรุปราคา + ปุ่ม "จองเลย" ======
+    const bookingHoursLabel = document.getElementById('bookingHoursLabel');
+    const bookingFieldPrice = document.getElementById('bookingFieldPrice');
+    const bookingServiceFee = document.getElementById('bookingServiceFee');
     const bookBtn = document.getElementById('btnBookNow');
 
     function setBookingDefault() {
-        if (bookingPriceLine) {
-            bookingPriceLine.textContent = 'ค่าจองสนาม (ต่อชั่วโมง) --฿';
+        if (bookingHoursLabel) {
+            bookingHoursLabel.textContent = 'ต่อชั่วโมง';
         }
-        if (bookingFeeLine) {
-            bookingFeeLine.textContent = 'ค่าบริการ --฿';
+        if (bookingFieldPrice) {
+            bookingFieldPrice.textContent = '--฿';
+        }
+        if (bookingServiceFee) {
+            bookingServiceFee.textContent = '--฿';
         }
         if (bookBtn) {
             bookBtn.disabled = true;
-            bookBtn.classList.add('opacity-60', 'cursor-not-allowed');
+            bookBtn.classList.add('opacity-50', 'cursor-not-allowed');
         }
     }
 
     function enableBookBtn() {
         if (!bookBtn) return;
         bookBtn.disabled = false;
-        bookBtn.classList.remove('opacity-60', 'cursor-not-allowed');
+        bookBtn.classList.remove('opacity-50', 'cursor-not-allowed');
     }
 
     function getDurationHours() {
@@ -323,16 +346,15 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function syncBookingUI() {
-        // default state
-        if (!bookingPriceLine && !bookingFeeLine && !bookBtn) {
-            return; // ไม่มี element ให้จัดการ ก็ไม่ต้องทำอะไร
+        // ถ้าไม่มี element พวกนี้ก็ไม่ต้องทำอะไร
+        if (!bookingFieldPrice && !bookingServiceFee && !bookBtn && !bookingHoursLabel) {
+            return;
         }
 
-        // ตรวจว่า field จำเป็นครบหรือยัง
         let ready = true;
 
-        // 1) ถ้ามีสนามย่อยให้เลือก ต้องไม่ใช่ option ว่าง
-        if (fieldSelect) {
+        // 1) ถ้ามีสนามย่อยและ select ไม่ disabled ต้องเลือกสนามย่อยที่ active
+        if (fieldSelect && !fieldSelect.disabled) {
             const opt = fieldSelect.options[fieldSelect.selectedIndex];
             if (!opt || !opt.value) {
                 ready = false;
@@ -344,12 +366,12 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
 
-        // 2) วันที่
+        // 2) ต้องมีวันที่
         if (!dateInput || !dateInput.value) {
             ready = false;
         }
 
-        // 3) เวลาเริ่ม/สิ้นสุด
+        // 3) ต้องมีเวลาเริ่ม/สิ้นสุดที่ถูกต้อง
         if (!startSelect || !endSelect || !startSelect.value || !endSelect.value) {
             ready = false;
         }
@@ -359,7 +381,12 @@ document.addEventListener('DOMContentLoaded', function () {
             ready = false;
         }
 
-        if (!ready || !pricePerHour) {
+        // 4) ต้องมีราคา/ชั่วโมง
+        if (!pricePerHour || pricePerHour <= 0) {
+            ready = false;
+        }
+
+        if (!ready) {
             setBookingDefault();
             return;
         }
@@ -368,35 +395,38 @@ document.addEventListener('DOMContentLoaded', function () {
         const bookingPrice = hours * pricePerHour;
         const serviceFee = bookingPrice * 0.05;
 
-        if (bookingPriceLine) {
-            bookingPriceLine.textContent =
-                `ค่าจองสนาม (${hours} ชั่วโมง) ` +
-                bookingPrice.toLocaleString('th-TH', { maximumFractionDigits: 2 }) +
-                '฿';
+        if (bookingHoursLabel) {
+            bookingHoursLabel.textContent = `${hours} ชั่วโมง`;
         }
 
-        if (bookingFeeLine) {
-            bookingFeeLine.textContent =
-                'ค่าบริการ ' +
-                serviceFee.toLocaleString('th-TH', { maximumFractionDigits: 2 }) +
-                '฿';
+        if (bookingFieldPrice) {
+            bookingFieldPrice.textContent =
+                bookingPrice.toLocaleString('th-TH', { maximumFractionDigits: 2 }) + '฿';
+        }
+
+        if (bookingServiceFee) {
+            bookingServiceFee.textContent =
+                serviceFee.toLocaleString('th-TH', { maximumFractionDigits: 2 }) + '฿';
         }
 
         enableBookBtn();
     }
 
-    // ตั้งค่าตั้งต้นตอนโหลดหน้า
+    // ตั้งค่า default ตอนโหลดหน้า
     setBookingDefault();
 
-    // ปุ่ม "จองเลย" — ตอนนี้ให้เป็น hover/handler ว่าง ๆ ไว้ก่อน
+    // ปุ่ม "จองเลย" — ตอนนี้ให้เป็น handler ว่าง ๆ ไว้ก่อน (ตามข้อ 3)
     if (bookBtn) {
-        bookBtn.addEventListener('click', (e) => {
+        bookBtn.addEventListener('click', function (e) {
             if (bookBtn.disabled) {
                 e.preventDefault();
                 return;
             }
-            // TODO: ตรงนี้เว้นไว้ให้คุณไปต่อเอง (เช่น เปิด popup ยืนยัน / ส่งฟอร์ม ฯลฯ)
-            console.log('Booking click placeholder');
+            // TODO: เว้นไว้ให้ทำต่อ (เช่น เปิด popup, ส่งฟอร์ม, ฯลฯ)
+            console.log('Book button clicked (placeholder)');
         });
     }
+
+    // เรียก syncBookingUI ครั้งแรกเผื่อกรณีมีค่า default จาก server
+    syncBookingUI();
 });
