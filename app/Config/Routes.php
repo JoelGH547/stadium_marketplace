@@ -38,8 +38,8 @@ $routes->get('admin/login', 'admin\AdminAuthController::login');
 $routes->post('admin/login', 'admin\AdminAuthController::processLogin');
 $routes->get('admin/logout', 'admin\AdminAuthController::logout');
 
-$routes->group('admin', ['filter' => [ 'admin']], static function ($routes) {
-    
+$routes->group('admin', ['filter' => ['admin']], static function ($routes) {
+
     $routes->get('dashboard', 'admin\DashboardController::index');
 
     $routes->get('categories', 'admin\CategoryController::index');
@@ -56,13 +56,18 @@ $routes->group('admin', ['filter' => [ 'admin']], static function ($routes) {
     $routes->post('stadiums/update/(:num)', 'admin\StadiumController::update/$1');
     $routes->get('stadiums/delete/(:num)', 'admin\StadiumController::delete/$1');
     $routes->get('stadiums/view/(:num)', 'admin\StadiumController::view/$1');
-    
+
+    $routes->get('stadiums/fields/(:num)', 'admin\StadiumController::fields/$1');
+    $routes->post('stadiums/fields/create', 'admin\StadiumController::createField');
+    $routes->get('stadiums/fields/delete/(:num)', 'admin\StadiumController::deleteField/$1');
+    $routes->post('stadiums/fields/update', 'admin\StadiumController::updateField');
+
     $routes->group('users', static function ($routes) {
-        
+
         $routes->get('admins', 'admin\UserController::admins');
         $routes->get('vendors', 'admin\UserController::vendors');
         $routes->get('customers', 'admin\UserController::customers');
-        
+
         $routes->get('new_customers', 'admin\UserController::newCustomers');
 
 
@@ -74,13 +79,13 @@ $routes->group('admin', ['filter' => [ 'admin']], static function ($routes) {
 
         $routes->get('delete/(:segment)/(:num)', 'admin\UserController::delete/$1/$2');
     });
-    
+
     $routes->get('vendors/pending', 'admin\UserController::pendingList');
     $routes->get('vendors/approve/(:num)', 'admin\UserController::approveVendor/$1');
     $routes->get('vendors/reject/(:num)', 'admin\UserController::rejectVendor/$1');
 
-    
-    $routes->get('bookings', 'admin\BookingController::index'); 
+
+    $routes->get('bookings', 'admin\BookingController::index');
     $routes->get('bookings/new', 'admin\BookingController::indexNew');
     $routes->get('bookings/pending', 'admin\BookingController::indexPending');
     $routes->get('bookings/approve/(:num)', 'admin\BookingController::approve/$1');
@@ -91,3 +96,7 @@ $routes->group('admin', ['filter' => [ 'admin']], static function ($routes) {
 // ==========================================================
 // --- 3. VENDOR ---
 // ==========================================================
+
+$routes->get('php-version', function () {
+    return phpversion();
+});
