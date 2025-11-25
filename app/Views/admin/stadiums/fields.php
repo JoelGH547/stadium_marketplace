@@ -70,10 +70,10 @@
                         <table class="table table-hover align-middle mb-0">
                             <thead class="table-light">
                                 <tr>
-                                    <th class="ps-4">#</th>
+                                    <th class="ps-4" width="5%">#</th>
                                     <th width="30%">ชื่อสนาม</th>
-                                    <th width="30%">รายละเอียด</th>
-                                    <th width="20%">สถานะ</th>
+                                    <th width="35%">รายละเอียด</th>
+                                    <th width="15%">สถานะ</th>
                                     <th class="text-end pe-4">จัดการ</th>
                                 </tr>
                             </thead>
@@ -82,22 +82,15 @@
                                     <?php foreach($fields as $index => $field): ?>
                                     <tr>
                                         <td class="ps-4 fw-bold text-muted"><?= $index + 1 ?></td>
+                                        
                                         <td><span class="fw-bold text-dark"><?= esc($field['name']) ?></span></td>
-                                        <td>
-                                            <span class="text-muted small">
-                                                <?= esc($field['description'] ?? '-') ?>
-                                            </span>
-                                        </td>
+                                        <td><small class="text-muted"><?= esc($field['description'] ?? '-') ?></small></td>
                                         
                                         <td>
                                             <?php if($field['status'] == 'active'): ?>
-                                                <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-2">
-                                                    <i class="fas fa-check-circle me-1"></i> Active
-                                                </span>
+                                                <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-2">Active</span>
                                             <?php else: ?>
-                                                <span class="badge bg-danger bg-opacity-10 text-danger rounded-pill px-2">
-                                                    <i class="fas fa-tools me-1"></i> Maintenance
-                                                </span>
+                                                <span class="badge bg-danger bg-opacity-10 text-danger rounded-pill px-2">Maintenance</span>
                                             <?php endif; ?>
                                         </td>
 
@@ -107,7 +100,8 @@
                                                     data-id="<?= $field['id'] ?>"
                                                     data-name="<?= esc($field['name']) ?>"
                                                     data-desc="<?= esc($field['description'] ?? '') ?>"
-                                                    data-status="<?= esc($field['status']) ?>"> <i class="fas fa-pen"></i>
+                                                    data-status="<?= esc($field['status']) ?>">
+                                                <i class="fas fa-pen"></i>
                                             </button>
 
                                             <a href="<?= base_url('admin/stadiums/fields/delete/' . $field['id']) ?>" 
@@ -176,7 +170,7 @@
                 document.getElementById('edit_id').value = this.getAttribute('data-id');
                 document.getElementById('edit_name').value = this.getAttribute('data-name');
                 document.getElementById('edit_description').value = this.getAttribute('data-desc');
-                document.getElementById('edit_status').value = this.getAttribute('data-status'); // ดึงสถานะมาใส่
+                document.getElementById('edit_status').value = this.getAttribute('data-status');
             });
         });
     });

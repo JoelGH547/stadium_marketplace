@@ -2,7 +2,6 @@
 
 <?= $this->section('content') ?>
 
-<!-- Leaflet CSS (สำหรับแผนที่) -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
 <div class="container-fluid p-0">
@@ -10,13 +9,21 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h3 class="h3 mb-0 text-gray-800">จัดการสนามกีฬา (Stadiums)</h3>
         <a href="<?= base_url('admin/stadiums/create') ?>" class="btn btn-primary shadow-sm">
-            <i class="fas fa-plus fa-sm text-white-50"></i> Add New Stadium
+            <i class="fas fa-plus fa-sm text-white-50 me-2"></i> Add New Stadium
         </a>
     </div>
 
     <?php if(session()->getFlashdata('success')): ?>
-        <div class="alert alert-success fade show">
+        <div class="alert alert-success alert-dismissible fade show">
             <i class="fas fa-check-circle me-1"></i> <?= session()->getFlashdata('success') ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    <?php endif; ?>
+
+    <?php if(session()->getFlashdata('error')): ?>
+        <div class="alert alert-danger alert-dismissible fade show">
+            <i class="fas fa-exclamation-circle me-1"></i> <?= session()->getFlashdata('error') ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     <?php endif; ?>
 
@@ -36,7 +43,7 @@
                             <th>Vendor</th>
                             <th>Price/Hour</th>
                             <th width="5%">Map</th>
-                            <th width="15%">Actions</th> <!-- จัดการความกว้างช่องนี้ -->
+                            <th width="18%">Actions</th> 
                         </tr>
                     </thead>
                     <tbody>
@@ -51,7 +58,7 @@
                                 <td class="text-center">
                                     <?php if($cover): ?>
                                         <img src="<?= base_url('assets/uploads/stadiums/' . $cover) ?>" 
-                                             class="img-fluid rounded shadow-sm" 
+                                             class="img-fluid rounded shadow-sm img-zoomable" 
                                              style="width: 60px; height: 40px; object-fit: cover;">
                                     <?php else: ?>
                                         <span class="text-muted text-xs"><i class="fas fa-image"></i></span>
@@ -59,7 +66,6 @@
                                 </td>
                                 <td class="fw-bold text-dark"><?= esc($stadium['name']) ?></td>
                                 
-                                <!-- แสดง Emoji + ชื่อ Category -->
                                 <td>
                                     <span class="me-1"><?= $stadium['category_emoji'] ?? '' ?></span>
                                     <?= esc($stadium['category_name']) ?>
@@ -68,7 +74,6 @@
                                 <td><small class="text-muted"><?= esc($stadium['vendor_name']) ?></small></td>
                                 <td class="fw-bold text-success text-end">฿<?= number_format($stadium['price'], 0) ?></td>
                                 
-                                <!-- ปุ่ม Map -->
                                 <td class="text-center">
                                     <?php if(!empty($stadium['lat']) && !empty($stadium['lng'])): ?>
                                         <button type="button" 
@@ -86,36 +91,34 @@
                                     <?php endif; ?>
                                 </td>
 
-                                <!-- [แก้ไข] ส่วน Actions: จัดเรียงใหม่เป็นแนวนอน + ใช้ไอคอน -->
-                              <td>
-    <div class="d-flex justify-content-center gap-2">
-        
-        <a href="<?= base_url('admin/stadiums/fields/' . $stadium['id']) ?>" 
-           class="btn btn-primary btn-sm shadow-sm" 
-           title="จัดการสนามย่อย (เช่น สนาม 1, สนาม 2)">
-            <i class="fas fa-layer-group"></i> สนามย่อย
-        </a>
+                                <td>
+                                    <div class="d-flex justify-content-center gap-1">
+                                        
+                                        <a href="<?= base_url('admin/stadiums/fields/' . $stadium['id']) ?>" 
+                                           class="btn btn-primary btn-sm shadow-sm" 
+                                           title="จัดการสนามย่อย (เช่น สนาม 1, สนาม 2)">
+                                            <i class="fas fa-layer-group"></i> สนามย่อย
+                                        </a>
 
-        <a href="<?= base_url('admin/stadiums/view/' . $stadium['id']) ?>" 
-           class="btn btn-info btn-sm text-white shadow-sm" 
-           title="ดูรายละเอียด">
-            <i class="fas fa-eye"></i>
-        </a>
+                                        <a href="<?= base_url('admin/stadiums/view/' . $stadium['id']) ?>" 
+                                           class="btn btn-info btn-sm text-white shadow-sm" 
+                                           title="ดูรายละเอียด">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
 
-        <a href="<?= base_url('admin/stadiums/edit/' . $stadium['id']) ?>" 
-           class="btn btn-warning btn-sm shadow-sm"
-           title="แก้ไข">
-            <i class="fas fa-edit"></i>
-        </a>
-        
-        <a href="<?= base_url('admin/stadiums/delete/' . $stadium['id']) ?>" 
-           class="btn btn-danger btn-sm btn-delete shadow-sm"
-           title="ลบ"
-           onclick="return confirm('ยืนยันการลบสนามนี้? ข้อมูลสนามย่อยและการจองทั้งหมดจะถูกลบไปด้วย');">
-            <i class="fas fa-trash"></i>
-        </a>
-    </div>
-</td>
+                                        <a href="<?= base_url('admin/stadiums/edit/' . $stadium['id']) ?>" 
+                                           class="btn btn-warning btn-sm shadow-sm"
+                                           title="แก้ไข">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        
+                                        <a href="<?= base_url('admin/stadiums/delete/' . $stadium['id']) ?>" 
+                                           class="btn btn-danger btn-sm btn-delete shadow-sm"
+                                           title="ลบ">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
                             </tr>
                             <?php endforeach; ?>
                         <?php else: ?>
@@ -128,7 +131,6 @@
     </div>
 </div>
 
-<!-- Modal แผนที่ -->
 <div class="modal fade" id="mapModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content rounded-4 border-0 overflow-hidden">
@@ -143,7 +145,6 @@
     </div>
 </div>
 
-<!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>

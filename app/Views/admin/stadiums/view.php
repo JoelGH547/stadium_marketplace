@@ -43,9 +43,12 @@
                     
                     <div class="row">
                         <div class="col-12 mb-3">
-                            <div class="border rounded bg-light text-center" style="min-height: 300px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                            <div class="border rounded bg-light text-center position-relative" style="min-height: 300px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
                                 <?php if ($cover): ?>
-                                    <img src="<?= base_url('assets/uploads/stadiums/' . $cover) ?>" class="img-fluid" style="max-height: 400px; width: 100%; object-fit: contain;">
+                                    <img src="<?= base_url('assets/uploads/stadiums/' . $cover) ?>" 
+                                         class="img-fluid img-zoomable" 
+                                         style="max-height: 400px; width: 100%; object-fit: contain;"
+                                         alt="Cover Image">
                                 <?php else: ?>
                                     <span class="text-muted">ไม่มีรูปปก</span>
                                 <?php endif; ?>
@@ -56,9 +59,12 @@
                         <?php if (!empty($insideArr)): ?>
                             <?php foreach ($insideArr as $img): ?>
                                 <div class="col-6 col-sm-3 mb-2">
-                                    <a href="<?= base_url('assets/uploads/stadiums/' . $img) ?>" target="_blank" class="d-block border rounded h-100">
-                                        <img src="<?= base_url('assets/uploads/stadiums/' . $img) ?>" class="img-fluid rounded" style="height: 80px; width: 100%; object-fit: cover;">
-                                    </a>
+                                    <div class="h-100 border rounded overflow-hidden">
+                                        <img src="<?= base_url('assets/uploads/stadiums/' . $img) ?>" 
+                                             class="img-fluid w-100 h-100 img-zoomable" 
+                                             style="object-fit: cover; height: 80px;"
+                                             alt="Inside Image">
+                                    </div>
                                 </div>
                             <?php endforeach; ?>
                         <?php endif; ?>
@@ -179,6 +185,15 @@
 <style>
     .border-top-primary {
         border-top: 4px solid var(--mint-primary) !important;
+    }
+    /* เพิ่ม Cursor ให้รู้ว่ากดได้ */
+    .img-zoomable {
+        cursor: zoom-in;
+        transition: transform 0.2s;
+    }
+    .img-zoomable:hover {
+        transform: scale(1.02);
+        box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
     }
 </style>
 
