@@ -1,34 +1,35 @@
-<?php
-
-namespace App\Models;
+<?php namespace App\Models;
 
 use CodeIgniter\Model;
 
 class FacilityModel extends Model
 {
-    protected $table            = 'facilities';
-    protected $primaryKey       = 'id';
-    protected $useAutoIncrement = true;
-    protected $returnType       = 'array';
-    protected $allowedFields    = ['name', 'icon']; // ตัด category_id ออก เพราะย้ายไปตารางใหม่แล้ว
+    protected $table = 'facilities';
+    protected $primaryKey = 'id';
+    protected $allowedFields = ['name', 'icon']; 
 
-    // ฟังก์ชันดึงสิ่งอำนวยความสะดวก "ตามประเภทกีฬา"
-    // (เผื่อ Admin อยากใช้ตอนสร้างสนาม หรือเผื่อเพื่อนฝั่ง Customer เอาไปใช้)
-    public function getByCategoryId($categoryId)
+    // ฟังก์ชันดึงสิ่งอำนวยความสะดวก โดยแยกตาม ID ของ Category
+    // ถ้า $categoryId = null คือดึงทั้งหมด (เอาไว้ใช้หน้า Create)
+    public function getFacilitiesByCategory($categoryId = null)
     {
-        return $this->select('facilities.*')
-                    ->join('facility_categories', 'facility_categories.facility_id = facilities.id')
-                    ->where('facility_categories.category_id', $categoryId)
-                    ->findAll();
-    }
+        $builder = $this->db->table('facilities');
+        $builder->select('facilities.*, categories.name as category_name, categories.id as cat_id');
+        
+        // Join เพื่อดูว่า Facility นี้เป็นของหมวดไหน
+        $builder->join('facility_categories', 'facility_categories.facility_id = facilities.id', 'left');
+        $builder->join('categories', 'categories.id = facility_categories.category_id', 'left');
 
-    // ฟังก์ชันดึงสิ่งอำนวยความสะดวกที่เป็น "ส่วนกลาง" (ถ้ามี)
-    // (เผื่อในอนาคตมีการเพิ่มกลับเข้ามา)
-    public function getGeneralFacilities()
-    {
-        return $this->select('facilities.*')
-                    ->join('facility_categories', 'facility_categories.facility_id = facilities.id')
-                    ->where('facility_categories.category_id', NULL)
-                    ->findAll();
+        // Logic กรองข้อมูล
+        if ($categoryId != null) {
+            $builder->groupStart();
+                $builder->where('categories.id', $categoryId); // ของหมวดที่เลือก
+                $builder->orWhere('categories.id', NULL);      // หรือ ของส่วนกลาง (ไม่มีหมวด)
+            $builder->groupEnd();
+        }
+        
+        // เรียงลำดับให้สวยงาม (เอาหมวดขึ้นก่อน)
+        $builder->orderBy('categories.id', 'DESC');
+        
+        return $builder->get()->getResultArray();
     }
 }

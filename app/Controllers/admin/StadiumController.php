@@ -158,18 +158,20 @@ class StadiumController extends BaseController
             return redirect()->to(base_url('admin/stadiums'))->with('error', 'ไม่พบข้อมูลสนาม');
         }
 
+        // [จุดสำคัญ 1] ดึง ID หมวดหมู่กีฬาของสนามนี้
+        $currentCategoryId = $stadium['category_id'];
+
         $data = [
             'title'      => 'Edit Stadium',
             'stadium'    => $stadium,
             'categories' => $this->categoryModel->findAll(),
             'vendors'    => $this->vendorModel->findAll(),
             
-            // [ใหม่] 1. ส่งตัวเลือกทั้งหมดไป
-            'facilities' => $this->facilityModel->findAll(),
+            // [จุดสำคัญ 2] สั่งให้ Model ดึงเฉพาะ Facility ที่เกี่ยวข้องกับกีฬานี้ + ของส่วนกลาง
+            'facilities' => $this->facilityModel->getFacilitiesByCategory($currentCategoryId),
             
-            // [ใหม่] 2. ส่งรายการที่สนามนี้ "เคยเลือกไว้" (เพื่อไปติ๊กถูก Checked)
-            // findColumn จะได้ผลลัพธ์เป็น Array เช่น [1, 2, 5]
-            'selected_facilities' => $this->stadiumFacilityModel->where('stadium_id', $id)->findColumn('facility_id') ?? []
+            // ดึงอันที่เคยเลือกไว้ (เหมือนเดิม)
+            'selected_facilities' => $this->stadiumFacilityModel->getSelectedFacilities($id)
         ];
 
         return view('admin/stadiums/edit', $data);
