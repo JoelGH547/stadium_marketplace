@@ -13,6 +13,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // ====== 1) สนามย่อย + tooltip ปุ่ม i ======
     const fieldSelect = document.getElementById('stadiumFieldSelect');
+    const itemButtons = document.querySelectorAll('.add-item-btn');
     const infoBtn = document.getElementById('fieldInfoBtn');
     const tooltip = document.getElementById('fieldInfoTooltip');
     const tooltipTitle = document.getElementById('fieldInfoTitle');
@@ -310,10 +311,14 @@ document.addEventListener('DOMContentLoaded', function () {
     const bookBtn = document.getElementById('btnBookNow');
     const bookingItemsSummary = document.getElementById('bookingItemsSummary');
     const bookingItemsList = document.getElementById('bookingItemsList');
-    const bookingOverlay = document.getElementById('bookingOverlay');
-    const bookingOverlayClose = document.getElementById('bookingOverlayClose');
-
-    const itemButtons = document.querySelectorAll('.add-item-btn');
+    const bookingForm = document.getElementById('bookingSubmitForm');
+    const bookingDateField = document.getElementById('bookingDateField');
+    const bookingTimeStartField = document.getElementById('bookingTimeStartField');
+    const bookingTimeEndField = document.getElementById('bookingTimeEndField');
+    const bookingHoursField = document.getElementById('bookingHoursField');
+    const bookingItemsField = document.getElementById('bookingItemsField');
+    const bookingPricePerHourField = document.getElementById('bookingPricePerHourField');
+    const bookingBasePriceField = document.getElementById('bookingBasePriceField');
 
     let cartItems = [];
     let cartTotal = 0;
@@ -473,6 +478,10 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function setBookingDefault() {
+        // ล้างข้อมูลตะกร้า + รีเซ็ต UI เมื่อสถานะการจองยังไม่พร้อม
+        cartItems = [];
+        cartTotal = 0;
+
         if (bookingHoursLabel) {
             bookingHoursLabel.textContent = 'ต่อชั่วโมง';
         }
@@ -500,6 +509,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+
     function enableBookBtn() {
         if (!bookBtn) return;
         bookBtn.disabled = false;
@@ -517,6 +527,18 @@ document.addEventListener('DOMContentLoaded', function () {
         if (diff <= 0) return 0;
         return diff / 60;
     }
+    function updateItemButtonsState(ready) {
+        if (!itemButtons || !itemButtons.length) return;
+        itemButtons.forEach(function (btn) {
+            btn.disabled = !ready;
+            if (ready) {
+                btn.classList.remove('opacity-50', 'cursor-not-allowed');
+            } else {
+                btn.classList.add('opacity-50', 'cursor-not-allowed');
+            }
+        });
+    }
+
 
     function syncBookingUI() {
         if (!bookingFieldPrice && !bookingServiceFee && !bookBtn && !bookingHoursLabel) {
@@ -556,6 +578,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (!ready) {
             setBookingDefault();
+            updateItemButtonsState(false);
             return;
         }
 
@@ -578,42 +601,73 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         enableBookBtn();
+        updateItemButtonsState(true);
     }
+
 
     setBookingDefault();
     updateItemsSummary();
     renderItemsList();
     syncBookingUI();
+    updateItemButtonsState(false);
 
-    if (bookBtn) {
+    if (bookBtn && bookingForm) {
         bookBtn.addEventListener('click', function (e) {
             if (bookBtn.disabled) {
                 e.preventDefault();
                 return;
             }
 
-            // ถ้ามี cart URL ให้ไปที่หน้าตะกร้า
-            const cartUrl = bookBtn.dataset.cartUrl;
-            if (cartUrl) {
-                window.location.href = cartUrl;
+            // กันกรณี JS พลาด ไม่เจอวันที่/เวลา
+            if (!dateInput || !startSelect || !endSelect) {
+                e.preventDefault();
                 return;
             }
 
-            // ถ้าไม่ได้ตั้งค่า cart URL ไว้ ใช้ overlay เป็น fallback
-            if (bookingOverlay) {
-                bookingOverlay.classList.remove('hidden');
+            // กรอกค่าลง hidden
+            if (bookingDateField) {
+                bookingDateField.value = dateInput.value || '';
             }
-        });
-    }
-    if (bookingOverlay && bookingOverlayClose) {
-        bookingOverlayClose.addEventListener('click', function () {
-            bookingOverlay.classList.add('hidden');
-        });
+            if (bookingTimeStartField) {
+                bookingTimeStartField.value = startSelect.value || '';
+            }
+            if (bookingTimeEndField) {
+                bookingTimeEndField.value = endSelect.value || '';
+            }
 
-        bookingOverlay.addEventListener('click', function (e) {
-            if (e.target === bookingOverlay) {
-                bookingOverlay.classList.add('hidden');
+            if (typeof getDurationHours === 'function') {
+                const hrs = getDurationHours() || 0;
+
+                if (bookingHoursField) {
+                    bookingHoursField.value = String(hrs);
+                }
+
+                if (bookingBasePriceField) {
+                    const basePrice = hrs * (pricePerHour || 0);
+                    bookingBasePriceField.value = String(basePrice);
+                }
             }
+
+            if (bookingPricePerHourField) {
+                bookingPricePerHourField.value = String(pricePerHour || 0);
+            }
+
+            if (bookingItemsField) {
+                const payloadItems = Array.isArray(cartItems)
+                    ? cartItems.map(function (it) {
+                        return {
+                            item_id: it.id || null,
+                            item_name: it.name || '',
+                            unit: it.unit || '',
+                            qty: it.qty || 0,
+                            price: it.price || 0
+                        };
+                    })
+                    : [];
+                bookingItemsField.value = JSON.stringify(payloadItems);
+            }
+
+            bookingForm.submit();
         });
     }
 
