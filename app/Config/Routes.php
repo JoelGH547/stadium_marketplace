@@ -41,6 +41,17 @@ $routes->group('admin', ['filter' => ['auth', 'admin']], static function ($route
     $routes->post('categories/update/(:num)', 'admin\CategoryController::update/$1');
     $routes->get('categories/delete/(:num)', 'admin\CategoryController::delete/$1');
 
+    // ==================================================
+    // +++ [เพิ่มใหม่] Facilities (สิ่งอำนวยความสะดวก) +++
+    // ==================================================
+    $routes->get('facilities', 'admin\FacilityController::index');
+    $routes->get('facilities/create', 'admin\FacilityController::create');
+    $routes->post('facilities/store', 'admin\FacilityController::store');
+    $routes->get('facilities/edit/(:num)', 'admin\FacilityController::edit/$1');
+    $routes->post('facilities/update/(:num)', 'admin\FacilityController::update/$1');
+    $routes->get('facilities/delete/(:num)', 'admin\FacilityController::delete/$1');
+    // ==================================================
+
     // --- Stadiums ---
     $routes->get('stadiums', 'admin\StadiumController::index');
     $routes->get('stadiums/create', 'admin\StadiumController::create');
@@ -56,6 +67,7 @@ $routes->group('admin', ['filter' => ['auth', 'admin']], static function ($route
     $routes->post('stadiums/fields/create', 'admin\StadiumController::createField');
     $routes->get('stadiums/fields/delete/(:num)', 'admin\StadiumController::deleteField/$1');
     $routes->post('stadiums/fields/update', 'admin\StadiumController::updateField');
+
     // --- User Management ---
     $routes->group('users', static function ($routes) {
         
@@ -83,13 +95,15 @@ $routes->group('admin', ['filter' => ['auth', 'admin']], static function ($route
     $routes->get('vendors/reject/(:num)', 'admin\UserController::rejectVendor/$1');
 
     // --- Bookings ---
-    // [แก้ไข] เพิ่มบรรทัดนี้ เพื่อแก้ 404 admin/bookings
     $routes->get('bookings', 'admin\BookingController::index'); 
     
     $routes->get('bookings/new', 'admin\BookingController::indexNew');
     $routes->get('bookings/pending', 'admin\BookingController::indexPending');
     $routes->get('bookings/approve/(:num)', 'admin\BookingController::approve/$1');
     $routes->get('bookings/cancel/(:num)', 'admin\BookingController::cancel/$1');
+
+    // ใน group 'admin'
+$routes->post('facilities/ajax_update', 'admin\FacilityController::ajaxUpdateCategory');
 });
 
 

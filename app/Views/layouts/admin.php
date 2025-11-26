@@ -122,6 +122,11 @@
                 </a>
             </li>
             <li class="nav-item">
+                <a class="nav-link" href="<?= base_url('admin/facilities') ?>">
+                <i class="fas fa-fw fa-concierge-bell"></i> <span>จัดการสิ่งอำนวยความสะดวก</span>
+                </a>
+            </li>
+            <li class="nav-item">
                 <a href="<?= base_url('admin/stadiums') ?>" class="nav-link <?= (strpos($currentUrl, 'stadiums') !== false) ? 'active-menu' : '' ?>">
                     <div><i class="fas fa-map-location-dot"></i> จัดการสนามกีฬา</div>
                 </a>

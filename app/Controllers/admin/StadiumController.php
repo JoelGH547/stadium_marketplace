@@ -6,6 +6,9 @@ use App\Controllers\BaseController;
 use App\Models\StadiumModel;
 use App\Models\CategoryModel;
 use App\Models\VendorModel;
+use App\Models\FacilityModel;         // [ใหม่] เรียกใช้ Model สิ่งอำนวยความสะดวก
+use App\Models\StadiumFacilityModel;  // [ใหม่] เรียกใช้ Model เชื่อมโยง
+use App\Models\StadiumFieldModel;     // [จำเป็น] สำหรับจัดการสนามย่อย
 use CodeIgniter\Database\Exceptions\DatabaseException;
 
 class StadiumController extends BaseController
@@ -13,16 +16,26 @@ class StadiumController extends BaseController
     protected $stadiumModel;
     protected $categoryModel;
     protected $vendorModel;
+    protected $facilityModel;         // [ใหม่]
+    protected $stadiumFacilityModel;  // [ใหม่]
 
     public function __construct()
     {
+        // โหลด Model ทั้งหมดที่ต้องใช้
         $this->stadiumModel  = new StadiumModel();
         $this->categoryModel = new CategoryModel();
         $this->vendorModel   = new VendorModel();
+        
+        // [ใหม่] โหลด Model จัดการ Facilities
+        $this->facilityModel = new FacilityModel();
+        $this->stadiumFacilityModel = new StadiumFacilityModel();
 
         helper(['form']);
     }
 
+    // --------------------------------------------------------------------------
+    // 1. หน้าแสดงรายการสนามทั้งหมด
+    // --------------------------------------------------------------------------
     public function index()
     {
         $stadiums = $this->stadiumModel
@@ -33,29 +46,35 @@ class StadiumController extends BaseController
             ->findAll();
 
         $data = [
-            'title'    => 'Stadiums',
+            'title'    => 'Stadiums List',
             'stadiums' => $stadiums,
         ];
 
         return view('admin/stadiums/index', $data);
     }
 
+    // --------------------------------------------------------------------------
+    // 2. หน้าฟอร์มสร้างสนามใหม่ (CREATE)
+    // --------------------------------------------------------------------------
     public function create()
     {
         $data = [
             'title'      => 'Add New Stadium',
             'categories' => $this->categoryModel->findAll(),
             'vendors'    => $this->vendorModel->findAll(),
+            // [ใหม่] ส่งรายการสิ่งอำนวยความสะดวกทั้งหมดไปให้เลือก (Checkbox)
+            'facilities' => $this->facilityModel->findAll(),
         ];
 
         return view('admin/stadiums/create', $data);
     }
 
-    // =========================
-    //  STORE (เพิ่มข้อมูลใหม่)
-    // =========================
+    // --------------------------------------------------------------------------
+    // 3. บันทึกข้อมูลใหม่ลงฐานข้อมูล (STORE)
+    // --------------------------------------------------------------------------
     public function store()
     {
+        // Validation rules
         if (!$this->validate([
             'name'          => 'required|max_length[100]',
             'price'         => 'required|numeric',
@@ -63,30 +82,25 @@ class StadiumController extends BaseController
             'vendor_id'     => 'required|integer',
             'contact_phone' => 'permit_empty|regex_match[/^[0-9]{10}$/]',
         ])) {
-            return redirect()->back()
-                ->withInput()
-                ->with('validation', $this->validator);
+            return redirect()->back()->withInput()->with('validation', $this->validator);
         }
 
+        // เตรียม Path รูป
         $uploadPath = FCPATH . 'assets/uploads/stadiums/';
-        if (!is_dir($uploadPath)) {
-            mkdir($uploadPath, 0777, true);
-        }
+        if (!is_dir($uploadPath)) { mkdir($uploadPath, 0777, true); }
 
-        // 1. จัดการรูปปก (Outside Image)
+        // --- จัดการรูปปก (Outside) ---
         $outsideImagesJson = '[]'; 
-        $outsideFile       = $this->request->getFile('outside_image');
-
+        $outsideFile = $this->request->getFile('outside_image');
         if ($outsideFile && $outsideFile->isValid() && !$outsideFile->hasMoved()) {
             $newName = 'outside_' . time() . '_' . $outsideFile->getRandomName();
             $outsideFile->move($uploadPath, $newName);
             $outsideImagesJson = json_encode([$newName]); 
         }
 
-        // 2. จัดการรูปภายใน (Inside Images)
+        // --- จัดการรูปภายใน (Inside) ---
         $insideFiles = $this->request->getFileMultiple('inside_images');
         $insideImagesArray = [];
-
         if (!empty($insideFiles)) {
             foreach ($insideFiles as $file) {
                 if ($file->isValid() && !$file->hasMoved()) {
@@ -97,7 +111,7 @@ class StadiumController extends BaseController
             }
         }
 
-        // บันทึกข้อมูล
+        // --- บันทึกข้อมูลสนาม (Stadium) ---
         $this->stadiumModel->save([
             'name'           => $this->request->getPost('name'),
             'price'          => $this->request->getPost('price'),
@@ -117,16 +131,31 @@ class StadiumController extends BaseController
             'inside_images'  => json_encode($insideImagesArray),
         ]);
 
-        return redirect()->to(base_url('admin/stadiums'))
-                         ->with('success', 'เพิ่มสนามเรียบร้อยแล้ว');
+        // [ใหม่] --- บันทึก Facilities ---
+        $newStadiumId = $this->stadiumModel->getInsertID(); // เอา ID ล่าสุดที่เพิ่งสร้าง
+        $selectedFacilities = $this->request->getPost('facilities'); // รับค่า array จาก checkbox
+
+        if (!empty($selectedFacilities)) {
+            foreach ($selectedFacilities as $facilityId) {
+                // Insert ลงตารางเชื่อม
+                $this->stadiumFacilityModel->insert([
+                    'stadium_id'  => $newStadiumId,
+                    'facility_id' => $facilityId
+                ]);
+            }
+        }
+
+        return redirect()->to(base_url('admin/stadiums'))->with('success', 'เพิ่มสนามเรียบร้อยแล้ว');
     }
 
+    // --------------------------------------------------------------------------
+    // 4. หน้าแก้ไขสนาม (EDIT)
+    // --------------------------------------------------------------------------
     public function edit($id = null)
     {
         $stadium = $this->stadiumModel->find($id);
         if (!$stadium) {
-            return redirect()->to(base_url('admin/stadiums'))
-                             ->with('error', 'ไม่พบข้อมูลสนามที่ต้องการแก้ไข');
+            return redirect()->to(base_url('admin/stadiums'))->with('error', 'ไม่พบข้อมูลสนาม');
         }
 
         $data = [
@@ -134,22 +163,29 @@ class StadiumController extends BaseController
             'stadium'    => $stadium,
             'categories' => $this->categoryModel->findAll(),
             'vendors'    => $this->vendorModel->findAll(),
+            
+            // [ใหม่] 1. ส่งตัวเลือกทั้งหมดไป
+            'facilities' => $this->facilityModel->findAll(),
+            
+            // [ใหม่] 2. ส่งรายการที่สนามนี้ "เคยเลือกไว้" (เพื่อไปติ๊กถูก Checked)
+            // findColumn จะได้ผลลัพธ์เป็น Array เช่น [1, 2, 5]
+            'selected_facilities' => $this->stadiumFacilityModel->where('stadium_id', $id)->findColumn('facility_id') ?? []
         ];
 
         return view('admin/stadiums/edit', $data);
     }
 
-    // =========================
-    //  UPDATE (แก้ไขข้อมูล - อัปเดตใหม่ ลบรูปได้)
-    // =========================
+    // --------------------------------------------------------------------------
+    // 5. อัปเดตข้อมูลสนาม (UPDATE)
+    // --------------------------------------------------------------------------
     public function update($id = null)
     {
         $stadium = $this->stadiumModel->find($id);
         if (!$stadium) {
-            return redirect()->to(base_url('admin/stadiums'))
-                             ->with('error', 'ไม่พบข้อมูลสนามที่ต้องการอัปเดต');
+            return redirect()->to(base_url('admin/stadiums'))->with('error', 'ไม่พบข้อมูลสนาม');
         }
 
+        // Validation
         if (!$this->validate([
             'name'          => 'required|max_length[100]',
             'price'         => 'required|numeric',
@@ -157,60 +193,41 @@ class StadiumController extends BaseController
             'vendor_id'     => 'required|integer',
             'contact_phone' => 'permit_empty|regex_match[/^[0-9]{10}$/]',
         ])) {
-            return redirect()->back()
-                ->withInput()
-                ->with('validation', $this->validator);
+            return redirect()->back()->withInput()->with('validation', $this->validator);
         }
 
         $uploadPath = FCPATH . 'assets/uploads/stadiums/';
         if (!is_dir($uploadPath)) { mkdir($uploadPath, 0777, true); }
 
-        // --- 1. จัดการรูปปก (Outside Image) ---
+        // --- Logic จัดการรูปภาพ (คงเดิม) ---
+        // 1. Outside Image
         $outsideOld = json_decode($stadium['outside_images'] ?? '[]', true) ?? [];
         $outsideResult = $outsideOld;
 
-        // 1.1 กรณีติ๊ก "ลบรูปปก"
         if ($this->request->getPost('delete_outside') == '1') {
-            if (!empty($outsideOld[0]) && file_exists($uploadPath . $outsideOld[0])) {
-                unlink($uploadPath . $outsideOld[0]); // ลบไฟล์
-            }
-            $outsideResult = []; // เคลียร์ค่า
+            if (!empty($outsideOld[0]) && file_exists($uploadPath . $outsideOld[0])) unlink($uploadPath . $outsideOld[0]);
+            $outsideResult = []; 
         }
-
-        // 1.2 กรณีอัปโหลดรูปปกใหม่ (แทนที่)
         $outsideFile = $this->request->getFile('outside_image');
         if ($outsideFile && $outsideFile->isValid() && !$outsideFile->hasMoved()) {
-            // ลบรูปเก่าทิ้งก่อน (ถ้ามี และยังไม่ได้ถูกลบใน step 1.1)
-            if (!empty($outsideResult[0]) && file_exists($uploadPath . $outsideResult[0])) {
-                 unlink($uploadPath . $outsideResult[0]);
-            }
-            
+            if (!empty($outsideResult[0]) && file_exists($uploadPath . $outsideResult[0])) unlink($uploadPath . $outsideResult[0]);
             $newName = 'outside_' . time() . '_' . $outsideFile->getRandomName();
             $outsideFile->move($uploadPath, $newName);
             $outsideResult = [$newName];
         }
 
-        // --- 2. จัดการรูปภายใน (Inside Images) ---
+        // 2. Inside Images
         $insideOld = json_decode($stadium['inside_images'] ?? '[]', true) ?? [];
         $insideResult = [];
-
-        // 2.1 รับรายชื่อรูปที่ต้องการลบ
         $filesToDelete = $this->request->getPost('delete_inside') ?? [];
 
-        // 2.2 วนลูปรูปเก่า: เก็บเฉพาะรูปที่ไม่ได้ถูกสั่งลบ
         foreach ($insideOld as $oldImg) {
             if (in_array($oldImg, $filesToDelete)) {
-                // ถ้าสั่งลบ -> ลบไฟล์ทิ้ง
-                if (file_exists($uploadPath . $oldImg)) {
-                    unlink($uploadPath . $oldImg);
-                }
+                if (file_exists($uploadPath . $oldImg)) unlink($uploadPath . $oldImg);
             } else {
-                // ถ้าไม่ลบ -> เก็บไว้
                 $insideResult[] = $oldImg;
             }
         }
-
-        // 2.3 เพิ่มรูปใหม่ (ถ้ามี)
         $insideFiles = $this->request->getFileMultiple('inside_images');
         if ($insideFiles) {
             foreach ($insideFiles as $file) {
@@ -222,7 +239,7 @@ class StadiumController extends BaseController
             }
         }
 
-        // อัปเดตข้อมูล
+        // --- อัปเดตตาราง Stadiums ---
         $this->stadiumModel->update($id, [
             'name'           => $this->request->getPost('name'),
             'price'          => $this->request->getPost('price'),
@@ -242,13 +259,30 @@ class StadiumController extends BaseController
             'inside_images'  => json_encode(array_values($insideResult)),
         ]);
 
-        return redirect()->to(base_url('admin/stadiums'))
-                         ->with('success', 'อัปเดตข้อมูลสนามเรียบร้อยแล้ว');
+        // [ใหม่] --- อัปเดต Facilities (Sync Data) ---
+        // 1. ลบข้อมูลเก่าทิ้งทั้งหมดของสนามนี้
+        $this->stadiumFacilityModel->where('stadium_id', $id)->delete();
+        
+        // 2. เพิ่มข้อมูลใหม่เข้าไป (ถ้ามีการเลือก)
+        $selectedFacilities = $this->request->getPost('facilities');
+        if (!empty($selectedFacilities)) {
+            foreach ($selectedFacilities as $facilityId) {
+                $this->stadiumFacilityModel->insert([
+                    'stadium_id'  => $id,
+                    'facility_id' => $facilityId
+                ]);
+            }
+        }
+
+        return redirect()->to(base_url('admin/stadiums'))->with('success', 'อัปเดตข้อมูลสนามเรียบร้อยแล้ว');
     }
 
+    // --------------------------------------------------------------------------
+    // 6. ดูรายละเอียดสนาม (VIEW)
+    // --------------------------------------------------------------------------
     public function view($id = null)
     {
-        // ดึงข้อมูลสนาม + Join ตาราง Category และ Vendor เพื่อเอาชื่อมาโชว์
+        // 1. ดึงข้อมูลสนามหลัก
         $stadium = $this->stadiumModel
             ->select('stadiums.*, categories.name AS category_name, vendors.vendor_name AS vendor_name, vendors.email AS vendor_email, vendors.phone_number AS vendor_phone')
             ->join('categories', 'categories.id = stadiums.category_id', 'left')
@@ -259,90 +293,88 @@ class StadiumController extends BaseController
             return redirect()->to(base_url('admin/stadiums'))->with('error', 'ไม่พบข้อมูลสนาม');
         }
 
+        // 2. ดึงสิ่งอำนวยความสะดวก (Facilities)
+        $db = \Config\Database::connect();
+        $stadiumFacilities = $db->table('facilities')
+            ->select('facilities.name, facilities.icon')
+            ->join('stadium_facilities', 'stadium_facilities.facility_id = facilities.id')
+            ->where('stadium_facilities.stadium_id', $id)
+            ->get()
+            ->getResultArray();
+
+        // 3. [เพิ่มใหม่] ดึงข้อมูลสนามย่อย (Stadium Fields)
+        // ต้องเรียกใช้ Model ของ Field ซึ่งคุณ use ไว้ข้างบนแล้ว (StadiumFieldModel)
+        $fieldModel = new StadiumFieldModel();
+        $stadiumFields = $fieldModel->where('stadium_id', $id)->findAll();
+
         $data = [
-            'title'   => 'รายละเอียดสนาม: ' . $stadium['name'],
-            'stadium' => $stadium
+            'title'      => 'Detail: ' . $stadium['name'],
+            'stadium'    => $stadium,
+            'facilities' => $stadiumFacilities,
+            'fields'     => $stadiumFields // ส่งตัวแปรนี้ไปที่หน้า View
         ];
 
         return view('admin/stadiums/view', $data);
     }
 
-    // =========================
-    //  DELETE (ลบสนาม + ลบรูปภาพทิ้ง)
-    // =========================
+    // --------------------------------------------------------------------------
+    // 7. ลบสนาม (DELETE)
+    // --------------------------------------------------------------------------
     public function delete($id = null)
     {
-        // 1. ค้นหาข้อมูลสนามก่อน เพื่อจะเอารายชื่อรูปภาพ
         $stadium = $this->stadiumModel->find($id);
 
         if (!$stadium) {
-            return redirect()->to(base_url('admin/stadiums'))->with('error', 'ไม่พบข้อมูลสนามที่ต้องการลบ');
+            return redirect()->to(base_url('admin/stadiums'))->with('error', 'ไม่พบข้อมูลสนาม');
         }
 
         try {
-            // กำหนด Path ที่เก็บรูป (ใช้ FCPATH ตามที่คุณใช้ในฟังก์ชัน store/update)
             $uploadPath = FCPATH . 'assets/uploads/stadiums/';
 
-            // --- ส่วนที่ 1: ลบรูปปก (Outside Images) ---
+            // ลบรูปภาพ
             $outsideImages = json_decode($stadium['outside_images'] ?? '[]', true);
-            if (!empty($outsideImages)) {
-                foreach ($outsideImages as $img) {
-                    // เช็คว่ามีไฟล์อยู่จริงไหม แล้วสั่งลบ
-                    if (file_exists($uploadPath . $img)) {
-                        unlink($uploadPath . $img);
-                    }
-                }
+            foreach ($outsideImages as $img) {
+                if (file_exists($uploadPath . $img)) unlink($uploadPath . $img);
             }
 
-            // --- ส่วนที่ 2: ลบรูปภายใน (Inside Images) ---
             $insideImages = json_decode($stadium['inside_images'] ?? '[]', true);
-            if (!empty($insideImages)) {
-                foreach ($insideImages as $img) {
-                    if (file_exists($uploadPath . $img)) {
-                        unlink($uploadPath . $img);
-                    }
-                }
+            foreach ($insideImages as $img) {
+                if (file_exists($uploadPath . $img)) unlink($uploadPath . $img);
             }
 
-            // --- ส่วนที่ 3: ลบข้อมูลใน Database ---
+            // ลบข้อมูล (ตาราง facilities จะถูกลบ Auto ถ้าตั้ง Cascade ไว้ หรือถ้าไม่ตั้งก็ไม่มีผลเสีย)
             $this->stadiumModel->delete($id);
             
-            return redirect()->to(base_url('admin/stadiums'))
-                             ->with('success', 'ลบข้อมูลสนามและไฟล์รูปภาพเรียบร้อยแล้ว');
+            return redirect()->to(base_url('admin/stadiums'))->with('success', 'ลบข้อมูลเรียบร้อยแล้ว');
 
         } catch (DatabaseException $e) {
-            // ดักจับ Error กรณีลบไม่ได้ (เช่น มีการจองค้างอยู่ แล้วติด Foreign Key)
             if ($e->getCode() == 1451) {
-                return redirect()->to(base_url('admin/stadiums'))
-                    ->with('error', 'ไม่สามารถลบสนามนี้ได้ เนื่องจากมีประวัติการจองหรือข้อมูลอื่นอ้างอิงอยู่ (Foreign Key Constraint)');
+                return redirect()->to(base_url('admin/stadiums'))->with('error', 'ไม่สามารถลบได้ เนื่องจากข้อมูลถูกใช้งานอยู่');
             }
-            return redirect()->to(base_url('admin/stadiums'))
-                ->with('error', 'เกิดข้อผิดพลาดฐานข้อมูล: ' . $e->getMessage());
+            return redirect()->to(base_url('admin/stadiums'))->with('error', 'เกิดข้อผิดพลาด: ' . $e->getMessage());
         }
     }
 
-    // ... (โค้ดเดิม) ...
-
-    // แสดงรายการสนามย่อย ของ Stadium ID นั้นๆ
+    // --------------------------------------------------------------------------
+    // 8. จัดการสนามย่อย (Fields) - คงเดิม
+    // --------------------------------------------------------------------------
     public function fields($stadium_id)
     {
-        $stadiumModel = new \App\Models\StadiumModel();
-        $fieldModel = new \App\Models\StadiumFieldModel(); // *ต้องสร้าง Model นี้นะครับ
+        $stadiumModel = new StadiumModel();
+        $fieldModel = new StadiumFieldModel();
 
         $data = [
-            'title' => 'จัดการสนามย่อย',
+            'title' => 'Manage Fields',
             'stadium' => $stadiumModel->find($stadium_id),
-            // ดึงสนามย่อยทั้งหมดของ Stadium นี้ออกมา
             'fields' => $fieldModel->where('stadium_id', $stadium_id)->findAll()
         ];
 
         return view('admin/stadiums/fields', $data);
     }
 
-    // บันทึกสนามย่อยใหม่
     public function createField()
     {
-        $fieldModel = new \App\Models\StadiumFieldModel();
+        $fieldModel = new StadiumFieldModel();
         $stadium_id = $this->request->getPost('stadium_id');
         
         $fieldModel->save([
@@ -355,11 +387,9 @@ class StadiumController extends BaseController
         return redirect()->to('admin/stadiums/fields/' . $stadium_id)->with('success', 'เพิ่มสนามย่อยเรียบร้อย');
     }
 
-    // 2. แก้ไขสนามย่อย
     public function updateField()
     {
-        $fieldModel = new \App\Models\StadiumFieldModel();
-        
+        $fieldModel = new StadiumFieldModel();
         $id = $this->request->getPost('id');
         $stadium_id = $this->request->getPost('stadium_id');
         
@@ -372,22 +402,18 @@ class StadiumController extends BaseController
         return redirect()->to('admin/stadiums/fields/' . $stadium_id)->with('success', 'แก้ไขข้อมูลเรียบร้อย');
     }
 
-    // 3. ลบสนามย่อย
     public function deleteField($id)
     {
-        $fieldModel = new \App\Models\StadiumFieldModel();
+        $fieldModel = new StadiumFieldModel();
         $field = $fieldModel->find($id);
         
         if ($field) {
-            // ไม่ต้องลบรูปแล้ว เพราะไม่ได้เก็บ
             $fieldModel->delete($id);
-            
-            return redirect()->to('admin/stadiums/fields/' . $field['stadium_id'])
-                             ->with('success', 'ลบสนามย่อยเรียบร้อยแล้ว');
+            return redirect()->to('admin/stadiums/fields/' . $field['stadium_id'])->with('success', 'ลบสนามย่อยเรียบร้อย');
         }
-
-        return redirect()->back()->with('error', 'ไม่พบข้อมูลสนามย่อย');
+        return redirect()->back()->with('error', 'ไม่พบข้อมูล');
     }
 
-    // ... (เพิ่มฟังก์ชันลบ หรือ แก้ไขตามต้องการ) ...
+    
+
 }

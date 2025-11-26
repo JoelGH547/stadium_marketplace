@@ -169,6 +169,45 @@
 
     <hr>
 
+    <div class="card mb-4 border-info">
+        <div class="card-header bg-light fw-bold text-info">
+            <i class="fas fa-concierge-bell me-1"></i> สิ่งอำนวยความสะดวก (Facilities)
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <?php if(isset($facilities) && !empty($facilities)): ?>
+                    <?php foreach ($facilities as $fac): ?>
+                        
+                        <?php 
+                            // Logic: เช็คว่า Facility ID นี้ เคยถูกบันทึกไว้หรือไม่?
+                            // $selected_facilities ถูกส่งมาจาก Controller
+                            $isChecked = '';
+                            if (isset($selected_facilities) && in_array($fac['id'], $selected_facilities)) {
+                                $isChecked = 'checked';
+                            }
+                        ?>
+
+                        <div class="col-md-3 col-sm-6 mb-2">
+                            <div class="form-check">
+                                <input class="form-check-input" 
+                                       type="checkbox" 
+                                       name="facilities[]" 
+                                       value="<?= $fac['id']; ?>" 
+                                       id="fac_<?= $fac['id']; ?>"
+                                       <?= $isChecked; ?>> <label class="form-check-label" for="fac_<?= $fac['id']; ?>">
+                                    <?= esc($fac['name']); ?>
+                                </label>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <div class="col-12 text-muted">
+                        <i class="fas fa-exclamation-circle"></i> ไม่พบข้อมูลสิ่งอำนวยความสะดวก
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
     <div class="form-group">
         <label>Current Outside Cover Image</label><br>
         <?php if (!empty($outsideArr)): ?>

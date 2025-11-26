@@ -81,7 +81,70 @@
                 </div>
             </div>
 
+            <div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-white font-weight-bold text-primary">
+                <i class="fas fa-concierge-bell me-1"></i> สิ่งอำนวยความสะดวก
+            </div>
+            <div class="card-body">
+                <?php if (!empty($facilities)): ?>
+                    <div class="row">
+                        <?php foreach ($facilities as $fac): ?>
+                            <div class="col-6 mb-2">
+                                <?php if (!empty($fac['icon'])): ?>
+                                    <i class="<?= $fac['icon'] ?> text-muted me-1"></i>
+                                <?php else: ?>
+                                    <i class="fas fa-check-circle text-success me-1"></i>
+                                <?php endif; ?>
+                                <?= esc($fac['name']) ?>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php else: ?>
+                    <span class="text-muted">- ไม่มีข้อมูล -</span>
+                <?php endif; ?>
+            </div>
         </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <span class="font-weight-bold text-primary">
+                    <i class="fas fa-futbol me-1"></i> สนามย่อย
+                </span>
+                <a href="<?= base_url('admin/stadiums/fields/' . $stadium['id']) ?>" class="btn btn-sm btn-outline-secondary">
+                    <i class="fas fa-cog"></i> จัดการ
+                </a>
+            </div>
+            <div class="list-group list-group-flush">
+                <?php if (!empty($fields)): ?>
+                    <?php foreach ($fields as $field): ?>
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong><?= esc($field['name']) ?></strong>
+                                <small class="d-block text-muted"><?= esc($field['description']) ?></small>
+                            </div>
+                            <?php if ($field['status'] == 'active'): ?>
+                                <span class="badge bg-success">พร้อมใช้</span>
+                            <?php else: ?>
+                                <span class="badge bg-danger">ปิด</span>
+                            <?php endif; ?>
+                        </div>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <div class="list-group-item text-center text-muted py-3">ยังไม่มีสนามย่อย</div>
+                <?php endif; ?>
+            </div>
+                </div>
+            </div>
+        </div>
+
+        </div>
+
+        
+
 
         <div class="col-lg-4 mb-4">
 
