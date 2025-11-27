@@ -377,39 +377,161 @@
         </div>
     </section>
 
-
-
-
     <section id="sortMenu" class="bg-gray-50 py-6">
-        <div class="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-            <div
-                class="bg-white rounded-2xl shadow-sm flex justify-between items-center overflow-hidden border border-gray-200">
+  <div class="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+    <div class="bg-white rounded-2xl shadow-sm flex justify-between items-center overflow-hidden border border-gray-200">
 
-                <!-- ปุ่มยอดนิยม (active เริ่มต้น) -->
-                <button class="sort-btn flex-1 py-3 text-center text-sm font-semibold bg-[var(--primary)] text-white"
-                    data-sort="popular" aria-selected="true">ยอดนิยม</button>
+      <!-- ปุ่มยอดนิยม (active เริ่มต้น) -->
+      <button class="sort-btn flex-1 py-3 text-center text-sm font-semibold bg-[var(--primary)] text-white"
+              data-sort="popular" aria-selected="true">ยอดนิยม</button>
 
-                <div class="w-px h-8 bg-gray-200"></div>
+      <div class="w-px h-8 bg-gray-200"></div>
 
-                <button
-                    class="sort-btn flex-1 py-3 text-center text-sm font-semibold text-gray-700 hover:text-[var(--primary)] hover:bg-[var(--primary)]/10"
-                    data-sort="price" aria-selected="false">ราคาถูกสุด</button>
+      <button class="sort-btn flex-1 py-3 text-center text-sm font-semibold text-gray-700 hover:text-[var(--primary)] hover:bg-[var(--primary)]/10"
+              data-sort="price" aria-selected="false">ราคาถูกสุด</button>
 
-                <div class="w-px h-8 bg-gray-200"></div>
+      <div class="w-px h-8 bg-gray-200"></div>
 
-                <button
-                    class="sort-btn flex-1 py-3 text-center text-sm font-semibold text-gray-700 hover:text-[var(--primary)] hover:bg-[var(--primary)]/10"
-                    data-sort="nearby" aria-selected="false">ราคาสุดหรู</button>
+      <button class="sort-btn flex-1 py-3 text-center text-sm font-semibold text-gray-700 hover:text-[var(--primary)] hover:bg-[var(--primary)]/10"
+              data-sort="nearby" aria-selected="false">ราคาสุดหรู</button>
 
-                <div class="w-px h-8 bg-gray-200"></div>
+      <div class="w-px h-8 bg-gray-200"></div>
 
-                <button
-                    class="sort-btn flex-1 py-3 text-center text-sm font-semibold text-gray-700 hover:text-[var(--primary)] hover:bg-[var(--primary)]/10"
-                    ดูทั้งหมด
-                </a>
-            </div>
-        </div>
-    </section>
+      <button class="sort-btn flex-1 py-3 text-center text-sm font-semibold text-gray-700 hover:text-[var(--primary)] hover:bg-[var(--primary)]/10"
+              data-sort="rating" aria-selected="false">ได้คะแนนรีวิวสูง</button>
+    </div>
+  </div>
+</section>
+
+<section id="venueList" class="py-4 bg-gray-50">
+  <div class="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+    <?php
+      /** @var array $venueCards */
+      $venueCards = $venueCards ?? [];
+    ?>
+    <ul id="venueItems" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <?php if (empty($venueCards)): ?>
+        <!-- fallback: ถ้าไม่มีข้อมูลจาก DB ตอนนี้ยังไม่แสดงอะไร -->
+      <?php else: ?>
+        <?php foreach ($venueCards as $idx => $v): ?>
+          <?php
+          $id        = $v['id'] ?? null; // << เพิ่ม
+          $detailUrl = $id
+            ? site_url('sport/show/' . $id)// ถ้าหน้า detail คือ /sport/stadium/{id}
+            : site_url('sport/show');// fallback ไปหน้า show รวมสนาม
+
+            $name    = $v['name'] ?? 'ชื่อสนาม';
+            $price   = isset($v['price']) ? (float) $v['price'] : 0;
+
+            $address = trim(($v['address'] ?? '') . ' ' . ($v['province'] ?? ''));
+            $address = $address !== '' ? $address : 'ยังไม่ระบุที่อยู่';
+
+            $open  = $v['open_time']  ?? null;
+            $close = $v['close_time'] ?? null;
+            if ($open  !== null && strlen($open)  >= 5) $open  = substr($open, 0, 5);
+            if ($close !== null && strlen($close) >= 5) $close = substr($close, 0, 5);
+            $timeLabel = ($open && $close) ? ($open . ' – ' . $close) : 'ยังไม่ระบุเวลา';
+
+            $typeIcon  = $v['type_icon']  ?? '🏟️';
+            $typeLabel = $v['type_label'] ?? ($v['category_name'] ?? 'สนามกีฬา');
+
+            $cover    = $v['cover_image'] ?? null;
+            $coverUrl = $cover
+              ? base_url('assets/uploads/stadiums/' . $cover)
+              : base_url('assets/uploads/home/1.jpg');
+
+            $lat = $v['lat'] ?? null;
+            $lng = $v['lng'] ?? null;
+          ?>
+          <li class="relative flex items-center gap-4 bg-white rounded-2xl
+           p-4 pb-8 sm:p-5 sm:pb-10 pr-16
+           transition-all duration-200 hover:shadow-lg" 
+    data-price="<?= esc($price) ?>"
+    data-distance-km=""
+    data-rating="0"
+    data-popular="<?= 100 - (int) $idx ?>"
+    <?php if (!empty($lat) && !empty($lng)): ?>
+      data-lat="<?= esc($lat) ?>"
+      data-lng="<?= esc($lng) ?>"
+    <?php endif; ?>
+>
+  <?php if (!empty($detailUrl)): ?>
+    <a href="<?= esc($detailUrl) ?>" class="absolute inset-0 z-[5]" aria-label="ดูรายละเอียดสนาม <?= esc($name) ?>">
+      <span class="sr-only">ดูรายละเอียดสนาม</span>
+    </a>
+  <?php endif; ?>
+  <img src="<?= esc($coverUrl) ?>" class="h-24 w-24 rounded-2xl object-cover" alt="">
+  <div class="flex-1 min-w-0">
+    <div class="flex items-center gap-2">
+      <h3 class="text-base font-extrabold text-[color:var(--ink)] truncate">
+        <?= esc($name) ?>
+      </h3>
+    </div>
+
+    <div class="mt-1 flex flex-wrap items-center gap-2 text-sm">
+      <span class="inline-flex items-center gap-1 rounded-full dist-badge px-2.5 py-0.5">
+        📍 <span>-- km.</span>
+      </span>
+      <span class="text-gray-500 truncate"><?= esc($address) ?></span>
+    </div>
+
+    <div class="mt-2 flex flex-wrap items-center gap-2 text-sm">
+      <span>⭐ <strong>0</strong></span>
+      <span class="inline-flex items-center gap-1 rounded-full border border-gray-200 px-2.5 py-0.5 text-gray-600">
+        ⏰ <?= esc($timeLabel) ?>
+      </span>
+      <span class="text-[var(--primary)] font-semibold">
+        ฿<?= number_format($price, 0) ?>/hr.
+      </span>
+    </div>
+  </div>
+
+  <!-- ปุ่มลูกศร: ชิดขวากลางการ์ด -->
+  <?php if (!empty($detailUrl)): ?>
+  <a
+    href="<?= esc($detailUrl) ?>"
+    class="absolute right-4 sm:right-5 top-1/2 -translate-y-1/2 z-[6]
+           flex h-9 w-9 items-center justify-center
+           rounded-full border border-[var(--primary)]
+           bg-white/90 text-[var(--primary)]
+           shadow-md shadow-black/10
+           hover:bg-[var(--primary)] hover:text-white
+           transition-colors"
+  >
+    &rsaquo;
+  </a>
+  <?php endif; ?>
+
+
+  <div class="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 z-[5]
+              inline-flex items-center justify-center gap-1
+              text-[var(--primary)] text-[11px] font-semibold
+              px-3 py-1 rounded-full
+              bg-white/80
+              shadow-md shadow-black/15
+              backdrop-blur-md
+              border border-white/60
+              transition-all duration-300">
+    <span class="text-sm leading-none drop-shadow-sm"><?= esc($typeIcon) ?></span>
+    <span class="leading-none"><?= esc($typeLabel) ?></span>
+  </div>
+</li>
+
+        <?php endforeach; ?>
+      <?php endif; ?>
+    </ul>
+  </div>
+</section>
+<section id="venueSeeAll" class="bg-gray-50 py-6">
+  <div class="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+    <div class="flex justify-end">
+      <a href="<?= site_url('sport/view') ?>"
+         class="px-6 py-3 text-sm font-semibold text-[var(--primary)] hover:underline">
+        ดูทั้งหมด
+      </a>
+    </div>
+  </div>
+</section>
 
 
 </main>
