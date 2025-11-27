@@ -526,10 +526,61 @@ document.addEventListener('DOMContentLoaded', () => {
   const tabDaily = document.getElementById('tabDaily');
   const formHourly = document.getElementById('formHourly');
   const formDaily = document.getElementById('formDaily');
+  const mainSearchBtn = document.getElementById('mainSearchBtn');
 
   if (!tabHourly || !tabDaily || !formHourly || !formDaily) return;
 
+  if (mainSearchBtn) {
+    mainSearchBtn.addEventListener('click', () => {
+      // Check which form is visible and submit it
+      if (!formHourly.classList.contains('hidden')) {
+        formHourly.submit();
+      } else if (!formDaily.classList.contains('hidden')) {
+        formDaily.submit();
+      }
+    });
+  }
+
   function switchTab(mode) {
+    const currentForm = mode === 'hourly' ? formDaily : formHourly;
+    const nextForm = mode === 'hourly' ? formHourly : formDaily;
+
+    // Fade out current form
+    currentForm.style.opacity = '1';
+    currentForm.style.transform = 'translateX(0)';
+    currentForm.style.transition = 'opacity 0.2s ease-out, transform 0.2s ease-out';
+
+    requestAnimationFrame(() => {
+      currentForm.style.opacity = '0';
+      currentForm.style.transform = 'translateX(-20px)';
+    });
+
+    // Hide current form after animation
+    setTimeout(() => {
+      currentForm.classList.add('hidden');
+      currentForm.style.opacity = '';
+      currentForm.style.transform = '';
+
+      // Prepare next form for animation
+      nextForm.style.opacity = '0';
+      nextForm.style.transform = 'translateX(20px)';
+      nextForm.classList.remove('hidden');
+
+      // Fade in next form
+      requestAnimationFrame(() => {
+        nextForm.style.transition = 'opacity 0.3s ease-in, transform 0.3s ease-in';
+        nextForm.style.opacity = '1';
+        nextForm.style.transform = 'translateX(0)';
+      });
+
+      // Clean up inline styles after animation
+      setTimeout(() => {
+        nextForm.style.opacity = '';
+        nextForm.style.transform = '';
+        nextForm.style.transition = '';
+      }, 300);
+    }, 200);
+
     if (mode === 'hourly') {
       // Active Hourly
       tabHourly.classList.remove('text-gray-500', 'bg-gray-50', 'border-transparent');
@@ -538,10 +589,6 @@ document.addEventListener('DOMContentLoaded', () => {
       // Inactive Daily
       tabDaily.classList.remove('text-[var(--primary)]', 'bg-white', 'border-[var(--primary)]');
       tabDaily.classList.add('text-gray-500', 'bg-gray-50', 'border-transparent');
-
-      // Show Hourly Form
-      formHourly.classList.remove('hidden');
-      formDaily.classList.add('hidden');
     } else {
       // Active Daily
       tabDaily.classList.remove('text-gray-500', 'bg-gray-50', 'border-transparent');
@@ -550,10 +597,6 @@ document.addEventListener('DOMContentLoaded', () => {
       // Inactive Hourly
       tabHourly.classList.remove('text-[var(--primary)]', 'bg-white', 'border-[var(--primary)]');
       tabHourly.classList.add('text-gray-500', 'bg-gray-50', 'border-transparent');
-
-      // Show Daily Form
-      formDaily.classList.remove('hidden');
-      formHourly.classList.add('hidden');
     }
   }
 

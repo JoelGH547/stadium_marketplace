@@ -72,18 +72,6 @@
                                     </div>
                                 </div>
                             </div>
-                            
-                            <!-- Floating Search Button (Bottom Center) -->
-                            <div class="absolute -bottom-6 left-1/2 -translate-x-1/2 w-full max-w-xs px-4">
-                                <button type="submit"
-                                    class="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--primary)] px-6 py-3.5 text-base font-bold text-white shadow-lg shadow-[var(--primary)]/30 hover:bg-emerald-600 hover:shadow-[var(--primary)]/40 hover:-translate-y-0.5 transition-all duration-200">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35" />
-                                        <circle cx="11" cy="11" r="6" stroke-linecap="round" stroke-linejoin="round" />
-                                    </svg>
-                                    <span>ค้นหา</span>
-                                </button>
-                            </div>
                         </form>
 
                         <!-- Form: Daily Booking -->
@@ -122,20 +110,20 @@
                                     </div>
                                 </div>
                             </div>
-
-                            <!-- Floating Search Button (Bottom Center) -->
-                            <div class="absolute -bottom-6 left-1/2 -translate-x-1/2 w-full max-w-xs px-4">
-                                <button type="submit"
-                                    class="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--primary)] px-6 py-3.5 text-base font-bold text-white shadow-lg shadow-[var(--primary)]/30 hover:bg-emerald-600 hover:shadow-[var(--primary)]/40 hover:-translate-y-0.5 transition-all duration-200">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35" />
-                                        <circle cx="11" cy="11" r="6" stroke-linecap="round" stroke-linejoin="round" />
-                                    </svg>
-                                    <span>ค้นหา</span>
-                                </button>
-                            </div>
                         </form>
 
+                    </div>
+                    
+                    <!-- Floating Search Button (Bottom Center) -->
+                    <div class="absolute -bottom-6 left-1/2 -translate-x-1/2 w-full max-w-xs px-4">
+                        <button type="button" id="mainSearchBtn"
+                            class="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--primary)] px-6 py-3.5 text-base font-bold text-white shadow-lg shadow-[var(--primary)]/30 hover:bg-emerald-600 hover:shadow-[var(--primary)]/40 hover:-translate-y-0.5 transition-all duration-200">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35" />
+                                <circle cx="11" cy="11" r="6" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                            <span>ค้นหา</span>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -409,114 +397,118 @@
       /** @var array $venueCards */
       $venueCards = $venueCards ?? [];
     ?>
-    <ul id="venueItems" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <!-- Replace the <ul id="venueItems"> section (around line 412-522) with this code -->
+    <ul id="venueItems" class="flex flex-col gap-4">
       <?php if (empty($venueCards)): ?>
         <!-- fallback: ถ้าไม่มีข้อมูลจาก DB ตอนนี้ยังไม่แสดงอะไร -->
       <?php else: ?>
-        <?php foreach ($venueCards as $idx => $v): ?>
+        <?php 
+        // Limit to 20 items
+        $limitedVenues = array_slice($venueCards, 0, 20);
+        foreach ($limitedVenues as $idx => $v): 
+        ?>
           <?php
-          $id        = $v['id'] ?? null; // << เพิ่ม
+          $id        = $v['id'] ?? null;
           $detailUrl = $id
-            ? site_url('sport/show/' . $id)// ถ้าหน้า detail คือ /sport/stadium/{id}
-            : site_url('sport/show');// fallback ไปหน้า show รวมสนาม
-
+            ? site_url('sport/show/' . $id)
+            : site_url('sport/show');
             $name    = $v['name'] ?? 'ชื่อสนาม';
             $price   = isset($v['price']) ? (float) $v['price'] : 0;
-
             $address = trim(($v['address'] ?? '') . ' ' . ($v['province'] ?? ''));
             $address = $address !== '' ? $address : 'ยังไม่ระบุที่อยู่';
-
             $open  = $v['open_time']  ?? null;
             $close = $v['close_time'] ?? null;
             if ($open  !== null && strlen($open)  >= 5) $open  = substr($open, 0, 5);
             if ($close !== null && strlen($close) >= 5) $close = substr($close, 0, 5);
             $timeLabel = ($open && $close) ? ($open . ' – ' . $close) : 'ยังไม่ระบุเวลา';
-
             $typeIcon  = $v['type_icon']  ?? '🏟️';
             $typeLabel = $v['type_label'] ?? ($v['category_name'] ?? 'สนามกีฬา');
-
             $cover    = $v['cover_image'] ?? null;
             $coverUrl = $cover
               ? base_url('assets/uploads/stadiums/' . $cover)
               : base_url('assets/uploads/home/1.jpg');
-
             $lat = $v['lat'] ?? null;
             $lng = $v['lng'] ?? null;
           ?>
-          <li class="relative flex items-center gap-4 bg-white rounded-2xl
-           p-4 pb-8 sm:p-5 sm:pb-10 pr-16
-           transition-all duration-200 hover:shadow-lg" 
-    data-price="<?= esc($price) ?>"
-    data-distance-km=""
-    data-rating="0"
-    data-popular="<?= 100 - (int) $idx ?>"
-    <?php if (!empty($lat) && !empty($lng)): ?>
-      data-lat="<?= esc($lat) ?>"
-      data-lng="<?= esc($lng) ?>"
-    <?php endif; ?>
->
-  <?php if (!empty($detailUrl)): ?>
-    <a href="<?= esc($detailUrl) ?>" class="absolute inset-0 z-[5]" aria-label="ดูรายละเอียดสนาม <?= esc($name) ?>">
-      <span class="sr-only">ดูรายละเอียดสนาม</span>
-    </a>
-  <?php endif; ?>
-  <img src="<?= esc($coverUrl) ?>" class="h-24 w-24 rounded-2xl object-cover" alt="">
-  <div class="flex-1 min-w-0">
-    <div class="flex items-center gap-2">
-      <h3 class="text-base font-extrabold text-[color:var(--ink)] truncate">
-        <?= esc($name) ?>
-      </h3>
-    </div>
-
-    <div class="mt-1 flex flex-wrap items-center gap-2 text-sm">
-      <span class="inline-flex items-center gap-1 rounded-full dist-badge px-2.5 py-0.5">
-        📍 <span>-- km.</span>
-      </span>
-      <span class="text-gray-500 truncate"><?= esc($address) ?></span>
-    </div>
-
-    <div class="mt-2 flex flex-wrap items-center gap-2 text-sm">
-      <span>⭐ <strong>0</strong></span>
-      <span class="inline-flex items-center gap-1 rounded-full border border-gray-200 px-2.5 py-0.5 text-gray-600">
-        ⏰ <?= esc($timeLabel) ?>
-      </span>
-      <span class="text-[var(--primary)] font-semibold">
-        ฿<?= number_format($price, 0) ?>/hr.
-      </span>
-    </div>
-  </div>
-
-  <!-- ปุ่มลูกศร: ชิดขวากลางการ์ด -->
-  <?php if (!empty($detailUrl)): ?>
-  <a
-    href="<?= esc($detailUrl) ?>"
-    class="absolute right-4 sm:right-5 top-1/2 -translate-y-1/2 z-[6]
-           flex h-9 w-9 items-center justify-center
-           rounded-full border border-[var(--primary)]
-           bg-white/90 text-[var(--primary)]
-           shadow-md shadow-black/10
-           hover:bg-[var(--primary)] hover:text-white
-           transition-colors"
-  >
-    &rsaquo;
-  </a>
-  <?php endif; ?>
-
-
-  <div class="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 z-[5]
-              inline-flex items-center justify-center gap-1
-              text-[var(--primary)] text-[11px] font-semibold
-              px-3 py-1 rounded-full
-              bg-white/80
-              shadow-md shadow-black/15
-              backdrop-blur-md
-              border border-white/60
-              transition-all duration-300">
-    <span class="text-sm leading-none drop-shadow-sm"><?= esc($typeIcon) ?></span>
-    <span class="leading-none"><?= esc($typeLabel) ?></span>
-  </div>
-</li>
-
+          <li class="relative bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-200 overflow-hidden"
+              data-price="<?= esc($price) ?>"
+              data-distance-km=""
+              data-rating="0"
+              data-popular="<?= 100 - (int) $idx ?>"
+              <?php if (!empty($lat) && !empty($lng)): ?>
+              data-lat="<?= esc($lat) ?>"
+              data-lng="<?= esc($lng) ?>"
+              <?php endif; ?>>
+            
+            <div class="flex flex-col md:flex-row">
+              <!-- Image Section -->
+              <div class="relative w-full md:w-80 h-56 flex-shrink-0">
+                <?php if (!empty($detailUrl)): ?>
+                <a href="<?= esc($detailUrl) ?>" class="absolute inset-0 z-[5]">
+                  <span class="sr-only">ดูรายละเอียดสนาม</span>
+                </a>
+                <?php endif; ?>
+                <img src="<?= esc($coverUrl) ?>" class="w-full h-full object-cover" alt="<?= esc($name) ?>">
+                
+                <!-- Sport Type Badge -->
+                <div class="absolute bottom-3 left-3 z-[6] inline-flex items-center gap-1 text-[var(--primary)] text-xs font-semibold px-3 py-1.5 rounded-full bg-white/90 shadow-md backdrop-blur-sm border border-white/60">
+                  <span class="text-sm"><?= esc($typeIcon) ?></span>
+                  <span><?= esc($typeLabel) ?></span>
+                </div>
+                
+                <!-- Heart Icon (Favorite) -->
+                <button class="absolute top-3 right-3 z-[6] w-10 h-10 rounded-full bg-white/90 hover:bg-white flex items-center justify-center shadow-md transition-colors">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                  </svg>
+                </button>
+              </div>
+              <!-- Content Section -->
+              <div class="flex-1 p-5 md:p-6">
+                <h3 class="text-xl font-bold text-gray-900 mb-2 line-clamp-2">
+                  <?= esc($name) ?>
+                </h3>
+                
+                <div class="flex items-center gap-2 text-sm text-gray-600 mb-3">
+                  <span class="inline-flex items-center gap-1">
+                    ⭐ <strong class="text-gray-900">0.0</strong>
+                  </span>
+                  <span class="text-gray-400">•</span>
+                  <span class="inline-flex items-center gap-1 dist-badge">
+                    📍 <span>-- km.</span>
+                  </span>
+                </div>
+                <p class="text-sm text-gray-600 mb-3 line-clamp-1">
+                  <?= esc($address) ?>
+                </p>
+                <div class="flex flex-wrap items-center gap-2 text-sm">
+                  <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full border border-gray-200 text-gray-600">
+                    ⏰ <?= esc($timeLabel) ?>
+                  </span>
+                </div>
+              </div>
+              <!-- Price Section -->
+              <div class="flex flex-col items-end justify-between p-5 md:p-6 md:w-48 bg-gray-50 border-t md:border-t-0 md:border-l border-gray-100">
+                <div class="text-right mb-auto">
+                  <div class="text-xs text-gray-500 mb-1">เริ่มต้น</div>
+                  <div class="text-2xl font-bold text-[var(--primary)]">
+                    ฿<?= number_format($price, 0) ?>
+                  </div>
+                  <div class="text-xs text-gray-500">ต่อชั่วโมง</div>
+                </div>
+                
+                <?php if (!empty($detailUrl)): ?>
+                <a href="<?= esc($detailUrl) ?>" 
+                   class="relative z-[6] w-full mt-4 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[var(--primary)] text-white font-semibold hover:bg-emerald-600 transition-colors shadow-md">
+                  <span>ดูรายละเอียด</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                  </svg>
+                </a>
+                <?php endif; ?>
+              </div>
+            </div>
+          </li>
         <?php endforeach; ?>
       <?php endif; ?>
     </ul>
@@ -536,4 +528,4 @@
 
 </main>
 
-<?= $this->endSection() ?>ผ
+<?= $this->endSection() ?>
