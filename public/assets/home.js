@@ -1,201 +1,22 @@
-/* ==================== Search panel ==================== */
-(function(){
-  const openBtn=document.getElementById('openSearch');
-  const panel=document.getElementById('searchPanel');
-  const backdrop=document.getElementById('searchBackdrop');
-  const closeBtn=document.getElementById('closeSearch');
-  const clearSports=document.getElementById('clearSports');
-  if(!openBtn||!panel) return;
-
-  const activeOn=['bg-[var(--primary)]/10','border-[var(--primary)]/40','text-[var(--primary)]'];
-
-  function show(){ panel.classList.remove('hidden'); backdrop?.classList.remove('hidden'); panel.scrollTop=0; }
-  function hide(){ panel.classList.add('hidden'); backdrop?.classList.add('hidden'); }
-
-  openBtn.addEventListener('click', show);
-  closeBtn?.addEventListener('click', hide);
-  backdrop?.addEventListener('click', hide);
-
-  panel.querySelectorAll('.sport-btn').forEach(btn=>{
-    btn.addEventListener('click', ()=> activeOn.forEach(c=> btn.classList.toggle(c)));
-  });
-  clearSports?.addEventListener('click', ()=>{
-    panel.querySelectorAll('.sport-btn').forEach(b=> activeOn.forEach(c=> b.classList.remove(c)));
-  });
-})();
-
-/* ==================== Balls ==================== */
-const Balls=(function(){
-  const section=document.getElementById('hero'), canvas=document.getElementById('heroBalls');
-  if(!section||!canvas) return { setThrottle:()=>{} };
-
-  const ctx=canvas.getContext('2d');
-  let W=0,H=0,balls=[],frame=0,throttled=false;
-
-  const EMOJIS=[{char:'⚽',size:44},{char:'🏀',size:46},{char:'🏸',size:48},{char:'🎾',size:48}];
-  const COUNT=8;
-
-  function resize(){
-    const r=section.getBoundingClientRect();
-    W=canvas.width = Math.floor(r.width*devicePixelRatio);
-    H=canvas.height= Math.floor(r.height*devicePixelRatio);
-    canvas.style.width = r.width+'px';
-    canvas.style.height= r.height+'px';
-    ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
-  }
-  function makeBall(){
-    const e=EMOJIS[Math.floor(Math.random()*EMOJIS.length)];
-    const sp=1+Math.random()*1.2, a=Math.random()*Math.PI*2;
-    return {char:e.char,size:e.size,
-      x:Math.random()*(W-e.size*2)+e.size, y:Math.random()*(H-e.size*2)+e.size,
-      vx:Math.cos(a)*sp, vy:Math.sin(a)*sp, rot:Math.random()*Math.PI*2, vr:(Math.random()*0.02-0.01)};
-  }
-  function loop(){
-    frame++;
-    if(throttled && (frame%2===1)){ requestAnimationFrame(loop); return; }
-
-    ctx.clearRect(0,0,W,H);
-    const blur = throttled ? 2 : 6;
-    for(let i=0;i<balls.length;i++){
-      if(throttled && i%3===0) continue;
-      const b=balls[i];
-      b.x+=b.vx*2; b.y+=b.vy*2; b.rot+=b.vr;
-      if(b.x<b.size||b.x>W-b.size) b.vx*=-1;
-      if(b.y<b.size||b.y>H-b.size) b.vy*=-1;
-
-      ctx.save(); ctx.translate(b.x,b.y); ctx.rotate(b.rot);
-      ctx.font=`bold ${b.size}px system-ui, Apple Color Emoji, Segoe UI Emoji, Noto Color Emoji`;
-      ctx.textAlign='center'; ctx.textBaseline='middle';
-      ctx.shadowColor='rgba(0,0,0,0.18)'; ctx.shadowBlur=blur; ctx.globalAlpha=.95;
-      ctx.fillText(b.char,0,0); ctx.restore();
-    }
-    requestAnimationFrame(loop);
-  }
-
-  function init(){ resize(); balls=Array.from({length:COUNT}, makeBall); requestAnimationFrame(loop); }
-  init(); window.addEventListener('resize', resize);
-
-  return { setThrottle:(v)=>{ throttled=!!v; } };
-})();
-
-/* ==================== Deck Carousel ==================== */
-(function(){
-  const stage=document.getElementById('heroCarousel'); if(!stage) return;
-  const slides=[...stage.querySelectorAll('[data-slide]')]; if(!slides.length) return;
-  const prevBtn=document.getElementById('prevSlide'), nextBtn=document.getElementById('nextSlide');
-
-  let index=0, autoTimer=null, isAnimating=false;
-
-  function metric(){ const w=stage.clientWidth; return { off:Math.min(96,Math.max(48,w*0.08)), drop:12 }; }
-  function pose(role){
-    const {off,drop}=metric();
-    if(role==='current') return `translate3d(0,0,0) scale(1)`;
-    if(role==='prev')    return `translate3d(${-off}px, ${drop}px, 0) scale(.965)`;
-    if(role==='next')    return `translate3d(${ off}px, ${drop}px, 0) scale(.965)`;
-    return `translate3d(0,24px,0) scale(.9)`;
-  }
-  function setRole(el, role){
-    el.classList.remove('is-current','is-prev','is-next','is-hidden');
-    el.classList.add(role==='others' ? 'is-hidden' : `is-${role}`);
-    el.style.transform = pose(role);
-    el.style.opacity   = (role==='current') ? 1 : (role==='prev'||role==='next') ? 0.98 : 0;
-  }
-  function layout(){
-    const n=slides.length, prev=(index-1+n)%n, next=(index+1)%n;
-    slides.forEach((el,i)=>{
-      if(i===index)      setRole(el,'current');
-      else if(i===prev)  setRole(el,'prev');
-      else if(i===next)  setRole(el,'next');
-      else               setRole(el,'others');
-    });
-  }
-
-  function animateTo(newIndex){
-    if(isAnimating) return;
-    isAnimating=true;
-    Balls.setThrottle(true);
-
-    const n=slides.length;
-    const old=index;
-    index=(newIndex+n)%n;
-
-    const prevOld=(old-1+n)%n, nextOld=(old+1)%n;
-    const prevNew=(index-1+n)%n, nextNew=(index+1)%n;
-
-    slides.forEach((el,i)=>{
-      let from='others', to='others';
-      if(i===old)     from='current'; else if(i===prevOld) from='prev'; else if(i===nextOld) from='next';
-      if(i===index)   to='current';   else if(i===prevNew) to='prev';   else if(i===nextNew) to='next';
-
-      const fT=pose(from), tT=pose(to);
-      const fO=(from==='current')?1:((from==='prev'||from==='next')?0.98:0);
-      const tO=(to==='current')?1:((to==='prev'||to==='next')?0.98:0);
-
-      setRole(el, to);
-      el.animate(
-        [{transform:fT,opacity:fO},{transform:tT,opacity:tO}],
-        {duration:420, easing:'cubic-bezier(.25,.8,.25,1)', fill:'both'}
-      );
-    });
-
-    setTimeout(()=>{ isAnimating=false; Balls.setThrottle(false); }, 450);
-  }
-  const go=(d)=>animateTo(index+d);
-
-  prevBtn?.addEventListener('click', ()=>go(-1));
-  nextBtn?.addEventListener('click', ()=>go(+1));
-
-  (function attachSwipe(el){
-    let startX=null, pid=null;
-    el.addEventListener('pointerdown', e=>{ startX=e.clientX; pid=e.pointerId; el.setPointerCapture(pid); });
-    el.addEventListener('pointerup', e=>{
-      if(startX==null) return;
-      const dx=e.clientX-startX; startX=null;
-      if(Math.abs(dx)>28) go(dx<0?+1:-1);
-    });
-    el.addEventListener('pointercancel', ()=>{ startX=null; });
-  })(stage);
-
-  stage.tabIndex=0;
-  stage.addEventListener('keydown', e=>{
-    if(e.key==='ArrowLeft')  go(-1);
-    if(e.key==='ArrowRight') go(+1);
-  });
-
-  function startAuto(){ if(!autoTimer) autoTimer=setInterval(()=>go(+1), 5600); }
-  function stopAuto(){ if(autoTimer){ clearInterval(autoTimer); autoTimer=null; } }
-  stage.addEventListener('pointerenter', stopAuto);
-  stage.addEventListener('pointerleave', startAuto);
-  document.addEventListener('visibilitychange', ()=> document.hidden ? stopAuto() : startAuto());
-
-  let rT=null;
-  window.addEventListener('resize', ()=>{
-    stopAuto(); clearTimeout(rT);
-    rT=setTimeout(()=>{ layout(); startAuto(); }, 120);
-  }, {passive:true});
-
-  layout(); startAuto();
-})();
-
 /* ==== Arrow buttons for #nearScroller ==== */
-(function(){
+(function () {
   const scroller = document.getElementById('nearScroller');
-  const leftBtn  = document.getElementById('nearLeft');
+  const leftBtn = document.getElementById('nearLeft');
   const rightBtn = document.getElementById('nearRight');
-  if(!scroller || !leftBtn || !rightBtn) return;
+  if (!scroller || !leftBtn || !rightBtn) return;
 
-  function stepSize(){
+  function stepSize() {
     const card = scroller.querySelector('article');
-    if(!card) return 320;
+    if (!card) return 320;
     const rect = card.getBoundingClientRect();
     return Math.round(rect.width + 16);
   }
 
-  leftBtn.addEventListener('click', ()=> scroller.scrollBy({left: -stepSize(), behavior: 'smooth'}));
-  rightBtn.addEventListener('click',()=> scroller.scrollBy({left:  stepSize(), behavior: 'smooth'}));
+  leftBtn.addEventListener('click', () => scroller.scrollBy({ left: -stepSize(), behavior: 'smooth' }));
+  rightBtn.addEventListener('click', () => scroller.scrollBy({ left: stepSize(), behavior: 'smooth' }));
 
-  scroller.querySelectorAll('img').forEach(img=>{
-    img.addEventListener('dragstart', e=> e.preventDefault());
+  scroller.querySelectorAll('img').forEach(img => {
+    img.addEventListener('dragstart', e => e.preventDefault());
   });
 })();
 
@@ -203,7 +24,7 @@ const Balls=(function(){
 /* ============ Nearby distance + limit 8/20 ============ */
 document.addEventListener('DOMContentLoaded', () => {
   const nearScroller = document.getElementById('nearScroller');
-  const listEl       = document.getElementById('venueItems');
+  const listEl = document.getElementById('venueItems');
 
   if (!nearScroller && !listEl) return;
 
@@ -227,21 +48,21 @@ document.addEventListener('DOMContentLoaded', () => {
     return d < 1 ? (d * 1000).toFixed(0) + ' m.' : d.toFixed(1) + ' km.';
   }
 
-    function applyRanking() {
+  function applyRanking() {
     // จัดการรายการหลักด้านล่าง
     if (listEl) {
       const items = Array.from(listEl.querySelectorAll('li'));
       items.forEach((li) => {
         const lat = parseFloat(li.dataset.lat || '');
         const lng = parseFloat(li.dataset.lng || '');
-        let dist  = Number.POSITIVE_INFINITY;
+        let dist = Number.POSITIVE_INFINITY;
 
         if (userLocation && !isNaN(lat) && !isNaN(lng)) {
           dist = haversine(userLocation.lat, userLocation.lng, lat, lng);
         }
 
         li.dataset.distanceKm = dist.toString();
-        li.dataset.distance   = dist.toString();
+        li.dataset.distance = dist.toString();
 
         if (userLocation) {
           const badge = li.querySelector('.dist-badge span:last-child');
@@ -258,7 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
       sorted.forEach((li, idx) => {
         listEl.appendChild(li);
         if (idx < 20) li.classList.remove('hidden');
-        else          li.classList.add('hidden');
+        else li.classList.add('hidden');
       });
     }
 
@@ -268,14 +89,14 @@ document.addEventListener('DOMContentLoaded', () => {
       cards.forEach((card) => {
         const lat = parseFloat(card.dataset.lat || '');
         const lng = parseFloat(card.dataset.lng || '');
-        let dist  = Number.POSITIVE_INFINITY;
+        let dist = Number.POSITIVE_INFINITY;
 
         if (userLocation && !isNaN(lat) && !isNaN(lng)) {
           dist = haversine(userLocation.lat, userLocation.lng, lat, lng);
         }
 
         card.dataset.distanceKm = dist.toString();
-        card.dataset.distance   = dist.toString();
+        card.dataset.distance = dist.toString();
 
         if (userLocation) {
           const badge = card.querySelector('.dist-badge span:last-child');
@@ -292,7 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
       sortedCards.forEach((card, idx) => {
         nearScroller.appendChild(card);
         if (idx < 12) card.classList.remove('hidden');
-        else         card.classList.add('hidden');
+        else card.classList.add('hidden');
       });
     }
 
@@ -348,7 +169,7 @@ document.addEventListener('DOMContentLoaded', () => {
 /* ============ เมนูเรียงลำดับด้านล่าง (home) ============ */
 document.addEventListener('DOMContentLoaded', () => {
   const sortMenu = document.getElementById('sortMenu');
-  const listEl   = document.getElementById('venueItems');
+  const listEl = document.getElementById('venueItems');
   if (!sortMenu || !listEl) return;
 
   const buttons = Array.from(sortMenu.querySelectorAll('button.sort-btn'));
@@ -366,7 +187,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function sortListBy(sortKey) {
-    const items  = Array.from(listEl.querySelectorAll('li'));
+    const items = Array.from(listEl.querySelectorAll('li'));
     const sorted = items.slice();
 
     if (sortKey === 'price') {
@@ -446,14 +267,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const ul = document.getElementById('venueItems');
   if (!ul) return;
 
-  const PER_ROW       = 2;
-  const ROWS_INITIAL  = 4;
-  const ROWS_PREVIEW  = 5;
+  const PER_ROW = 2;
+  const ROWS_INITIAL = 4;
+  const ROWS_PREVIEW = 5;
   const ROWS_EXPANDED = 10;
 
-  const INITIAL       = ROWS_INITIAL  * PER_ROW;   // 4 แถวแรก = 8 การ์ด
-  const PREVIEW_LIMIT = ROWS_PREVIEW  * PER_ROW;   // แถวที่ 5   = 10 การ์ด
-  const EXPAND_LIMIT  = ROWS_EXPANDED * PER_ROW;   // แถว 1–10   = 20 การ์ด
+  const INITIAL = ROWS_INITIAL * PER_ROW;   // 4 แถวแรก = 8 การ์ด
+  const PREVIEW_LIMIT = ROWS_PREVIEW * PER_ROW;   // แถวที่ 5   = 10 การ์ด
+  const EXPAND_LIMIT = ROWS_EXPANDED * PER_ROW;   // แถว 1–10   = 20 การ์ด
 
   // จำว่าเคยกด "ดูเพิ่มเติม" แล้วหรือยัง
   let isExpanded = false;
@@ -512,7 +333,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const max = Math.min(EXPAND_LIMIT, total);
       for (let i = 0; i < total; i++) {
         if (i < max) items[i].classList.remove('hidden', 'vp-partial');
-        else         items[i].classList.add('hidden');
+        else items[i].classList.add('hidden');
       }
       const btn = wrap.querySelector('#btnMoreOverlay');
       if (btn) btn.classList.add('hidden');
@@ -556,7 +377,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function expandToLimit() {
     const items = Array.from(ul.children).filter(el => el.tagName === 'LI');
     const total = items.length;
-    const max   = Math.min(EXPAND_LIMIT, total);
+    const max = Math.min(EXPAND_LIMIT, total);
 
     for (let i = INITIAL; i < max; i++) {
       items[i].classList.remove('hidden', 'vp-partial');
@@ -582,7 +403,7 @@ document.addEventListener('DOMContentLoaded', () => {
 (function () {
   const loggedIn = !!window.CUSTOMER_LOGGED_IN;
   const backdrop = document.getElementById('loginBackdrop');
-  const panel    = document.getElementById('loginPanel');
+  const panel = document.getElementById('loginPanel');
 
   if (!backdrop || !panel) return;
 
@@ -672,7 +493,7 @@ document.addEventListener('DOMContentLoaded', () => {
     return null;
   }
 
-   const nearViewAll = findNearViewAll();
+  const nearViewAll = findNearViewAll();
   if (nearViewAll) {
     nearViewAll.addEventListener('click', (e) => {
       // ถ้าล็อกอินแล้ว → ปล่อยให้ลิงก์ทำงานตามปกติ
@@ -698,3 +519,59 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 })();
+
+/* ==================== Search Tabs (Hourly / Daily) ==================== */
+document.addEventListener('DOMContentLoaded', () => {
+  const tabHourly = document.getElementById('tabHourly');
+  const tabDaily = document.getElementById('tabDaily');
+  const formHourly = document.getElementById('formHourly');
+  const formDaily = document.getElementById('formDaily');
+
+  if (!tabHourly || !tabDaily || !formHourly || !formDaily) return;
+
+  function switchTab(mode) {
+    if (mode === 'hourly') {
+      // Active Hourly
+      tabHourly.classList.remove('text-gray-500', 'bg-gray-50', 'border-transparent');
+      tabHourly.classList.add('text-[var(--primary)]', 'bg-white', 'border-[var(--primary)]');
+
+      // Inactive Daily
+      tabDaily.classList.remove('text-[var(--primary)]', 'bg-white', 'border-[var(--primary)]');
+      tabDaily.classList.add('text-gray-500', 'bg-gray-50', 'border-transparent');
+
+      // Show Hourly Form
+      formHourly.classList.remove('hidden');
+      formDaily.classList.add('hidden');
+    } else {
+      // Active Daily
+      tabDaily.classList.remove('text-gray-500', 'bg-gray-50', 'border-transparent');
+      tabDaily.classList.add('text-[var(--primary)]', 'bg-white', 'border-[var(--primary)]');
+
+      // Inactive Hourly
+      tabHourly.classList.remove('text-[var(--primary)]', 'bg-white', 'border-[var(--primary)]');
+      tabHourly.classList.add('text-gray-500', 'bg-gray-50', 'border-transparent');
+
+      // Show Daily Form
+      formDaily.classList.remove('hidden');
+      formHourly.classList.add('hidden');
+    }
+  }
+
+  tabHourly.addEventListener('click', () => switchTab('hourly'));
+  tabDaily.addEventListener('click', () => switchTab('daily'));
+
+  // Popular Stadiums Scroller
+  const popularScroller = document.getElementById('popularScroller');
+  const popularLeft = document.getElementById('popularLeft');
+  const popularRight = document.getElementById('popularRight');
+
+  if (popularScroller && popularLeft && popularRight) {
+    popularLeft.addEventListener('click', () => {
+      popularScroller.scrollBy({ left: -300, behavior: 'smooth' });
+    });
+
+    popularRight.addEventListener('click', () => {
+      popularScroller.scrollBy({ left: 300, behavior: 'smooth' });
+    });
+  }
+});

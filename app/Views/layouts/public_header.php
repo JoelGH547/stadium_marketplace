@@ -6,7 +6,6 @@ $siteName = $siteName ?? 'Stadium Marketplace';
 ?>
 <header class="relative z-[80]">
   <div class="border-b border-[var(--line)] bg-[var(--panel)]/90 backdrop-blur">
-    <div class="accent-bar"></div>
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
 
       <!-- Logo -->
