@@ -61,13 +61,7 @@
         </select>
     </div>
 
-    <div class="form-group">
-        <label for="price">Price (per hour)</label>
-        <input type="number" step="0.01"
-               id="price" name="price"
-               class="form-control"
-               value="<?= old('price') ?>" required>
-    </div>
+    
 
     <div class="form-group">
         <label for="description">Description (Stadium Condition)</label>

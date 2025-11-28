@@ -67,14 +67,6 @@
     </div>
 
     <div class="form-group">
-        <label for="price">Price (per hour)</label>
-        <input type="number" step="0.01"
-               id="price" name="price"
-               class="form-control"
-               value="<?= old('price', $stadium['price']) ?>" required>
-    </div>
-
-    <div class="form-group">
         <label for="description">Description (Stadium Condition)</label>
         <textarea id="description"
                   name="description"
@@ -179,8 +171,6 @@
                     <?php foreach ($facilities as $fac): ?>
                         
                         <?php 
-                            // Logic: เช็คว่า Facility ID นี้ เคยถูกบันทึกไว้หรือไม่?
-                            // $selected_facilities ถูกส่งมาจาก Controller
                             $isChecked = '';
                             if (isset($selected_facilities) && in_array($fac['id'], $selected_facilities)) {
                                 $isChecked = 'checked';
@@ -208,6 +198,7 @@
             </div>
         </div>
     </div>
+
     <div class="form-group">
         <label>Current Outside Cover Image</label><br>
         <?php if (!empty($outsideArr)): ?>
@@ -263,57 +254,7 @@
             <?php endif; ?>
         </div>
     </div>
-    <div class="form-group mt-3">
-    <label class="font-weight-bold">
-        สิ่งอำนวยความสะดวก 
-        <small class="text-muted">(กรองตามประเภทกีฬาให้แล้ว)</small>
-    </label>
     
-    <div class="row p-3 border rounded bg-white">
-        <?php if (!empty($facilities)): ?>
-            <?php foreach ($facilities as $fac): ?>
-                <div class="col-md-3 col-6 mb-3">
-                    <div class="card h-100 border-0 shadow-sm bg-light">
-                        <div class="card-body p-2">
-                            <div class="form-check">
-                                <input class="form-check-input" 
-                                       type="checkbox" 
-                                       name="facilities[]" 
-                                       value="<?= $fac['id'] ?>" 
-                                       id="fac_<?= $fac['id'] ?>"
-                                       <?php 
-                                       if (isset($selected_facilities) && in_array($fac['id'], $selected_facilities)) {
-                                           echo "checked";
-                                       }
-                                       ?>
-                                >
-                                <label class="form-check-label w-100" for="fac_<?= $fac['id'] ?>">
-                                    <?= !empty($fac['icon']) ? '<i class="'.$fac['icon'].' me-1"></i>' : '' ?> 
-                                    <?= esc($fac['name']) ?>
-                                    
-                                    <div class="mt-1">
-                                        <?php if(!empty($fac['category_name'])): ?>
-                                            <span class="badge bg-primary" style="font-size: 0.6rem;">
-                                                <?= esc($fac['category_name']) ?>
-                                            </span>
-                                        <?php else: ?>
-                                            <span class="badge bg-secondary" style="font-size: 0.6rem;">
-                                                ส่วนกลาง
-                                            </span>
-                                        <?php endif; ?>
-                                    </div>
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            <?php endforeach; ?>
-        <?php else: ?>
-            <p class="text-muted text-center">ไม่พบสิ่งอำนวยความสะดวกสำหรับประเภทกีฬานี้</p>
-        <?php endif; ?>
-    </div>
-</div>
-
     <div class="form-group">
         <label for="inside_images">Add More Inside Images</label>
         <input type="file" id="inside_images" name="inside_images[]"

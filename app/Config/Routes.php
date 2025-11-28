@@ -101,7 +101,9 @@ $routes->group('admin', ['filter' => ['auth', 'admin']], static function ($route
     $routes->get('bookings/pending', 'admin\BookingController::indexPending');
     $routes->get('bookings/approve/(:num)', 'admin\BookingController::approve/$1');
     $routes->get('bookings/cancel/(:num)', 'admin\BookingController::cancel/$1');
-
+    $routes->post('bookings/updateStatus', 'Admin\BookingController::updateStatus');
+    $routes->get('bookings/approve/(:num)', 'Admin\BookingController::approve/$1');
+    $routes->get('bookings/cancel/(:num)', 'Admin\BookingController::cancel/$1');
     // ใน group 'admin'
 $routes->post('facilities/ajax_update', 'admin\FacilityController::ajaxUpdateCategory');
 });

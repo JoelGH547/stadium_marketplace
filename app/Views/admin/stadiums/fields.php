@@ -20,6 +20,12 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     <?php endif; ?>
+    <?php if(session()->getFlashdata('error')): ?>
+        <div class="alert alert-danger alert-dismissible fade show shadow-sm">
+            <i class="fas fa-exclamation-circle me-1"></i> <?= session()->getFlashdata('error') ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    <?php endif; ?>
 
     <div class="row">
         <div class="col-md-4 mb-4">
@@ -36,6 +42,23 @@
                         <div class="mb-3">
                             <label class="fw-bold">ชื่อสนาม / เลขที่ <span class="text-danger">*</span></label>
                             <input type="text" name="name" class="form-control" placeholder="เช่น สนาม 1, Court A" required>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <label class="fw-bold small">ราคา/ชม. <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <input type="number" name="price" class="form-control" placeholder="0" required>
+                                    <span class="input-group-text">฿</span>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <label class="fw-bold small">ราคา/วัน <span class="text-muted">(ถ้ามี)</span></label>
+                                <div class="input-group">
+                                    <input type="number" name="price_daily" class="form-control" placeholder="-">
+                                    <span class="input-group-text">฿</span>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="mb-3">
@@ -71,9 +94,13 @@
                             <thead class="table-light">
                                 <tr>
                                     <th class="ps-4" width="5%">#</th>
-                                    <th width="30%">ชื่อสนาม</th>
-                                    <th width="35%">รายละเอียด</th>
-                                    <th width="15%">สถานะ</th>
+                                    <th width="20%">ชื่อสนาม</th>
+                                    <th width="25%">รายละเอียด</th>
+                                    
+                                    <th width="10%" class="text-center">ราคา/ชม.</th>
+                                    <th width="10%" class="text-center">ราคา/วัน</th>
+                                    
+                                    <th width="10%">สถานะ</th>
                                     <th class="text-end pe-4">จัดการ</th>
                                 </tr>
                             </thead>
@@ -82,10 +109,21 @@
                                     <?php foreach($fields as $index => $field): ?>
                                     <tr>
                                         <td class="ps-4 fw-bold text-muted"><?= $index + 1 ?></td>
-                                        
                                         <td><span class="fw-bold text-dark"><?= esc($field['name']) ?></span></td>
                                         <td><small class="text-muted"><?= esc($field['description'] ?? '-') ?></small></td>
                                         
+                                        <td class="text-center">
+                                            <span class="text-success fw-bold">฿<?= number_format($field['price']) ?></span>
+                                        </td>
+
+                                        <td class="text-center">
+                                            <?php if(!empty($field['price_daily'])): ?>
+                                                <span class="text-info fw-bold">฿<?= number_format($field['price_daily']) ?></span>
+                                            <?php else: ?>
+                                                <span class="text-muted small">-</span>
+                                            <?php endif; ?>
+                                        </td>
+
                                         <td>
                                             <?php if($field['status'] == 'active'): ?>
                                                 <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-2">Active</span>
@@ -99,6 +137,8 @@
                                                     data-bs-toggle="modal" data-bs-target="#editModal"
                                                     data-id="<?= $field['id'] ?>"
                                                     data-name="<?= esc($field['name']) ?>"
+                                                    data-price="<?= esc($field['price']) ?>"
+                                                    data-price-daily="<?= esc($field['price_daily'] ?? '') ?>"
                                                     data-desc="<?= esc($field['description'] ?? '') ?>"
                                                     data-status="<?= esc($field['status']) ?>">
                                                 <i class="fas fa-pen"></i>
@@ -112,7 +152,7 @@
                                     </tr>
                                     <?php endforeach; ?>
                                 <?php else: ?>
-                                    <tr><td colspan="5" class="text-center py-5 text-muted">ไม่มีข้อมูล</td></tr>
+                                    <tr><td colspan="7" class="text-center py-5 text-muted">ไม่มีข้อมูล</td></tr>
                                 <?php endif; ?>
                             </tbody>
                         </table>
@@ -140,6 +180,17 @@
                         <input type="text" name="name" id="edit_name" class="form-control" required>
                     </div>
 
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <label class="fw-bold small">ราคา/ชม.</label>
+                            <input type="number" name="price" id="edit_price" class="form-control" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="fw-bold small">ราคา/วัน</label>
+                            <input type="number" name="price_daily" id="edit_price_daily" class="form-control">
+                        </div>
+                    </div>
+
                     <div class="mb-3">
                         <label class="fw-bold">รายละเอียด</label>
                         <textarea name="description" id="edit_description" class="form-control" rows="2"></textarea>
@@ -162,15 +213,46 @@
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        
+        // 1. Script สำหรับปุ่มแก้ไข (Edit)
         const editButtons = document.querySelectorAll('.btn-edit');
         editButtons.forEach(button => {
             button.addEventListener('click', function() {
                 document.getElementById('edit_id').value = this.getAttribute('data-id');
                 document.getElementById('edit_name').value = this.getAttribute('data-name');
+                document.getElementById('edit_price').value = this.getAttribute('data-price');
+                document.getElementById('edit_price_daily').value = this.getAttribute('data-price-daily');
                 document.getElementById('edit_description').value = this.getAttribute('data-desc');
                 document.getElementById('edit_status').value = this.getAttribute('data-status');
+            });
+        });
+
+        // 2. Script สำหรับปุ่มลบ (SweetAlert2)
+        const deleteButtons = document.querySelectorAll('.btn-delete');
+        deleteButtons.forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault(); // ห้ามกดลิ้งค์ทันที
+                const href = this.getAttribute('href'); // เก็บ URL
+
+                Swal.fire({
+                    title: 'ยืนยันการลบ?',
+                    text: "ข้อมูลนี้จะหายไปและไม่สามารถกู้คืนได้!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'ลบเลย',
+                    cancelButtonText: 'ยกเลิก',
+                    reverseButtons: true
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = href; // ถ้ากดยืนยัน ให้ไปที่ URL ลบ
+                    }
+                });
             });
         });
     });

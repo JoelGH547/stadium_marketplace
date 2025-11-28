@@ -6,9 +6,9 @@ use App\Controllers\BaseController;
 use App\Models\StadiumModel;
 use App\Models\CategoryModel;
 use App\Models\VendorModel;
-use App\Models\FacilityModel;         // [ใหม่] เรียกใช้ Model สิ่งอำนวยความสะดวก
-use App\Models\StadiumFacilityModel;  // [ใหม่] เรียกใช้ Model เชื่อมโยง
-use App\Models\StadiumFieldModel;     // [จำเป็น] สำหรับจัดการสนามย่อย
+use App\Models\FacilityModel;         // Model สิ่งอำนวยความสะดวก
+use App\Models\StadiumFacilityModel;  // Model เชื่อมโยง
+use App\Models\StadiumFieldModel;     // Model สนามย่อย
 use CodeIgniter\Database\Exceptions\DatabaseException;
 
 class StadiumController extends BaseController
@@ -16,17 +16,15 @@ class StadiumController extends BaseController
     protected $stadiumModel;
     protected $categoryModel;
     protected $vendorModel;
-    protected $facilityModel;         // [ใหม่]
-    protected $stadiumFacilityModel;  // [ใหม่]
+    protected $facilityModel;
+    protected $stadiumFacilityModel;
 
     public function __construct()
     {
-        // โหลด Model ทั้งหมดที่ต้องใช้
         $this->stadiumModel  = new StadiumModel();
         $this->categoryModel = new CategoryModel();
         $this->vendorModel   = new VendorModel();
         
-        // [ใหม่] โหลด Model จัดการ Facilities
         $this->facilityModel = new FacilityModel();
         $this->stadiumFacilityModel = new StadiumFacilityModel();
 
@@ -62,7 +60,6 @@ class StadiumController extends BaseController
             'title'      => 'Add New Stadium',
             'categories' => $this->categoryModel->findAll(),
             'vendors'    => $this->vendorModel->findAll(),
-            // [ใหม่] ส่งรายการสิ่งอำนวยความสะดวกทั้งหมดไปให้เลือก (Checkbox)
             'facilities' => $this->facilityModel->findAll(),
         ];
 
@@ -77,7 +74,7 @@ class StadiumController extends BaseController
         // Validation rules
         if (!$this->validate([
             'name'          => 'required|max_length[100]',
-            'price'         => 'required|numeric',
+            // 'price'      => 'required|numeric', // [แก้ไข] ไม่ต้อง validate price ที่นี่แล้ว
             'category_id'   => 'required|integer',
             'vendor_id'     => 'required|integer',
             'contact_phone' => 'permit_empty|regex_match[/^[0-9]{10}$/]',
@@ -114,7 +111,7 @@ class StadiumController extends BaseController
         // --- บันทึกข้อมูลสนาม (Stadium) ---
         $this->stadiumModel->save([
             'name'           => $this->request->getPost('name'),
-            'price'          => $this->request->getPost('price'),
+            // 'price'       => $this->request->getPost('price'), // [แก้ไข] ปิดการบันทึกราคาลงตารางแม่
             'description'    => $this->request->getPost('description'),
             'category_id'    => $this->request->getPost('category_id'),
             'vendor_id'      => $this->request->getPost('vendor_id'),
@@ -131,13 +128,12 @@ class StadiumController extends BaseController
             'inside_images'  => json_encode($insideImagesArray),
         ]);
 
-        // [ใหม่] --- บันทึก Facilities ---
-        $newStadiumId = $this->stadiumModel->getInsertID(); // เอา ID ล่าสุดที่เพิ่งสร้าง
-        $selectedFacilities = $this->request->getPost('facilities'); // รับค่า array จาก checkbox
+        // --- บันทึก Facilities ---
+        $newStadiumId = $this->stadiumModel->getInsertID();
+        $selectedFacilities = $this->request->getPost('facilities');
 
         if (!empty($selectedFacilities)) {
             foreach ($selectedFacilities as $facilityId) {
-                // Insert ลงตารางเชื่อม
                 $this->stadiumFacilityModel->insert([
                     'stadium_id'  => $newStadiumId,
                     'facility_id' => $facilityId
@@ -158,7 +154,6 @@ class StadiumController extends BaseController
             return redirect()->to(base_url('admin/stadiums'))->with('error', 'ไม่พบข้อมูลสนาม');
         }
 
-        // [จุดสำคัญ 1] ดึง ID หมวดหมู่กีฬาของสนามนี้
         $currentCategoryId = $stadium['category_id'];
 
         $data = [
@@ -166,11 +161,7 @@ class StadiumController extends BaseController
             'stadium'    => $stadium,
             'categories' => $this->categoryModel->findAll(),
             'vendors'    => $this->vendorModel->findAll(),
-            
-            // [จุดสำคัญ 2] สั่งให้ Model ดึงเฉพาะ Facility ที่เกี่ยวข้องกับกีฬานี้ + ของส่วนกลาง
             'facilities' => $this->facilityModel->getFacilitiesByCategory($currentCategoryId),
-            
-            // ดึงอันที่เคยเลือกไว้ (เหมือนเดิม)
             'selected_facilities' => $this->stadiumFacilityModel->getSelectedFacilities($id)
         ];
 
@@ -190,7 +181,7 @@ class StadiumController extends BaseController
         // Validation
         if (!$this->validate([
             'name'          => 'required|max_length[100]',
-            'price'         => 'required|numeric',
+            // 'price'      => 'required|numeric', // [แก้ไข] ไม่ต้อง validate price
             'category_id'   => 'required|integer',
             'vendor_id'     => 'required|integer',
             'contact_phone' => 'permit_empty|regex_match[/^[0-9]{10}$/]',
@@ -201,7 +192,7 @@ class StadiumController extends BaseController
         $uploadPath = FCPATH . 'assets/uploads/stadiums/';
         if (!is_dir($uploadPath)) { mkdir($uploadPath, 0777, true); }
 
-        // --- Logic จัดการรูปภาพ (คงเดิม) ---
+        // --- Logic จัดการรูปภาพ ---
         // 1. Outside Image
         $outsideOld = json_decode($stadium['outside_images'] ?? '[]', true) ?? [];
         $outsideResult = $outsideOld;
@@ -244,7 +235,7 @@ class StadiumController extends BaseController
         // --- อัปเดตตาราง Stadiums ---
         $this->stadiumModel->update($id, [
             'name'           => $this->request->getPost('name'),
-            'price'          => $this->request->getPost('price'),
+            // 'price'       => $this->request->getPost('price'), // [แก้ไข] ปิดการอัปเดตราคา
             'description'    => $this->request->getPost('description'),
             'category_id'    => $this->request->getPost('category_id'),
             'vendor_id'      => $this->request->getPost('vendor_id'),
@@ -261,11 +252,9 @@ class StadiumController extends BaseController
             'inside_images'  => json_encode(array_values($insideResult)),
         ]);
 
-        // [ใหม่] --- อัปเดต Facilities (Sync Data) ---
-        // 1. ลบข้อมูลเก่าทิ้งทั้งหมดของสนามนี้
+        // --- อัปเดต Facilities ---
         $this->stadiumFacilityModel->where('stadium_id', $id)->delete();
         
-        // 2. เพิ่มข้อมูลใหม่เข้าไป (ถ้ามีการเลือก)
         $selectedFacilities = $this->request->getPost('facilities');
         if (!empty($selectedFacilities)) {
             foreach ($selectedFacilities as $facilityId) {
@@ -284,7 +273,6 @@ class StadiumController extends BaseController
     // --------------------------------------------------------------------------
     public function view($id = null)
     {
-        // 1. ดึงข้อมูลสนามหลัก
         $stadium = $this->stadiumModel
             ->select('stadiums.*, categories.name AS category_name, vendors.vendor_name AS vendor_name, vendors.email AS vendor_email, vendors.phone_number AS vendor_phone')
             ->join('categories', 'categories.id = stadiums.category_id', 'left')
@@ -295,7 +283,7 @@ class StadiumController extends BaseController
             return redirect()->to(base_url('admin/stadiums'))->with('error', 'ไม่พบข้อมูลสนาม');
         }
 
-        // 2. ดึงสิ่งอำนวยความสะดวก (Facilities)
+        // Facilities
         $db = \Config\Database::connect();
         $stadiumFacilities = $db->table('facilities')
             ->select('facilities.name, facilities.icon')
@@ -304,8 +292,7 @@ class StadiumController extends BaseController
             ->get()
             ->getResultArray();
 
-        // 3. [เพิ่มใหม่] ดึงข้อมูลสนามย่อย (Stadium Fields)
-        // ต้องเรียกใช้ Model ของ Field ซึ่งคุณ use ไว้ข้างบนแล้ว (StadiumFieldModel)
+        // Fields
         $fieldModel = new StadiumFieldModel();
         $stadiumFields = $fieldModel->where('stadium_id', $id)->findAll();
 
@@ -313,7 +300,7 @@ class StadiumController extends BaseController
             'title'      => 'Detail: ' . $stadium['name'],
             'stadium'    => $stadium,
             'facilities' => $stadiumFacilities,
-            'fields'     => $stadiumFields // ส่งตัวแปรนี้ไปที่หน้า View
+            'fields'     => $stadiumFields 
         ];
 
         return view('admin/stadiums/view', $data);
@@ -333,7 +320,6 @@ class StadiumController extends BaseController
         try {
             $uploadPath = FCPATH . 'assets/uploads/stadiums/';
 
-            // ลบรูปภาพ
             $outsideImages = json_decode($stadium['outside_images'] ?? '[]', true);
             foreach ($outsideImages as $img) {
                 if (file_exists($uploadPath . $img)) unlink($uploadPath . $img);
@@ -344,7 +330,6 @@ class StadiumController extends BaseController
                 if (file_exists($uploadPath . $img)) unlink($uploadPath . $img);
             }
 
-            // ลบข้อมูล (ตาราง facilities จะถูกลบ Auto ถ้าตั้ง Cascade ไว้ หรือถ้าไม่ตั้งก็ไม่มีผลเสีย)
             $this->stadiumModel->delete($id);
             
             return redirect()->to(base_url('admin/stadiums'))->with('success', 'ลบข้อมูลเรียบร้อยแล้ว');
@@ -358,7 +343,7 @@ class StadiumController extends BaseController
     }
 
     // --------------------------------------------------------------------------
-    // 8. จัดการสนามย่อย (Fields) - คงเดิม
+    // 8. จัดการสนามย่อย (Fields)
     // --------------------------------------------------------------------------
     public function fields($stadium_id)
     {
@@ -366,9 +351,9 @@ class StadiumController extends BaseController
         $fieldModel = new StadiumFieldModel();
 
         $data = [
-            'title' => 'Manage Fields',
+            'title'   => 'Manage Fields',
             'stadium' => $stadiumModel->find($stadium_id),
-            'fields' => $fieldModel->where('stadium_id', $stadium_id)->findAll()
+            'fields'  => $fieldModel->where('stadium_id', $stadium_id)->findAll()
         ];
 
         return view('admin/stadiums/fields', $data);
@@ -380,10 +365,12 @@ class StadiumController extends BaseController
         $stadium_id = $this->request->getPost('stadium_id');
         
         $fieldModel->save([
-            'stadium_id' => $stadium_id,
-            'name'       => $this->request->getPost('name'),
-            'description'=> $this->request->getPost('description'),
-            'status'     => $this->request->getPost('status')
+            'stadium_id'  => $stadium_id,
+            'name'        => $this->request->getPost('name'),
+            'description' => $this->request->getPost('description'),
+            'price'       => $this->request->getPost('price'),       // [เก็บราคาที่นี่]
+            'price_daily' => $this->request->getPost('price_daily') ?: null, // [เก็บรายวันที่นี่]
+            'status'      => $this->request->getPost('status')
         ]);
 
         return redirect()->to('admin/stadiums/fields/' . $stadium_id)->with('success', 'เพิ่มสนามย่อยเรียบร้อย');
@@ -396,9 +383,11 @@ class StadiumController extends BaseController
         $stadium_id = $this->request->getPost('stadium_id');
         
         $fieldModel->update($id, [
-            'name'       => $this->request->getPost('name'),
-            'description'=> $this->request->getPost('description'),
-            'status'     => $this->request->getPost('status')
+            'name'        => $this->request->getPost('name'),
+            'description' => $this->request->getPost('description'),
+            'price'       => $this->request->getPost('price'),       // [อัปเดตราคาที่นี่]
+            'price_daily' => $this->request->getPost('price_daily') ?: null, // [อัปเดตรายวันที่นี่]
+            'status'      => $this->request->getPost('status')
         ]);
 
         return redirect()->to('admin/stadiums/fields/' . $stadium_id)->with('success', 'แก้ไขข้อมูลเรียบร้อย');
@@ -415,7 +404,5 @@ class StadiumController extends BaseController
         }
         return redirect()->back()->with('error', 'ไม่พบข้อมูล');
     }
-
-    
 
 }

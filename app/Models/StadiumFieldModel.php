@@ -12,7 +12,7 @@ class StadiumFieldModel extends Model
     protected $returnType       = 'array';
     
     // ฟิลด์ที่อนุญาตให้บันทึกได้
-    protected $allowedFields    = ['stadium_id', 'name', 'description', 'status',];
+    protected $allowedFields    = ['stadium_id', 'name', 'description', 'price', 'price_daily', 'status',];
 
     protected $useTimestamps = true;
     protected $createdField  = 'created_at';
