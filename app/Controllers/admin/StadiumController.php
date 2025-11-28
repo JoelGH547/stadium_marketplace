@@ -6,8 +6,7 @@ use App\Controllers\BaseController;
 use App\Models\StadiumModel;
 use App\Models\CategoryModel;
 use App\Models\VendorModel;
-// [ลบ] FacilityModel และ StadiumFacilityModel ออกแล้ว เพราะเราไม่ใช้ระบบเก่า
-use App\Models\StadiumFieldModel;
+use App\Models\StadiumFieldModel; // ใช้ Model สนามย่อย
 use CodeIgniter\Database\Exceptions\DatabaseException;
 
 class StadiumController extends BaseController
@@ -15,16 +14,13 @@ class StadiumController extends BaseController
     protected $stadiumModel;
     protected $categoryModel;
     protected $vendorModel;
-    // protected $facilityModel;        // [ลบ] ไม่ใช้แล้ว
-    // protected $stadiumFacilityModel; // [ลบ] ไม่ใช้แล้ว
+    // [ลบ] FacilityModel และ StadiumFacilityModel เก่าออกแล้ว
 
     public function __construct()
     {
         $this->stadiumModel  = new StadiumModel();
         $this->categoryModel = new CategoryModel();
         $this->vendorModel   = new VendorModel();
-        
-        // [ลบ] ไม่โหลด Model เก่า
         
         helper(['form']);
     }
@@ -124,7 +120,7 @@ class StadiumController extends BaseController
             'inside_images'  => json_encode($insideImagesArray),
         ]);
 
-        // [ลบ] ส่วนบันทึก Facilities ออกทั้งหมด
+        // [ลบ] ส่วนบันทึก Facilities ออกทั้งหมดแล้ว
 
         return redirect()->to(base_url('admin/stadiums'))->with('success', 'เพิ่มสนามเรียบร้อยแล้ว');
     }
@@ -144,7 +140,7 @@ class StadiumController extends BaseController
             'stadium'    => $stadium,
             'categories' => $this->categoryModel->findAll(),
             'vendors'    => $this->vendorModel->findAll(),
-            // [ลบ] ไม่ส่ง facilities และ selected_facilities ไปแล้ว
+            // [ลบ] ไม่ส่ง facilities ไปหน้า View
         ];
 
         return view('admin/stadiums/edit', $data);
@@ -250,9 +246,23 @@ class StadiumController extends BaseController
             return redirect()->to(base_url('admin/stadiums'))->with('error', 'ไม่พบข้อมูลสนาม');
         }
 
-        // [แก้ไข] ไม่ดึง Facilities แบบเก่าแล้ว (เพราะตารางเปลี่ยน)
-        // เดี๋ยวค่อยให้ Vendor มาเพิ่มเองทีหลัง หรือเขียน Logic ใหม่ดึงจากตาราง stadium_facilities (แบบใหม่)
-        $stadiumFacilities = []; 
+        // [แก้ไข] ดึง Facility จากระบบใหม่ (stadium_facilities + facility_types)
+        $db = \Config\Database::connect();
+        // ถ้าตารางยังไม่มีข้อมูล query นี้จะคืนค่าว่าง ซึ่งไม่ error
+        $rawFacilities = $db->table('stadium_facilities')
+            ->select('stadium_facilities.name as item_name, facility_types.name as type_name')
+            ->join('facility_types', 'facility_types.id = stadium_facilities.type_id', 'left')
+            ->where('stadium_facilities.stadium_id', $id)
+            ->orderBy('facility_types.id', 'ASC')
+            ->get()
+            ->getResultArray();
+
+        // จัดกลุ่มข้อมูล
+        $groupedFacilities = [];
+        foreach ($rawFacilities as $row) {
+            $type = $row['type_name'] ?? 'อื่นๆ';
+            $groupedFacilities[$type][] = $row['item_name'];
+        }
 
         // Fields (สนามย่อย)
         $fieldModel = new StadiumFieldModel();
@@ -261,7 +271,7 @@ class StadiumController extends BaseController
         $data = [
             'title'      => 'Detail: ' . $stadium['name'],
             'stadium'    => $stadium,
-            'facilities' => $stadiumFacilities,
+            'facilities' => $groupedFacilities, // ส่งข้อมูลแบบใหม่ไป
             'fields'     => $stadiumFields 
         ];
 
@@ -330,7 +340,7 @@ class StadiumController extends BaseController
             'stadium_id'  => $stadium_id,
             'name'        => $this->request->getPost('name'),
             'description' => $this->request->getPost('description'),
-            'price'       => $this->request->getPost('price'),
+            'price'       => $this->request->getPost('price'),       // [เก็บราคาที่นี่]
             'price_daily' => $this->request->getPost('price_daily') ?: null,
             'status'      => $this->request->getPost('status')
         ]);
@@ -347,7 +357,7 @@ class StadiumController extends BaseController
         $fieldModel->update($id, [
             'name'        => $this->request->getPost('name'),
             'description' => $this->request->getPost('description'),
-            'price'       => $this->request->getPost('price'),
+            'price'       => $this->request->getPost('price'),       // [อัปเดตราคาที่นี่]
             'price_daily' => $this->request->getPost('price_daily') ?: null,
             'status'      => $this->request->getPost('status')
         ]);

@@ -69,23 +69,26 @@
                 <div class="card-body">
                     <?php if (!empty($facilities)): ?>
                         <div class="row">
-                            <?php foreach ($facilities as $fac): ?>
-                                <div class="col-md-4 col-6 mb-3">
-                                    <div class="d-flex align-items-center">
-                                        <?php if (!empty($fac['icon'])): ?>
-                                            <div class="btn btn-sm btn-light rounded-circle me-2" style="width: 35px; height: 35px; display: flex; align-items: center; justify-content: center;">
-                                                <i class="<?= $fac['icon'] ?> text-primary"></i>
-                                            </div>
-                                        <?php else: ?>
-                                            <i class="fas fa-check-circle text-success me-2"></i>
-                                        <?php endif; ?>
-                                        <span><?= esc($fac['name']) ?></span>
+                            <?php foreach ($facilities as $type => $items): ?>
+                                <div class="col-12 mb-3">
+                                    <h6 class="fw-bold text-dark border-bottom pb-2 mb-2">
+                                        <i class="fas fa-folder me-1 text-warning"></i> <?= esc($type) ?>
+                                    </h6>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        <?php foreach ($items as $item): ?>
+                                            <span class="badge bg-light text-dark border px-3 py-2 shadow-sm">
+                                                <i class="fas fa-check text-success me-1"></i> <?= esc($item) ?>
+                                            </span>
+                                        <?php endforeach; ?>
                                     </div>
                                 </div>
                             <?php endforeach; ?>
                         </div>
                     <?php else: ?>
-                        <p class="text-muted text-center my-3">ไม่มีข้อมูลสิ่งอำนวยความสะดวก</p>
+                        <div class="text-center py-4 text-muted">
+                            <i class="fas fa-box-open fa-2x mb-2 text-gray-300"></i><br>
+                            ยังไม่มีข้อมูลสิ่งอำนวยความสะดวก (รอ Vendor เพิ่มรายการ)
+                        </div>
                     <?php endif; ?>
                 </div>
             </div>
@@ -104,10 +107,8 @@
                                     <tr>
                                         <th class="ps-4" width="30%">ชื่อสนาม</th>
                                         <th width="30%">รายละเอียด</th>
-                                        
                                         <th width="15%">ราคา/ชม.</th>
                                         <th width="15%">ราคา/วัน</th>
-                                        
                                         <th class="text-center" width="10%">สถานะ</th>
                                     </tr>
                                 </thead>
