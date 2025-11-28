@@ -25,13 +25,12 @@
             font-family: 'Prompt', sans-serif;
             min-height: 100vh;
             background-color: var(--bg-body);
-            /* ปรับขนาด Font ให้ดู Compact ขึ้น */
             font-size: 0.9rem; 
         }
 
         /* Sidebar */
         .sidebar {
-            width: 240px; /* ลดความกว้าง */
+            width: 240px;
             min-height: 100vh;
             background: var(--sidebar-bg);
             color: #9ca3af;
@@ -44,7 +43,7 @@
         }
         .nav-link {
             color: #9ca3af;
-            padding: 10px 15px; /* ลด Padding */
+            padding: 10px 15px;
             border-radius: 0;
             display: flex;
             align-items: center;
@@ -116,21 +115,25 @@
                     <div><i class="fas fa-chart-pie"></i> Dashboard</div>
                 </a>
             </li>
+            
             <li class="nav-item">
                 <a href="<?= base_url('admin/categories') ?>" class="nav-link <?= (strpos($currentUrl, 'categories') !== false) ? 'active-menu' : '' ?>">
-                    <div><i class="fas fa-layer-group"></i> จัดการหมวดหมู่</div>
+                    <div><i class="fas fa-layer-group"></i> จัดการประเภทกีฬา</div>
                 </a>
             </li>
+
             <li class="nav-item">
-                <a class="nav-link" href="<?= base_url('admin/facilities') ?>">
-                <i class="fas fa-fw fa-concierge-bell"></i> <span>จัดการสิ่งอำนวยความสะดวก</span>
+                <a href="<?= base_url('admin/facility-types') ?>" class="nav-link <?= (strpos($currentUrl, 'facility-types') !== false) ? 'active-menu' : '' ?>">
+                    <div><i class="fas fa-concierge-bell"></i> หมวดหมู่สิ่งอำนวยความสะดวก</div>
                 </a>
             </li>
+
             <li class="nav-item">
                 <a href="<?= base_url('admin/stadiums') ?>" class="nav-link <?= (strpos($currentUrl, 'stadiums') !== false) ? 'active-menu' : '' ?>">
                     <div><i class="fas fa-map-location-dot"></i> จัดการสนามกีฬา</div>
                 </a>
             </li>
+            
             <li class="nav-item">
                 <a href="<?= base_url('admin/bookings') ?>" class="nav-link <?= (strpos($currentUrl, 'bookings') !== false) ? 'active-menu' : '' ?>">
                     <div><i class="fas fa-calendar-check"></i> จัดการการจอง</div>

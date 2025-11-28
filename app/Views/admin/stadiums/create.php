@@ -61,8 +61,6 @@
         </select>
     </div>
 
-    
-
     <div class="form-group">
         <label for="description">Description (Stadium Condition)</label>
         <textarea id="description"
@@ -142,8 +140,6 @@
     <input type="hidden" id="lat" name="lat" value="<?= old('lat') ?>">
     <input type="hidden" id="lng" name="lng" value="<?= old('lng') ?>">
 
-    <hr>
-
     <div class="form-group">
         <label for="map_link">Custom Map Link (optional)</label>
         <input type="text" id="map_link" name="map_link"
@@ -159,36 +155,6 @@
 
     <hr>
 
-    <div class="card mb-4 border-info">
-        <div class="card-header bg-light fw-bold text-info">
-            <i class="fas fa-concierge-bell me-1"></i> สิ่งอำนวยความสะดวก (Facilities)
-        </div>
-        <div class="card-body">
-            <div class="row">
-                <?php if(isset($facilities) && !empty($facilities)): ?>
-                    <?php foreach ($facilities as $fac): ?>
-                        <div class="col-md-3 col-sm-6 mb-2">
-                            <div class="form-check">
-                                <input class="form-check-input" 
-                                       type="checkbox" 
-                                       name="facilities[]" 
-                                       value="<?= $fac['id']; ?>" 
-                                       id="fac_<?= $fac['id']; ?>">
-                                
-                                <label class="form-check-label" for="fac_<?= $fac['id']; ?>">
-                                    <?= esc($fac['name']); ?>
-                                </label>
-                            </div>
-                        </div>
-                    <?php endforeach; ?>
-                <?php else: ?>
-                    <div class="col-12 text-muted">
-                        <i class="fas fa-exclamation-circle"></i> ไม่พบข้อมูลสิ่งอำนวยความสะดวก (กรุณาเพิ่มในฐานข้อมูลก่อน)
-                    </div>
-                <?php endif; ?>
-            </div>
-        </div>
-    </div>
     <div class="form-group">
         <label for="outside_image">Outside Cover Image (1 รูป)</label>
         <input type="file" id="outside_image" name="outside_image"

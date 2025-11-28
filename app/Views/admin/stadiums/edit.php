@@ -113,18 +113,17 @@
     </div>
 
     <div class="form-group">
-    <label for="province">Province</label>
-    <input type="text"
-           id="province"
-           name="province"
-           class="form-control"
-           value="<?= old('province', $stadium['province']) ?>"
-           placeholder="เช่น กรุงเทพมหานคร, เชียงใหม่">
-    <small class="form-text text-muted">
-        พิมพ์ชื่อจังหวัด
-    </small>
-</div>
-
+        <label for="province">Province</label>
+        <input type="text"
+               id="province"
+               name="province"
+               class="form-control"
+               value="<?= old('province', $stadium['province']) ?>"
+               placeholder="เช่น กรุงเทพมหานคร, เชียงใหม่">
+        <small class="form-text text-muted">
+            พิมพ์ชื่อจังหวัด
+        </small>
+    </div>
 
     <div class="form-group">
         <label for="address">Address (Detail)</label>
@@ -160,44 +159,6 @@
     </div>
 
     <hr>
-
-    <div class="card mb-4 border-info">
-        <div class="card-header bg-light fw-bold text-info">
-            <i class="fas fa-concierge-bell me-1"></i> สิ่งอำนวยความสะดวก (Facilities)
-        </div>
-        <div class="card-body">
-            <div class="row">
-                <?php if(isset($facilities) && !empty($facilities)): ?>
-                    <?php foreach ($facilities as $fac): ?>
-                        
-                        <?php 
-                            $isChecked = '';
-                            if (isset($selected_facilities) && in_array($fac['id'], $selected_facilities)) {
-                                $isChecked = 'checked';
-                            }
-                        ?>
-
-                        <div class="col-md-3 col-sm-6 mb-2">
-                            <div class="form-check">
-                                <input class="form-check-input" 
-                                       type="checkbox" 
-                                       name="facilities[]" 
-                                       value="<?= $fac['id']; ?>" 
-                                       id="fac_<?= $fac['id']; ?>"
-                                       <?= $isChecked; ?>> <label class="form-check-label" for="fac_<?= $fac['id']; ?>">
-                                    <?= esc($fac['name']); ?>
-                                </label>
-                            </div>
-                        </div>
-                    <?php endforeach; ?>
-                <?php else: ?>
-                    <div class="col-12 text-muted">
-                        <i class="fas fa-exclamation-circle"></i> ไม่พบข้อมูลสิ่งอำนวยความสะดวก
-                    </div>
-                <?php endif; ?>
-            </div>
-        </div>
-    </div>
 
     <div class="form-group">
         <label>Current Outside Cover Image</label><br>
@@ -254,7 +215,7 @@
             <?php endif; ?>
         </div>
     </div>
-    
+
     <div class="form-group">
         <label for="inside_images">Add More Inside Images</label>
         <input type="file" id="inside_images" name="inside_images[]"
