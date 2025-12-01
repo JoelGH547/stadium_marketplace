@@ -13,13 +13,13 @@ class StadiumModel extends Model
     protected $useSoftDeletes   = false;
 
     // ==========================================================
-    //  ฟิลด์ที่อนุญาตให้บันทึก (จุดที่แก้ไข)
-    //  เราต้องเพิ่มฟิลด์ทั้งหมดที่ส่งมาจาก Controller
+    //  ฟิลด์ที่อนุญาตให้บันทึก (Allowed Fields)
     // ==========================================================
     protected $allowedFields    = [
         'name', 
-        'price', 
         'description', 
+        'booking_type',   // [เพิ่มใหม่] รองรับ ENUM('single', 'complex')
+        // 'price',       // [ลบออก] เพราะย้ายราคาไปที่ตาราง stadium_fields แล้ว
         'category_id', 
         'vendor_id',
         'open_time',
@@ -31,8 +31,8 @@ class StadiumModel extends Model
         'lat',
         'lng',
         'map_link',
-        'outside_images', // <-- ตัวปัญหาหลัก
-        'inside_images'   // <-- ตัวปัญหารอง
+        'outside_images', 
+        'inside_images'   
     ];
 
     // Dates

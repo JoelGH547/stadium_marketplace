@@ -11,9 +11,16 @@
             <h3 class="h3 mt-2 text-gray-800 font-weight-bold">รายละเอียดสนาม</h3>
         </div>
         <div>
-            <a href="<?= base_url('admin/stadiums/fields/' . $stadium['id']) ?>" class="btn btn-info text-white shadow-sm me-1">
-                <i class="fas fa-list-ul"></i> จัดการสนามย่อย
-            </a>
+            <?php if(($stadium['booking_type'] ?? 'complex') == 'complex'): ?>
+                <a href="<?= base_url('admin/stadiums/fields/' . $stadium['id']) ?>" class="btn btn-info text-white shadow-sm me-1">
+                    <i class="fas fa-list-ul"></i> จัดการสนามย่อย
+                </a>
+            <?php else: ?>
+                <a href="<?= base_url('admin/stadiums/fields/' . $stadium['id']) ?>" class="btn btn-success text-white shadow-sm me-1">
+                    <i class="fas fa-tag"></i> ตั้งค่าราคา
+                </a>
+            <?php endif; ?>
+
             <a href="<?= base_url('admin/stadiums/edit/' . $stadium['id']) ?>" class="btn btn-warning text-dark shadow-sm">
                 <i class="fas fa-pen"></i> แก้ไข
             </a>
@@ -25,9 +32,7 @@
             
             <div class="card shadow mb-4 border-0">
                 <div class="card-header py-3 bg-white">
-                    <h6 class="m-0 font-weight-bold text-primary">
-                        <i class="fas fa-image me-2"></i>รูปภาพสนาม
-                    </h6>
+                    <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-image me-2"></i>รูปภาพสนาม</h6>
                 </div>
                 <div class="card-body">
                     <?php 
@@ -60,22 +65,36 @@
                 </div>
             </div>
 
+            <?php 
+                $hasFacilities = false;
+                if (!empty($facilities)) {
+                    foreach ($facilities as $type => $items) {
+                        $validItems = array_filter($items, function($v) { return !empty($v); });
+                        if (!empty($validItems)) {
+                            $hasFacilities = true;
+                            break;
+                        }
+                    }
+                }
+            ?>
             <div class="card shadow mb-4 border-0">
                 <div class="card-header py-3 bg-white">
-                    <h6 class="m-0 font-weight-bold text-primary">
-                        <i class="fas fa-concierge-bell me-2"></i>สิ่งอำนวยความสะดวก
-                    </h6>
+                    <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-concierge-bell me-2"></i>สิ่งอำนวยความสะดวก</h6>
                 </div>
                 <div class="card-body">
-                    <?php if (!empty($facilities)): ?>
+                    <?php if ($hasFacilities): ?>
                         <div class="row">
                             <?php foreach ($facilities as $type => $items): ?>
+                                <?php 
+                                    $validItems = array_filter($items, function($v) { return !empty($v); });
+                                    if (empty($validItems)) continue;
+                                ?>
                                 <div class="col-12 mb-3">
                                     <h6 class="fw-bold text-dark border-bottom pb-2 mb-2">
                                         <i class="fas fa-folder me-1 text-warning"></i> <?= esc($type) ?>
                                     </h6>
                                     <div class="d-flex flex-wrap gap-2">
-                                        <?php foreach ($items as $item): ?>
+                                        <?php foreach ($validItems as $item): ?>
                                             <span class="badge bg-light text-dark border px-3 py-2 shadow-sm">
                                                 <i class="fas fa-check text-success me-1"></i> <?= esc($item) ?>
                                             </span>
@@ -87,12 +106,13 @@
                     <?php else: ?>
                         <div class="text-center py-4 text-muted">
                             <i class="fas fa-box-open fa-2x mb-2 text-gray-300"></i><br>
-                            ยังไม่มีข้อมูลสิ่งอำนวยความสะดวก (รอ Vendor เพิ่มรายการ)
+                            ยังไม่มีข้อมูล
                         </div>
                     <?php endif; ?>
                 </div>
             </div>
 
+            <?php if(($stadium['booking_type'] ?? 'complex') == 'complex'): ?>
             <div class="card shadow mb-4 border-0">
                 <div class="card-header bg-white py-3">
                     <h6 class="m-0 font-weight-bold text-primary">
@@ -105,8 +125,9 @@
                             <table class="table table-hover mb-0 align-middle">
                                 <thead class="table-light">
                                     <tr>
-                                        <th class="ps-4" width="30%">ชื่อสนาม</th>
-                                        <th width="30%">รายละเอียด</th>
+                                        <th class="ps-4" width="10%">รูป</th>
+                                        <th width="25%">ชื่อสนาม</th>
+                                        <th width="25%">รายละเอียด</th>
                                         <th width="15%">ราคา/ชม.</th>
                                         <th width="15%">ราคา/วัน</th>
                                         <th class="text-center" width="10%">สถานะ</th>
@@ -115,12 +136,22 @@
                                 <tbody>
                                     <?php foreach ($fields as $field): ?>
                                         <tr>
-                                            <td class="ps-4 fw-bold text-dark"><?= esc($field['name']) ?></td>
-                                            <td class="text-muted small"><?= esc($field['description']) ?></td>
-                                            
-                                            <td>
-                                                <span class="text-success fw-bold">฿<?= number_format($field['price']) ?></span>
+                                            <td class="ps-4">
+                                                <?php 
+                                                    $f_imgs = json_decode($field['field_images'] ?? '[]', true); 
+                                                    $f_thumb = !empty($f_imgs[0]) ? $f_imgs[0] : null;
+                                                ?>
+                                                <?php if($f_thumb): ?>
+                                                    <img src="<?= base_url('assets/uploads/fields/'.$f_thumb) ?>" class="rounded border shadow-sm" style="width: 50px; height: 50px; object-fit: cover;">
+                                                <?php else: ?>
+                                                    <div class="bg-light rounded border text-center pt-2" style="width: 50px; height: 50px;">
+                                                        <i class="fas fa-image text-muted"></i>
+                                                    </div>
+                                                <?php endif; ?>
                                             </td>
+                                            <td class="fw-bold text-dark"><?= esc($field['name']) ?></td>
+                                            <td class="text-muted small"><?= esc($field['description']) ?></td>
+                                            <td><span class="text-success fw-bold">฿<?= number_format($field['price']) ?></span></td>
                                             <td>
                                                 <?php if(!empty($field['price_daily'])): ?>
                                                     <span class="text-info fw-bold">฿<?= number_format($field['price_daily']) ?></span>
@@ -128,7 +159,6 @@
                                                     <span class="text-muted small">-</span>
                                                 <?php endif; ?>
                                             </td>
-
                                             <td class="text-center">
                                                 <?php if ($field['status'] == 'active'): ?>
                                                     <span class="badge bg-success rounded-pill">พร้อมใช้</span>
@@ -143,13 +173,12 @@
                         </div>
                     <?php else: ?>
                         <div class="text-center py-4 text-muted">
-                            ยังไม่มีสนามย่อย <a href="<?= base_url('admin/stadiums/fields/' . $stadium['id']) ?>">เพิ่มเลย</a>
+                            ยังไม่มีสนามย่อย
                         </div>
                     <?php endif; ?>
                 </div>
             </div>
-
-        </div>
+            <?php endif; ?> </div>
 
         <div class="col-xl-4 col-lg-5">
             <div class="card shadow mb-4 border-0">
@@ -164,6 +193,13 @@
                         <span class="badge bg-secondary">
                             <i class="fas fa-map-marker-alt me-1"></i><?= esc($stadium['province']) ?>
                         </span>
+                        <div class="mt-2">
+                            <?php if(($stadium['booking_type'] ?? 'complex') == 'complex'): ?>
+                                <span class="badge bg-light text-dark border">🏢 มีสนามย่อย (Complex)</span>
+                            <?php else: ?>
+                                <span class="badge bg-light text-dark border">🏟️ จองเหมา (Single)</span>
+                            <?php endif; ?>
+                        </div>
                     </div>
 
                     <hr>
