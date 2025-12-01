@@ -10,140 +10,144 @@ use App\Models\StadiumFieldModel;
 class StadiumController extends BaseController
 {
     public function view()
-        {
-            $stadiumModel  = new StadiumModel();
-            $categoryModel = new CategoryModel();
+    {
+        $stadiumModel  = new StadiumModel();
+        $categoryModel = new CategoryModel();
 
-            // ดึงสนามทั้งหมด + join category (ชื่อ + emoji)
-            $venueCards = $stadiumModel
-                ->select('stadiums.*, categories.name AS category_name, categories.emoji AS category_emoji')
-                ->join('categories', 'categories.id = stadiums.category_id', 'left')
-                ->orderBy('stadiums.id', 'DESC')
-                ->findAll(); // ✅ เอามาทั้งหมด (ภายหลังค่อยทำ pagination ได้)
+        // ดึงสนามทั้งหมด + join category (ชื่อ + emoji)
+        $venueCards = $stadiumModel
+            ->select('stadiums.*, categories.name AS category_name, categories.emoji AS category_emoji')
+            ->join('categories', 'categories.id = stadiums.category_id', 'left')
+            ->orderBy('stadiums.id', 'DESC')
+            ->findAll(); // ✅ เอามาทั้งหมด (ภายหลังค่อยทำ pagination ได้)
 
-            // เตรียมข้อมูลให้เหมือนหน้า home (type_icon, type_label, cover_image)
-            foreach ($venueCards as &$v) {
-                $catName  = (string)($v['category_name']  ?? '');
-                $catEmoji = (string)($v['category_emoji'] ?? '');
+        // เตรียมข้อมูลให้เหมือนหน้า home (type_icon, type_label, cover_image)
+        foreach ($venueCards as &$v) {
+            $catName  = (string)($v['category_name']  ?? '');
+            $catEmoji = (string)($v['category_emoji'] ?? '');
 
-                $v['type_icon']  = $catEmoji !== '' ? $catEmoji : '🏟️';
-                $v['type_label'] = $catName  !== '' ? $catName  : 'สนามกีฬา';
+            $v['type_icon']  = $catEmoji !== '' ? $catEmoji : '🏟️';
+            $v['type_label'] = $catName  !== '' ? $catName  : 'สนามกีฬา';
 
-                // รูปปกด้านนอกใบแรกจาก JSON outside_images
-                $cover = null;
-                if (!empty($v['outside_images'])) {
-                    $decoded = json_decode($v['outside_images'], true);
-                    if (is_array($decoded) && !empty($decoded)) {
-                        $cover = reset($decoded);
-                    }
+            // รูปปกด้านนอกใบแรกจาก JSON outside_images
+            $cover = null;
+            if (!empty($v['outside_images'])) {
+                $decoded = json_decode($v['outside_images'], true);
+                if (is_array($decoded) && !empty($decoded)) {
+                    $cover = reset($decoded);
                 }
-                $v['cover_image'] = $cover;
             }
-            unset($v);
-
-            // ดึงประเภทกีฬาไปใช้ใน filter (dynamic จากตาราง categories)
-            $categories = $categoryModel
-                ->orderBy('name', 'ASC')
-                ->findAll();
-
-            $data = [
-                'venueCards' => $venueCards,
-                'categories' => $categories,
-            ];
-
-            return view('public/view', $data);
+            $v['cover_image'] = $cover;
         }
+        unset($v);
 
+        // ดึงประเภทกีฬาไปใช้ใน filter (dynamic จากตาราง categories)
+        $categories = $categoryModel
+            ->orderBy('name', 'ASC')
+            ->findAll();
 
+        $data = [
+            'venueCards' => $venueCards,
+            'categories' => $categories,
+        ];
+
+        return view('public/view', $data);
+    }
 
     public function show($id = null)
-        {
-            $stadiumModel      = new StadiumModel();
-            $stadiumFieldModel = new StadiumFieldModel();
+    {
+        // ---------------- MOCK ข้อมูลสนามหลัก ----------------
+        $stadium = [
+            'id'             => 1,
+            'name'           => 'Arena Sport Complex (Mock)',
+            'price'          => 370,
+            'category_name'  => 'แบดมินตัน',
+            'category_emoji' => '🏸',
+            'description'    => 'สนามแบดมินตันในร่ม พื้นยางมาตรฐาน แสงสว่างทั่วถึง มีที่จอดรถ และห้องน้ำสะอาด.',
+            'lat'            => null,
+            'lng'            => null,
+            'district'       => 'เขตห้วยขวาง',
+            'province'       => 'กรุงเทพฯ',
+            'contact_phone'  => '02-123-4567',
+            'contact_email'  => 'contact@arena-mock.test',
+            'open_time'      => '10:00',
+            'close_time'     => '23:00',
 
-            $stadium = $stadiumModel->getStadiumsWithCategory($id);
+            // รูปภาพแบบ mock (ปล่อยค่าว่าง เพราะ show.php เดี๋ยวสร้าง fallback เอง)
+            'cover_image'    => '',
+            'outside_images' => json_encode([]),
+            'inside_images'  => json_encode([]),
 
-            if (!$stadium) {
-                throw new \CodeIgniter\Exceptions\PageNotFoundException('ไม่พบสนามที่ต้องการ');
-            }
-            $contactPhone = $stadium['phone'] ?? ($stadium['contact_phone'] ?? '');
-            $contactEmail = $stadium['email'] ?? ($stadium['contact_email'] ?? '');
-            // สนามย่อยทั้งหมดของสนามนี้
-            $fields = $stadiumFieldModel
-                ->where('stadium_id', $id)
-                ->orderBy('name', 'ASC')
-                ->findAll();
+            // rating mock
+            'rating'         => 4.8,
+        ];
 
-            // เตรียมข้อมูลพื้นฐานให้ view ใช้งานง่าย
-            $cover    = $stadium['cover_image'] ?? null;
-            $coverUrl = $cover
-                ? base_url('assets/uploads/stadiums/' . $cover)
-                : base_url('assets/uploads/home/1.jpg');
+        // ---------------- MOCK สนามย่อย ----------------
+        $fields = [
+            [
+                'id'          => 1,
+                'name'        => 'คอร์ท 1 (พื้นยาง)',
+                'description' => 'คอร์ทในร่ม พื้นยางมาตรฐาน เหมาะสำหรับซ้อมจริงจัง.',
+                'status'      => 'active',
+            ],
+            [
+                'id'          => 2,
+                'name'        => 'คอร์ท 2 (พื้นยาง)',
+                'description' => 'คอร์ทในร่ม บรรยากาศสงบ เหมาะสำหรับเล่นชิลๆ.',
+                'status'      => 'active',
+            ],
+        ];
 
-            $addressParts = array_filter([
-                $stadium['address_line'] ?? '',
-                $stadium['district']     ?? '',
-                $stadium['province']     ?? '',
-                $stadium['postal_code']  ?? '',
-            ]);
+        // ---------------- MOCK อุปกรณ์/บริการเสริม ----------------
+        $items = [
+            [
+                'id'    => 1,
+                'name'  => 'ไม้แบด Yonex Pro',
+                'price' => 50,
+                'unit'  => 'ชม.'
+            ],
+            [
+                'id'    => 2,
+                'name'  => 'ลูกแบดฝึกซ้อม (1 กระป๋อง)',
+                'price' => 120,
+                'unit'  => 'ชุด'
+            ]
+        ];
 
-            $addressFull = implode(' ', $addressParts);
+        // ---------------- ตัวแปรที่ show.php ต้องใช้ ----------------
 
-            $open  = $stadium['open_time']  ?? null;
-            $close = $stadium['close_time'] ?? null;
+        // 1) coverUrl
+        $coverUrl = base_url('assets/uploads/home/batminton.webp'); // mock
 
-            if ($open && strlen($open) >= 5)   $open  = substr($open, 0, 5);
-            if ($close && strlen($close) >= 5) $close = substr($close, 0, 5);
-            $timeLabel = ($open && $close) ? ($open . ' – ' . $close) : 'ยังไม่ระบุเวลาเปิด–ปิด';
+        // 2) galleryImages
+        $galleryImages = [
+            $coverUrl,
+            $coverUrl,
+            $coverUrl,
+        ];
 
-            // MOCK: ไอเทมของสนาม (ชั่วคราว - รอเชื่อม DB ฝั่ง vendor)
-            $items = [
-                [
-                    'id'       => 1,
-                    'name'     => 'ไม้แบด Yonex Pro',
-                    'price'    => 50,
-                    'unit'     => 'ชม.',
-                    'category' => 'อุปกรณ์กีฬา',
-                    'desc'     => 'ให้เช่าไม้แบดคุณภาพสูง 1 ชั่วโมง',
-                ],
-                [
-                    'id'       => 2,
-                    'name'     => 'ลูกแบดฝึกซ้อม (1 กระป๋อง)',
-                    'price'    => 80,
-                    'unit'     => 'ชุด',
-                    'category' => 'อุปกรณ์กีฬา',
-                    'desc'     => 'ลูกแบดสำหรับการซ้อมทั่วไป 1 กระป๋อง',
-                ],
-                [
-                    'id'       => 3,
-                    'name'     => 'นวดนักกีฬา 60 นาที',
-                    'price'    => 300,
-                    'unit'     => 'ครั้ง',
-                    'category' => 'บริการเสริม',
-                    'desc'     => 'บริการนวดคลายกล้ามเนื้อหลังการเล่นกีฬา',
-                ],
-                [
-                    'id'       => 4,
-                    'name'     => 'ห้องพักนักกีฬา (2 ชั่วโมง)',
-                    'price'    => 200,
-                    'unit'     => 'ครั้ง',
-                    'category' => 'ห้องพัก',
-                    'desc'     => 'ห้องพักผ่อนพร้อมแอร์สำหรับนักกีฬา',
-                ],
-            ];
+        // 3) addressFull
+        $addressFull = trim($stadium['district'] . ' ' . $stadium['province']);
+
+        // 4) timeLabel (ใช้ open_time/close_time)
+        $timeLabel = $stadium['open_time'] . ' - ' . $stadium['close_time'];
+
+        // ส่งให้ View
+        return view('public/show', [
+            'stadium'       => $stadium,
+            'fields'        => $fields,
+            'items'         => $items,
+            'coverUrl'      => $coverUrl,
+            'galleryImages' => $galleryImages,
+            'addressFull'   => $addressFull,
+            'timeLabel'     => $timeLabel,
+        ]);
+    }
 
 
-            $data = [
-                'stadium'     => $stadium,
-                'coverUrl'    => $coverUrl,
-                'addressFull' => $addressFull,
-                'timeLabel'   => $timeLabel,
-                'fields'      => $fields,
-                'contactPhone'  => $contactPhone,
-                'contactEmail'  => $contactEmail,
-                'items'        => $items,
-            ];
-
-            return view('public/show', $data);
-        }
+    public function fields($id = null)
+    {
+        // ขั้นนี้เรายังไม่ยุ่ง DB ใช้ field.php ที่มีข้อมูลจำลองในตัว view ไปก่อน
+        return view('public/field');
+    }
 }

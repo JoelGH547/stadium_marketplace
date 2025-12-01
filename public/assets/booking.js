@@ -11,83 +11,6 @@ document.addEventListener('DOMContentLoaded', function () {
         pricePerHour = parseFloat(article.dataset.priceHour || '0') || 0;
     }
 
-    // ====== 1) สนามย่อย + tooltip ปุ่ม i ======
-    const fieldSelect = document.getElementById('stadiumFieldSelect');
-    const itemButtons = document.querySelectorAll('.add-item-btn');
-    const infoBtn = document.getElementById('fieldInfoBtn');
-    const tooltip = document.getElementById('fieldInfoTooltip');
-    const tooltipTitle = document.getElementById('fieldInfoTitle');
-    const tooltipBody = document.getElementById('fieldInfoBody');
-    const statusLabel = document.getElementById('fieldStatusLabel');
-
-    function clearFieldTooltip() {
-        if (tooltipTitle) tooltipTitle.textContent = '';
-        if (tooltipBody) tooltipBody.textContent = '';
-        if (tooltip) tooltip.classList.add('hidden');
-        if (infoBtn) infoBtn.disabled = true;
-    }
-
-    function updateFieldUI() {
-        if (!fieldSelect) return;
-
-        // กรณีไม่มีสนามย่อยให้เลือก (dropdown ซีด ๆ)
-        if (fieldSelect.disabled) {
-            if (statusLabel) {
-                statusLabel.textContent = '';
-                statusLabel.className = 'text-xs font-medium text-gray-500';
-            }
-            clearFieldTooltip();
-            return;
-        }
-
-        const opt = fieldSelect.options[fieldSelect.selectedIndex];
-        if (!opt || !opt.value) {
-            if (statusLabel) {
-                statusLabel.textContent = '';
-                statusLabel.className = 'text-xs font-medium text-gray-500';
-            }
-            clearFieldTooltip();
-            return;
-        }
-
-        const name = opt.dataset.name || opt.textContent || '';
-        const desc = opt.dataset.desc || '';
-        const status = (opt.dataset.status || 'active').toLowerCase();
-
-        if (tooltipTitle) tooltipTitle.textContent = name;
-        if (tooltipBody) tooltipBody.textContent = desc || 'ไม่มีรายละเอียดเพิ่มเติม';
-        if (infoBtn) infoBtn.disabled = !desc;
-
-        if (!statusLabel) return;
-
-        if (status === 'active') {
-            statusLabel.textContent = 'สถานะ: เปิดให้จอง';
-            statusLabel.className = 'text-xs font-semibold text-emerald-600';
-        } else {
-            statusLabel.textContent = 'สถานะ: ปิดปรับปรุงชั่วคราว';
-            statusLabel.className = 'text-xs font-semibold text-amber-600';
-        }
-    }
-
-    if (fieldSelect) {
-        fieldSelect.addEventListener('change', function () {
-            updateFieldUI();
-            syncBookingUI();
-        });
-        updateFieldUI();
-    }
-
-    if (infoBtn && tooltip) {
-        infoBtn.addEventListener('mouseenter', function () {
-            if (infoBtn.disabled) return;
-            if (!tooltipBody || !tooltipBody.textContent.trim()) return;
-            tooltip.classList.remove('hidden');
-        });
-        infoBtn.addEventListener('mouseleave', function () {
-            tooltip.classList.add('hidden');
-        });
-    }
-
     // ====== 2) วันที่ + เวลาเริ่ม/สิ้นสุด ======
     const dateInput = document.getElementById('bookingDate');
     const startSelect = document.getElementById('startTimeSelect');
@@ -267,20 +190,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const btnShowSchedule = document.getElementById('btnShowSchedule');
     if (btnShowSchedule) {
         btnShowSchedule.addEventListener('click', function () {
-            // หากมีสนามย่อยและ select ไม่ disabled ให้ตรวจว่ามีการเลือก field แล้ว
-            if (fieldSelect && !fieldSelect.disabled) {
-                const opt = fieldSelect.options[fieldSelect.selectedIndex];
-                if (!opt || !opt.value) {
-                    alert('กรุณาเลือกสนามย่อย (court) ก่อนดูตารางเวลา');
-                    return;
-                }
-                const status = (opt.dataset.status || 'active').toLowerCase();
-                if (status !== 'active') {
-                    alert('สนามย่อยนี้กำลังปิดปรับปรุง กรุณาเลือกสนามอื่น');
-                    return;
-                }
-            }
-
             if (dateInput && (!dateInput.value || dateInput.value.trim() === '')) {
                 alert('กรุณาเลือกวันที่ต้องการจอง');
                 return;
@@ -293,14 +202,8 @@ document.addEventListener('DOMContentLoaded', function () {
             const baseUrl = this.dataset.baseUrl || '';
             if (!baseUrl) return;
 
-            let url = baseUrl;
-            if (fieldSelect && !fieldSelect.disabled) {
-                const opt = fieldSelect.options[fieldSelect.selectedIndex];
-                if (opt && opt.value) {
-                    url += '?field=' + encodeURIComponent(opt.value);
-                }
-            }
-            window.location.href = url;
+            // ตัดการส่ง field ออกแล้ว ใช้ baseUrl ตรง ๆ
+            window.location.href = baseUrl;
         });
     }
 
@@ -319,6 +222,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const bookingItemsField = document.getElementById('bookingItemsField');
     const bookingPricePerHourField = document.getElementById('bookingPricePerHourField');
     const bookingBasePriceField = document.getElementById('bookingBasePriceField');
+
+    const itemButtons = document.querySelectorAll('.add-item-btn');
 
     let cartItems = [];
     let cartTotal = 0;
@@ -509,7 +414,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-
     function enableBookBtn() {
         if (!bookBtn) return;
         bookBtn.disabled = false;
@@ -527,6 +431,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (diff <= 0) return 0;
         return diff / 60;
     }
+
     function updateItemButtonsState(ready) {
         if (!itemButtons || !itemButtons.length) return;
         itemButtons.forEach(function (btn) {
@@ -539,7 +444,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-
     function syncBookingUI() {
         if (!bookingFieldPrice && !bookingServiceFee && !bookBtn && !bookingHoursLabel) {
             return;
@@ -547,17 +451,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         let ready = true;
 
-        if (fieldSelect && !fieldSelect.disabled) {
-            const opt = fieldSelect.options[fieldSelect.selectedIndex];
-            if (!opt || !opt.value) {
-                ready = false;
-            } else {
-                const status = (opt.dataset.status || 'active').toLowerCase();
-                if (status !== 'active') {
-                    ready = false;
-                }
-            }
-        }
+        // ไม่เช็ค fieldSelect แล้ว (ตัดระบบเลือกสนามย่อยออก)
 
         if (!dateInput || !dateInput.value) {
             ready = false;
@@ -603,7 +497,6 @@ document.addEventListener('DOMContentLoaded', function () {
         enableBookBtn();
         updateItemButtonsState(true);
     }
-
 
     setBookingDefault();
     updateItemsSummary();
@@ -670,5 +563,4 @@ document.addEventListener('DOMContentLoaded', function () {
             bookingForm.submit();
         });
     }
-
 });
