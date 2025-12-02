@@ -12,12 +12,9 @@
 $stadium = $stadium ?? [
     'name'        => 'Arena Sport Complex',
     'sport_emoji' => '⚽',
-    'sport_name'  => 'ฟุตบอล / ฟุตซอล',
+    'sport_name'  => 'ฟุตบอล',
     'location'    => 'เขตห้วยขวาง, กรุงเทพฯ',
-    'rating'      => 4.7,
-    'rating_count' => 132,
     'hero_image'  => base_url('assets/uploads/home/batminton.webp'),
-    'tags'        => ['ใกล้รถไฟฟ้า', 'มีที่จอดรถ', 'ห้องน้ำสะอาด'],
 ];
 
 $stadiumId = $stadiumId ?? 1;
@@ -26,11 +23,7 @@ $fields = $fields ?? [
     [
         'id'          => 1,
         'name'        => 'สนามฟุตซอลในร่ม 1',
-        'size_label'  => '5 คน · Indoor',
-        'surface'     => 'หญ้าเทียม',
         'price_hour'  => 450,
-        'status_badge' => 'จองเยอะช่วงหัวค่ำ',
-        'status_type' => 'hot',
         'open_time'   => '10:00 - 23:00 น.',
         'image'       => base_url('assets/uploads/home/batminton.webp'),
         'short_desc'  => 'หลังคาสูง โปร่ง ลมโกรกดี มีห้องน้ำและล็อกเกอร์ให้บริการ',
@@ -38,11 +31,7 @@ $fields = $fields ?? [
     [
         'id'          => 2,
         'name'        => 'สนามหญ้าเทียม 7 คน A',
-        'size_label'  => '7 คน · Outdoor',
-        'surface'     => 'หญ้าเทียม',
         'price_hour'  => 650,
-        'status_badge' => 'มีคิวว่างตอนดึก',
-        'status_type' => 'normal',
         'open_time'   => '09:00 - 01:00 น.',
         'image'       => base_url('assets/uploads/home/batminton.webp'),
         'short_desc'  => 'ไฟสว่างทั่วสนาม เหมาะกับทีมซ้อมจริงจังและเตะกระชับมิตร',
@@ -50,11 +39,7 @@ $fields = $fields ?? [
     [
         'id'          => 3,
         'name'        => 'สนามฟุตซอลในร่ม 2',
-        'size_label'  => '5 คน · Indoor',
-        'surface'     => 'หญ้าเทียม',
         'price_hour'  => 450,
-        'status_badge' => 'มีโปรฯ วันธรรมดา',
-        'status_type' => 'promo',
         'open_time'   => '10:00 - 23:00 น.',
         'image'       => base_url('assets/uploads/home/batminton.webp'),
         'short_desc'  => 'พื้นนุ่มเล่นสบาย เหมาะสำหรับเตะชิล ๆ กับเพื่อน',
@@ -119,25 +104,7 @@ $fields = $fields ?? [
                             </svg>
                             <span><?= esc($stadium['location']) ?></span>
                         </div>
-                        <div class="flex items-center gap-1.5">
-                            <span
-                                class="inline-flex items-center gap-1 rounded-full bg-yellow-50 px-2 py-0.5 text-[11px] font-medium text-amber-700 border border-amber-100">
-                                ★ <?= number_format($stadium['rating'], 1) ?>
-                                <span class="text-[11px] text-gray-500"> (<?= (int) $stadium['rating_count'] ?>
-                                    รีวิว)</span>
-                            </span>
-                        </div>
                     </div>
-                    <?php if (!empty($stadium['tags']) && is_array($stadium['tags'])): ?>
-                    <div class="flex flex-wrap gap-1.5 mt-1">
-                        <?php foreach ($stadium['tags'] as $tag): ?>
-                        <span
-                            class="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-[11px] font-medium text-gray-700">
-                            <?= esc($tag) ?>
-                        </span>
-                        <?php endforeach; ?>
-                    </div>
-                    <?php endif; ?>
                 </div>
             </div>
             <!-- Separator -->
@@ -159,12 +126,6 @@ $fields = $fields ?? [
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
                     <?php foreach ($fields as $field): ?>
                     <?php
-                        $badgeClass = 'bg-gray-100 text-gray-700 border border-gray-200';
-                        if ($field['status_type'] === 'hot') {
-                            $badgeClass = 'bg-rose-50 text-rose-700 border border-rose-100';
-                        } elseif ($field['status_type'] === 'promo') {
-                            $badgeClass = 'bg-emerald-50 text-emerald-700 border border-emerald-100';
-                        }
                         $detailUrl = site_url('sport/show/' . $stadiumId);
                         ?>
                     <article
@@ -173,28 +134,12 @@ $fields = $fields ?? [
                             <img src="<?= esc($field['image']) ?>" alt="<?= esc($field['name']) ?>"
                                 class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                                 loading="lazy">
-                            <?php if (!empty($field['status_badge'])): ?>
-                            <span
-                                class="absolute left-3 top-3 inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium <?= $badgeClass ?>">
-                                <?= esc($field['status_badge']) ?>
-                            </span>
-                            <?php endif; ?>
                         </div>
                         <div class="flex flex-1 flex-col gap-2.5 px-3.5 py-3 sm:px-4 sm:py-3.5">
                             <div class="space-y-1">
                                 <h3 class="text-sm sm:text-base font-semibold text-gray-900">
                                     <?= esc($field['name']) ?>
                                 </h3>
-                                <div class="flex flex-wrap items-center gap-1.5 text-[11px] sm:text-xs text-gray-600">
-                                    <span
-                                        class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 font-medium">
-                                        <?= esc($field['size_label']) ?>
-                                    </span>
-                                    <span
-                                        class="inline-flex items-center gap-1 rounded-full bg-sky-50 px-2 py-0.5 font-medium text-sky-700 border border-sky-100">
-                                        พื้นสนาม: <?= esc($field['surface']) ?>
-                                    </span>
-                                </div>
                                 <p class="mt-1 text-xs sm:text-sm text-gray-500 line-clamp-2">
                                     <?= esc($field['short_desc']) ?>
                                 </p>
@@ -240,7 +185,7 @@ $fields = $fields ?? [
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
                                     class="w-5 h-5">
                                     <path
-                                        d="M1.25 1.25a.75.75 0 011.5 0v1.518a32.023 32.023 0 0114.5 0V1.25a.75.75 0 011.5 0v1.518c.454.04.893.102 1.32.182a.75.75 0 01-.296 1.478A31.023 31.023 0 0010 4.875a31.023 31.023 0 00-7.524-.482.75.75 0 01-.296-1.478A33.522 33.522 0 012.75 2.768V1.25zM1.25 6.5a.75.75 0 01.75-.75h16.5a.75.75 0 010 1.5H2a.75.75 0 01-.75-.75zM1.25 11.25a.75.75 0 01.75-.75h16.5a.75.75 0 010 1.5H2a.75.75 0 01-.75-.75zM1.25 16a.75.75 0 01.75-.75h16.5a.75.75 0 010 1.5H2a.75.75 0 01-.75-.75z" />
+                                        d="M3.75 3.75A.75.75 0 003 4.5v11a.75.75 0 00.75.75h13.5a.75.75 0 00.75-.75v-11a.75.75 0 00-.75-.75h-13.5zM13.5 4.5v3h3V4.5h-3zM4.5 4.5h3v3h-3V4.5zM4.5 8.25h3v3h-3v-3zm9 0v3h-3v-3h3zm-4.5 0h3v3h-3v-3zm-4.5 3.75h3v3h-3v-3zm4.5 0h3v3h-3v-3zm4.5 0h3v3h-3v-3z" />
                                 </svg>
                                 <span>ดูรูปทั้งหมด</span>
                             </button>

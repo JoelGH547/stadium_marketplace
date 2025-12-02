@@ -417,12 +417,17 @@ foreach ($fieldsRaw as $f) {
                     <div class="grid grid-cols-2 gap-2"
                         data-images='<?= json_encode($galleryImages ?? [], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) ?>'>
                         <!-- Main Image -->
-                        <div class="relative col-span-1">
+                        <div class="relative col-span-1 group">
                             <img src="<?= esc($galleryImages[0] ?? $coverUrl) ?>" alt="Main stadium image"
                                 class="h-full w-full object-cover rounded-lg cursor-pointer" data-gallery-item="0">
-                            <button type="button"
-                                class="absolute bottom-4 right-4 bg-white/90 text-black text-sm px-4 py-2 rounded-lg shadow-md hover:bg-white view-all-photos">
-                                ดูรูปทั้งหมด
+                            <button type="button" class="absolute bottom-4 right-4 inline-flex items-center gap-2 rounded-lg bg-black/60 px-3 py-2 text-xs font-semibold text-white backdrop-blur-sm hover:bg-black/80 transition
+                                                   opacity-0 group-hover:opacity-100 view-all-photos">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
+                                    class="w-5 h-5">
+                                    <path
+                                        d="M3.75 3.75A.75.75 0 003 4.5v11a.75.75 0 00.75.75h13.5a.75.75 0 00.75-.75v-11a.75.75 0 00-.75-.75h-13.5zM13.5 4.5v3h3V4.5h-3zM4.5 4.5h3v3h-3V4.5zM4.5 8.25h3v3h-3v-3zm9 0v3h-3v-3h3zm-4.5 0h3v3h-3v-3zm-4.5 3.75h3v3h-3v-3zm4.5 0h3v3h-3v-3zm4.5 0h3v3h-3v-3z" />
+                                </svg>
+                                <span>ดูรูปทั้งหมด</span>
                             </button>
                         </div>
                         <!-- Thumbnail Grid -->
