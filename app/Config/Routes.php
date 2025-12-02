@@ -44,56 +44,80 @@ $routes->get('admin/logout', 'Admin\AdminAuthController::logout');
 
 $routes->group('admin', ['filter' => ['admin']], static function ($routes) {
 
-    $routes->get('dashboard', 'admin\DashboardController::index');
+    // --- Dashboard ---
+    $routes->get('dashboard', 'Admin\DashboardController::index');
 
-    $routes->get('categories', 'admin\CategoryController::index');
-    $routes->get('categories/new', 'admin\CategoryController::new');
-    $routes->post('categories/create', 'admin\CategoryController::create');
-    $routes->get('categories/edit/(:num)', 'admin\CategoryController::edit/$1');
-    $routes->post('categories/update/(:num)', 'admin\CategoryController::update/$1');
-    $routes->get('categories/delete/(:num)', 'admin\CategoryController::delete/$1');
+    // --- Categories (ประเภทกีฬา) ---
+    $routes->get('categories', 'Admin\CategoryController::index');
+    $routes->get('categories/new', 'Admin\CategoryController::new');
+    $routes->post('categories/create', 'Admin\CategoryController::create');
+    $routes->get('categories/edit/(:num)', 'Admin\CategoryController::edit/$1');
+    $routes->post('categories/update/(:num)', 'Admin\CategoryController::update/$1');
+    $routes->get('categories/delete/(:num)', 'Admin\CategoryController::delete/$1');
 
-    $routes->get('stadiums', 'admin\StadiumController::index');
-    $routes->get('stadiums/create', 'admin\StadiumController::create');
-    $routes->post('stadiums', 'admin\StadiumController::store');
-    $routes->get('stadiums/edit/(:num)', 'admin\StadiumController::edit/$1');
-    $routes->post('stadiums/update/(:num)', 'admin\StadiumController::update/$1');
-    $routes->get('stadiums/delete/(:num)', 'admin\StadiumController::delete/$1');
-    $routes->get('stadiums/view/(:num)', 'admin\StadiumController::view/$1');
+    // ==========================================================
+    // +++ [ระบบใหม่] Facility Types (หมวดหมู่สิ่งอำนวยความสะดวก) +++
+    // ==========================================================
+    $routes->get('facility-types', 'Admin\FacilityTypeController::index');
+    $routes->post('facility-types/create', 'Admin\FacilityTypeController::create');
+    $routes->get('facility-types/delete/(:num)', 'Admin\FacilityTypeController::delete/$1');
+    // ==========================================================
 
-    $routes->get('stadiums/fields/(:num)', 'admin\StadiumController::fields/$1');
-    $routes->post('stadiums/fields/create', 'admin\StadiumController::createField');
-    $routes->get('stadiums/fields/delete/(:num)', 'admin\StadiumController::deleteField/$1');
-    $routes->post('stadiums/fields/update', 'admin\StadiumController::updateField');
+    // --- Stadiums (สนามหลัก) ---
+    $routes->get('stadiums', 'Admin\StadiumController::index');
+    $routes->get('stadiums/create', 'Admin\StadiumController::create');
+    $routes->post('stadiums', 'Admin\StadiumController::store'); // รับค่า Create
+    $routes->get('stadiums/edit/(:num)', 'Admin\StadiumController::edit/$1');
+    $routes->post('stadiums/update/(:num)', 'Admin\StadiumController::update/$1');
+    $routes->get('stadiums/delete/(:num)', 'Admin\StadiumController::delete/$1');
+    $routes->get('stadiums/view/(:num)', 'Admin\StadiumController::view/$1');
 
+    // --- Stadium Fields (จัดการสนามย่อย & ราคา) ---
+    $routes->get('stadiums/fields/(:num)', 'Admin\StadiumController::fields/$1');
+    $routes->post('stadiums/fields/create', 'Admin\StadiumController::createField');
+    $routes->post('stadiums/fields/update', 'Admin\StadiumController::updateField');
+    $routes->get('stadiums/fields/delete/(:num)', 'Admin\StadiumController::deleteField/$1');
+
+    // ==========================================================
+    // +++ [ระบบใหม่] Vendor Items (จัดการสินค้า/บริการเสริม) +++
+    // ==========================================================
+    $routes->group('vendor-items', static function ($routes) {
+        $routes->get('/', 'Admin\VendorItemController::index');
+        $routes->post('store', 'Admin\VendorItemController::store');
+        $routes->post('update', 'Admin\VendorItemController::update');
+        $routes->get('delete/(:num)', 'Admin\VendorItemController::delete/$1');
+    });
+    // ==========================================================
+
+    // --- User Management (จัดการผู้ใช้) ---
     $routes->group('users', static function ($routes) {
 
-        $routes->get('admins', 'admin\UserController::admins');
-        $routes->get('vendors', 'admin\UserController::vendors');
-        $routes->get('customers', 'admin\UserController::customers');
+        // 1. หน้าแสดงรายการ (Read)
+        $routes->get('admins', 'Admin\UserController::admins');
+        $routes->get('vendors', 'Admin\UserController::vendors');
+        $routes->get('customers', 'Admin\UserController::customers');
+        $routes->get('new_customers', 'Admin\UserController::newCustomers');
 
-        $routes->get('new_customers', 'admin\UserController::newCustomers');
-
-
-        $routes->get('create/(:segment)', 'admin\UserController::create/$1');
-        $routes->post('store/(:segment)', 'admin\UserController::store/$1');
-
-        $routes->get('edit/(:segment)/(:num)', 'admin\UserController::edit/$1/$2');
-        $routes->post('update/(:segment)/(:num)', 'admin\UserController::update/$1/$2');
-
-        $routes->get('delete/(:segment)/(:num)', 'admin\UserController::delete/$1/$2');
+        // 2. CRUD (Create, Edit, Delete)
+        $routes->get('create/(:segment)', 'Admin\UserController::create/$1');
+        $routes->post('store/(:segment)', 'Admin\UserController::store/$1');
+        $routes->get('edit/(:segment)/(:num)', 'Admin\UserController::edit/$1/$2');
+        $routes->post('update/(:segment)/(:num)', 'Admin\UserController::update/$1/$2');
+        $routes->get('delete/(:segment)/(:num)', 'Admin\UserController::delete/$1/$2');
     });
 
-    $routes->get('vendors/pending', 'admin\UserController::pendingList');
-    $routes->get('vendors/approve/(:num)', 'admin\UserController::approveVendor/$1');
-    $routes->get('vendors/reject/(:num)', 'admin\UserController::rejectVendor/$1');
+    // --- Vendor Approval (อนุมัติผู้ขาย) ---
+    $routes->get('vendors/pending', 'Admin\UserController::pendingList');
+    $routes->get('vendors/approve/(:num)', 'Admin\UserController::approveVendor/$1');
+    $routes->get('vendors/reject/(:num)', 'Admin\UserController::rejectVendor/$1');
 
+    // --- Bookings (การจอง) ---
+    $routes->get('bookings', 'Admin\BookingController::index');
 
-    $routes->get('bookings', 'admin\BookingController::index');
-    $routes->get('bookings/new', 'admin\BookingController::indexNew');
-    $routes->get('bookings/pending', 'admin\BookingController::indexPending');
-    $routes->get('bookings/approve/(:num)', 'admin\BookingController::approve/$1');
-    $routes->get('bookings/cancel/(:num)', 'admin\BookingController::cancel/$1');
+    // จัดการสถานะจอง
+    $routes->post('bookings/updateStatus', 'Admin\BookingController::updateStatus');
+    $routes->get('bookings/approve/(:num)', 'Admin\BookingController::approve/$1');
+    $routes->get('bookings/cancel/(:num)', 'Admin\BookingController::cancel/$1');
 });
 
 
