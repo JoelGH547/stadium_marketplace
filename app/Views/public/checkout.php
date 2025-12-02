@@ -33,7 +33,7 @@ $total      = $total ?? ($subtotal + $serviceFee);
 ?>
 
 <section class="mx-auto max-w-5xl px-4 pt-4 pb-10 lg:px-0">
-    <ol class="mb-3 flex items-center gap-2 text-[11px] sm:text-xs">
+    <ol class="w-fit mx-auto mb-3 flex items-center gap-2 text-[11px] sm:text-xs">
         <li class="flex items-center gap-1 rounded-full bg-gray-100 px-3 py-1 text-gray-500">
             <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-gray-200 text-[10px]">1</span>
             <span>เลือกเวลาและบริการ</span>

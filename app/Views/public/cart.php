@@ -5,24 +5,24 @@
   // เตรียมข้อมูล mock เผื่อยังไม่มีการเชื่อม Controller จริง
 /** @var array|null $cartItems */
 $items = $cartItems ?? [
-  [
-    'stadium_name' => 'Sport Arena A',
-    'item_name'    => 'ไม้แบด Yonex Pro',
-    'unit'         => 'ชม.',
-    'qty'          => 1,
-    'price'        => 50,
-  ],
-  [
-    'stadium_name' => 'Sport Arena A',
-    'item_name'    => 'นวดนักกีฬา 60 นาที',
-    'unit'         => 'ครั้ง',
-    'qty'          => 1,
-    'price'        => 300,
-  ],
+    [
+        'stadium_name' => 'Sport Arena A',
+        'item_name'    => 'ไม้แบด Yonex Pro',
+        'unit'         => 'ชม.',
+        'qty'          => 1,
+        'price'        => 50,
+    ],
+    [
+        'stadium_name' => 'Sport Arena A',
+        'item_name'    => 'นวดนักกีฬา 60 นาที',
+        'unit'         => 'ครั้ง',
+        'qty'          => 1,
+        'price'        => 300,
+    ],
 ];
 
 $subtotal = $subtotal ?? array_reduce($items, static function ($carry, $row) {
-  return $carry + (float) $row['price'] * (int) $row['qty'];
+    return $carry + (float) $row['price'] * (int) $row['qty'];
 }, 0.0);
 
 $serviceFee = $serviceFee ?? ($subtotal * 0.05);
@@ -30,7 +30,7 @@ $total      = $total ?? ($subtotal + $serviceFee);
 ?>
 
 <section class="mx-auto max-w-6xl px-4 pt-4 pb-10 lg:px-0">
-    <ol class="mb-3 flex items-center gap-2 text-[11px] sm:text-xs">
+    <ol class="w-fit mx-auto mb-3 flex items-center gap-2 text-[11px] sm:text-xs">
         <li class="flex items-center gap-1 rounded-full bg-gray-100 px-3 py-1 text-gray-500">
             <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-gray-200 text-[10px]">1</span>
             <span>เลือกเวลาและบริการ</span>
@@ -53,60 +53,56 @@ $total      = $total ?? ($subtotal + $serviceFee);
                 ตรวจสอบไอเทมและบริการที่คุณเลือกจากสนามกีฬา ก่อนดำเนินการจองขั้นถัดไป
             </p>
         </div>
-        <a href="<?= base_url('customer/home') ?>"
-            class="hidden text-xs font-medium text-[var(--primary)] hover:underline sm:inline">
-            ‹ เลือกสนามเพิ่ม
-        </a>
     </header>
 
     <div class="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1.1fr)]">
         <!-- รายการไอเทมในตะกร้า -->
         <div class="space-y-3">
             <?php if (empty($items)): ?>
-            <div
-                class="rounded-2xl border border-dashed border-gray-300 bg-white px-4 py-6 text-center text-sm text-gray-500">
-                ยังไม่มีไอเทมในตะกร้า ลองกลับไปเลือกสนามและบริการที่ต้องการอีกครั้ง
-            </div>
-            <?php else: ?>
-            <div class="rounded-2xl border border-gray-200 bg-white px-4 py-3 shadow-sm">
-                <div class="mb-2 flex items-center justify-between">
-                    <span class="text-xs font-medium text-gray-700">
-                        รายการทั้งหมด (<?= count($items) ?>)
-                    </span>
-                    <a href="<?= base_url('customer/home') ?>"
-                        class="text-[11px] font-medium text-[var(--primary)] hover:underline">
-                        เลือกเพิ่ม
-                    </a>
+                <div
+                    class="rounded-2xl border border-dashed border-gray-300 bg-white px-4 py-6 text-center text-sm text-gray-500">
+                    ยังไม่มีไอเทมในตะกร้า ลองกลับไปเลือกสนามและบริการที่ต้องการอีกครั้ง
                 </div>
+            <?php else: ?>
+                <div class="rounded-2xl border border-gray-200 bg-white px-4 py-3 shadow-sm">
+                    <div class="mb-2 flex items-center justify-between">
+                        <span class="text-xs font-medium text-gray-700">
+                            รายการทั้งหมด (<?= count($items) ?>)
+                        </span>
+                        <a href="<?= base_url('customer/home') ?>"
+                            class="text-[11px] font-medium text-[var(--primary)] hover:underline">
+                            เลือกเพิ่ม
+                        </a>
+                    </div>
 
-                <ul class="divide-y divide-gray-100">
-                    <?php foreach ($items as $row): ?>
-                    <li class="flex items-start justify-between gap-3 py-3 text-xs sm:text-sm">
-                        <div class="flex-1">
-                            <p class="font-semibold text-gray-900">
-                                <?= esc($row['item_name']) ?>
-                            </p>
-                            <?php if (!empty($row['stadium_name'])): ?>
-                            <p class="text-[11px] text-gray-500">
-                                สนาม: <?= esc($row['stadium_name']) ?>
-                            </p>
-                            <?php endif; ?>
-                            <p class="mt-1 text-[11px] text-gray-500">
-                                จำนวน: <?= (int) $row['qty'] ?> <?= esc($row['unit'] ?? '') ?>
-                            </p>
-                        </div>
-                        <div class="text-right">
-                            <p class="font-semibold text-gray-900">
-                                <?= number_format((float) $row['price'] * (int) $row['qty'], 2) ?>฿
-                            </p>
-                            <p class="text-[11px] text-gray-500">
-                                (<?= number_format((float) $row['price'], 2) ?>฿ / <?= esc($row['unit'] ?? 'ครั้ง') ?>)
-                            </p>
-                        </div>
-                    </li>
-                    <?php endforeach; ?>
-                </ul>
-            </div>
+                    <ul class="divide-y divide-gray-100">
+                        <?php foreach ($items as $row): ?>
+                            <li class="flex items-start justify-between gap-3 py-3 text-xs sm:text-sm">
+                                <div class="flex-1">
+                                    <p class="font-semibold text-gray-900">
+                                        <?= esc($row['item_name']) ?>
+                                    </p>
+                                    <?php if (!empty($row['stadium_name'])): ?>
+                                        <p class="text-[11px] text-gray-500">
+                                            สนาม: <?= esc($row['stadium_name']) ?>
+                                        </p>
+                                    <?php endif; ?>
+                                    <p class="mt-1 text-[11px] text-gray-500">
+                                        จำนวน: <?= (int) $row['qty'] ?> <?= esc($row['unit'] ?? '') ?>
+                                    </p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="font-semibold text-gray-900">
+                                        <?= number_format((float) $row['price'] * (int) $row['qty'], 2) ?>฿
+                                    </p>
+                                    <p class="text-[11px] text-gray-500">
+                                        (<?= number_format((float) $row['price'], 2) ?>฿ / <?= esc($row['unit'] ?? 'ครั้ง') ?>)
+                                    </p>
+                                </div>
+                            </li>
+                        <?php endforeach; ?>
+                    </ul>
+                </div>
             <?php endif; ?>
         </div>
 

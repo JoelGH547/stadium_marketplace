@@ -81,7 +81,7 @@ foreach ($fieldsRaw as $f) {
 ?>
 <main class="bg-gray-50 min-h-screen pb-10">
     <section class="mx-auto max-w-6xl px-4 pt-4 lg:px-0">
-        <ol class="flex items-center gap-2 text-[11px] sm:text-xs">
+        <ol class="flex items-center justify-center gap-2 text-[11px] sm:text-xs">
             <li class="flex items-center gap-1 rounded-full bg-[var(--primary)] px-3 py-1 text-white">
                 <span
                     class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-white/20 text-[10px]">1</span>
@@ -101,13 +101,6 @@ foreach ($fieldsRaw as $f) {
     </section>
 
     <section class="relative mx-auto max-w-5xl">
-        <!-- ปุ่ม Back อยู่นอกการ์ด ชิดซ้ายบนของรูป -->
-        <button type="button" onclick="history.back()" class="absolute -left-12 top-4 z-20 inline-flex items-center justify-center
-                   w-10 h-10 rounded-full bg-gray-800/85 text-white text-xl shadow-md
-                   hover:bg-gray-800 transition">
-            ‹
-        </button>
-
         <article id="stadiumDetail" class="bg-white shadow-sm sm:shadow-md sm:rounded-3xl overflow-hidden"
             data-lat="<?= esc($lat ?? '') ?>" data-lng="<?= esc($lng ?? '') ?>" data-price-hour="<?= esc($price) ?>"
             data-open-time="<?= esc($openTimeRaw) ?>" data-close-time="<?= esc($closeTimeRaw) ?>">
@@ -118,7 +111,7 @@ foreach ($fieldsRaw as $f) {
                 <!-- ชื่อ + meta แถวบน -->
                 <header class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                     <div>
-                        <h1 class="text-2xl sm:text-3xl font-extrabold text-[color:var(--ink)]">
+                        <h1 class="text-xl sm:text-2xl font-semibold text-[color:var(--ink)]">
                             <?= esc($name) ?>
                         </h1>
                         <div class="mt-2 flex flex-wrap items-center gap-3 text-sm text-gray-600">
@@ -197,58 +190,6 @@ foreach ($fieldsRaw as $f) {
                             </dl>
                         </div>
                     </aside>
-                    <!-- รายการไอเทม / บริการของสนาม -->
-                    <?php if (!empty($items)): ?>
-                        <section class="mt-10">
-                            <div class="flex items-center justify-between gap-3 mb-4">
-                                <h2 class="text-lg font-semibold text-gray-900">
-                                    บริการและไอเทมของสนาม
-                                </h2>
-                                <p class="text-xs sm:text-sm text-gray-500">
-                                    เลือกไอเทมที่ต้องการใช้งานร่วมกับการจองสนาม เช่น ไม้แบด, ห้องพัก, นวด ฯลฯ
-                                </p>
-                            </div>
-
-                            <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                                <?php foreach ($items as $item): ?>
-                                    <article
-                                        class="flex flex-col justify-between rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
-                                        <div class="space-y-1">
-                                            <h3 class="text-sm font-semibold text-gray-900">
-                                                <?= esc($item['name']) ?>
-                                            </h3>
-                                            <?php if (!empty($item['category'])): ?>
-                                                <p class="text-xs text-gray-500">
-                                                    <?= esc($item['category']) ?>
-                                                </p>
-                                            <?php endif; ?>
-                                            <?php if (!empty($item['desc'])): ?>
-                                                <p class="mt-1 text-xs text-gray-600 line-clamp-2">
-                                                    <?= esc($item['desc']) ?>
-                                                </p>
-                                            <?php endif; ?>
-                                        </div>
-
-                                        <div class="mt-3 flex items-center justify-between">
-                                            <div class="text-sm font-semibold text-gray-900">
-                                                <?= number_format((float) $item['price'], 2) ?>฿
-                                                <span class="text-xs font-normal text-gray-500">
-                                                    / <?= esc($item['unit'] ?? 'ครั้ง') ?>
-                                                </span>
-                                            </div>
-
-                                            <button type="button" class="inline-flex items-center rounded-xl bg-[var(--primary)] px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-teal-600 transition
-                                           add-item-btn" data-item-id="<?= (int) $item['id'] ?>"
-                                                data-item-name="<?= esc($item['name']) ?>"
-                                                data-item-price="<?= (float) $item['price'] ?>">
-                                                + เพิ่มลงตะกร้า
-                                            </button>
-                                        </div>
-                                    </article>
-                                <?php endforeach; ?>
-                            </div>
-                        </section>
-                    <?php endif; ?>
                 </section>
 
                 <!-- Divider -->
@@ -262,6 +203,17 @@ foreach ($fieldsRaw as $f) {
                             <!-- เลือกวันที่และเวลา -->
                             <div class="space-y-3">
                                 <h3 class="text-lg font-semibold text-gray-900 mb-3">เลือกวันที่และเวลา</h3>
+                                <!-- ประเภทการจอง -->
+                                <div class="space-y-1 mb-4">
+                                    <label for="bookingTypeSelect" class="block text-xs font-medium text-gray-700">
+                                        ประเภทการจอง
+                                    </label>
+                                    <select id="bookingTypeSelect" name="booking_type"
+                                        class="block w-full rounded-full border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 shadow-sm focus:border-[var(--primary)] focus:ring-[var(--primary)]">
+                                        <option value="hourly">จองรายชั่วโมง</option>
+                                        <option value="daily">จองรายวัน</option>
+                                    </select>
+                                </div>
                                 <div class="grid gap-3 sm:grid-cols-3">
                                     <!-- วันที่ -->
                                     <div class="space-y-1">
@@ -399,15 +351,77 @@ foreach ($fieldsRaw as $f) {
 
                     </div>
                 </section>
-                
+
+                <!-- Divider for items -->
+                <hr class="my-8 border-t border-gray-200">
+
+                <!-- รายการไอเทม / บริการของสนาม -->
+                <?php if (!empty($items)): ?>
+                    <section>
+                        <div class="flex items-center justify-between gap-3 mb-4">
+                            <h2 class="text-lg font-semibold text-gray-900">
+                                บริการและไอเทมของสนาม
+                            </h2>
+                            <p class="text-xs sm:text-sm text-gray-500">
+                                เลือกไอเทมที่ต้องการใช้งานร่วมกับการจองสนาม เช่น ไม้แบด, ห้องพัก, นวด ฯลฯ
+                            </p>
+                        </div>
+
+                        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                            <?php foreach ($items as $item): ?>
+                                <article
+                                    class="flex flex-col justify-between rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+                                    <div class="space-y-1">
+                                        <h3 class="text-sm font-semibold text-gray-900">
+                                            <?= esc($item['name']) ?>
+                                        </h3>
+                                        <?php if (!empty($item['category'])): ?>
+                                            <p class="text-xs text-gray-500">
+                                                <?= esc($item['category']) ?>
+                                            </p>
+                                        <?php endif; ?>
+                                        <?php if (!empty($item['desc'])): ?>
+                                            <p class="mt-1 text-xs text-gray-600 line-clamp-2">
+                                                <?= esc($item['desc']) ?>
+                                            </p>
+                                        <?php endif; ?>
+                                    </div>
+
+                                    <div class="mt-3 flex items-center justify-between">
+                                        <div class="text-sm font-semibold text-gray-900">
+                                            <?= number_format((float) $item['price'], 2) ?>฿
+                                            <span class="text-xs font-normal text-gray-500">
+                                                / <?= esc($item['unit'] ?? 'ครั้ง') ?>
+                                            </span>
+                                        </div>
+
+                                        <button type="button" class="inline-flex items-center rounded-xl bg-[var(--primary)] px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-teal-600 transition
+                                           add-item-btn" data-item-id="<?= (int) $item['id'] ?>"
+                                            data-item-name="<?= esc($item['name']) ?>"
+                                            data-item-price="<?= (float) $item['price'] ?>">
+                                            + เพิ่มลงตะกร้า
+                                        </button>
+                                    </div>
+                                </article>
+                            <?php endforeach; ?>
+                        </div>
+                    </section>
+                <?php endif; ?>
+
+                <!-- Divider -->
+                <hr class="my-8 border-t border-gray-200">
+
                 <!-- New Image Gallery Section -->
                 <section class="mt-8" id="stadiumGallery">
                     <h2 class="text-xl font-bold text-gray-900 mb-4">รูปภาพสนาม</h2>
-                    <div class="grid grid-cols-2 gap-2" data-images='<?= json_encode($galleryImages ?? [], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) ?>'>
+                    <div class="grid grid-cols-2 gap-2"
+                        data-images='<?= json_encode($galleryImages ?? [], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) ?>'>
                         <!-- Main Image -->
                         <div class="relative col-span-1">
-                            <img src="<?= esc($galleryImages[0] ?? $coverUrl) ?>" alt="Main stadium image" class="h-full w-full object-cover rounded-lg cursor-pointer" data-gallery-item="0">
-                            <button type="button" class="absolute bottom-4 right-4 bg-white/90 text-black text-sm px-4 py-2 rounded-lg shadow-md hover:bg-white view-all-photos">
+                            <img src="<?= esc($galleryImages[0] ?? $coverUrl) ?>" alt="Main stadium image"
+                                class="h-full w-full object-cover rounded-lg cursor-pointer" data-gallery-item="0">
+                            <button type="button"
+                                class="absolute bottom-4 right-4 bg-white/90 text-black text-sm px-4 py-2 rounded-lg shadow-md hover:bg-white view-all-photos">
                                 ดูรูปทั้งหมด
                             </button>
                         </div>
@@ -416,7 +430,8 @@ foreach ($fieldsRaw as $f) {
                             <?php for ($i = 1; $i < 7; $i++): ?>
                                 <div class="cursor-pointer">
                                     <?php if (isset($galleryImages[$i])): ?>
-                                        <img src="<?= esc($galleryImages[$i]) ?>" alt="Stadium thumbnail <?= $i ?>" class="h-full w-full object-cover rounded-lg" data-gallery-item="<?= $i ?>">
+                                        <img src="<?= esc($galleryImages[$i]) ?>" alt="Stadium thumbnail <?= $i ?>"
+                                            class="h-full w-full object-cover rounded-lg" data-gallery-item="<?= $i ?>">
                                     <?php else: ?>
                                         <div class="h-full w-full bg-gray-200 rounded-lg"></div>
                                     <?php endif; ?>
