@@ -65,6 +65,17 @@ $routes->group('admin', ['filter' => ['auth', 'admin']], static function ($route
     $routes->post('stadiums/fields/update', 'Admin\StadiumController::updateField');
     $routes->get('stadiums/fields/delete/(:num)', 'Admin\StadiumController::deleteField/$1');
 
+    // ==========================================================
+    // +++ [ระบบใหม่] Vendor Items (จัดการสินค้า/บริการเสริม) +++
+    // ==========================================================
+    $routes->group('vendor-items', static function ($routes) {
+        $routes->get('/', 'Admin\VendorItemController::index');
+        $routes->post('store', 'Admin\VendorItemController::store');
+        $routes->post('update', 'Admin\VendorItemController::update');
+        $routes->get('delete/(:num)', 'Admin\VendorItemController::delete/$1');
+    });
+    // ==========================================================
+
     // --- User Management (จัดการผู้ใช้) ---
     $routes->group('users', static function ($routes) {
         

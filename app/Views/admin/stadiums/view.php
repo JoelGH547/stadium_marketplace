@@ -21,6 +21,10 @@
                 </a>
             <?php endif; ?>
 
+            <a href="<?= base_url('admin/vendor-items') ?>" class="btn btn-primary text-white shadow-sm me-1">
+                <i class="fas fa-box-open"></i> สินค้า/บริการ
+            </a>
+
             <a href="<?= base_url('admin/stadiums/edit/' . $stadium['id']) ?>" class="btn btn-warning text-dark shadow-sm">
                 <i class="fas fa-pen"></i> แก้ไข
             </a>
@@ -65,48 +69,116 @@
                 </div>
             </div>
 
-            <?php 
-                $hasFacilities = false;
-                if (!empty($facilities)) {
-                    foreach ($facilities as $type => $items) {
-                        $validItems = array_filter($items, function($v) { return !empty($v); });
-                        if (!empty($validItems)) {
-                            $hasFacilities = true;
-                            break;
-                        }
-                    }
-                }
-            ?>
             <div class="card shadow mb-4 border-0">
                 <div class="card-header py-3 bg-white">
-                    <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-concierge-bell me-2"></i>สิ่งอำนวยความสะดวก</h6>
+                    <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-concierge-bell me-2"></i>สิ่งอำนวยความสะดวก & บริการ</h6>
                 </div>
                 <div class="card-body">
-                    <?php if ($hasFacilities): ?>
-                        <div class="row">
-                            <?php foreach ($facilities as $type => $items): ?>
-                                <?php 
-                                    $validItems = array_filter($items, function($v) { return !empty($v); });
-                                    if (empty($validItems)) continue;
-                                ?>
-                                <div class="col-12 mb-3">
-                                    <h6 class="fw-bold text-dark border-bottom pb-2 mb-2">
-                                        <i class="fas fa-folder me-1 text-warning"></i> <?= esc($type) ?>
-                                    </h6>
-                                    <div class="d-flex flex-wrap gap-2">
-                                        <?php foreach ($validItems as $item): ?>
-                                            <span class="badge bg-light text-dark border px-3 py-2 shadow-sm">
-                                                <i class="fas fa-check text-success me-1"></i> <?= esc($item) ?>
-                                            </span>
-                                        <?php endforeach; ?>
-                                    </div>
-                                </div>
+                    <?php 
+                        $allServices = [];
+
+                        // 2.1 ดึงประเภทจากสิ่งอำนวยความสะดวกที่ติ๊กเลือก (Facilities)
+                        if (!empty($facilities)) {
+                            foreach ($facilities as $type => $items) {
+                                // เช็คว่าในหมวดนั้นมีรายการจริงๆ ไหม
+                                if (!empty(array_filter($items))) {
+                                     if (!in_array($type, $allServices)) {
+                                         $allServices[] = $type; 
+                                     }
+                                }
+                            }
+                        }
+
+                        // 2.2 ดึงประเภทจากสินค้าที่มีขาย (Vendor Items)
+                        if (!empty($vendor_items)) {
+                            // ดึงชื่อ type_name ของสินค้าแต่ละชิ้น
+                            $itemTypes = array_column($vendor_items, 'type_name');
+                            $uniqueTypes = array_unique($itemTypes);
+                            
+                            foreach ($uniqueTypes as $type) {
+                                if (!empty($type) && !in_array($type, $allServices)) {
+                                    $allServices[] = $type;
+                                }
+                            }
+                        }
+                    ?>
+
+                    <?php if (!empty($allServices)): ?>
+                        <div class="d-flex flex-wrap gap-2">
+                            <?php foreach ($allServices as $service): ?>
+                                <span class="badge bg-info text-white border px-3 py-2 shadow-sm rounded-pill" style="font-size: 0.9rem;">
+                                    <i class="fas fa-check-circle me-1"></i> <?= esc($service) ?>
+                                </span>
                             <?php endforeach; ?>
+                        </div>
+                        <div class="mt-2 text-muted small">
+                            * รายการข้างต้นรวมสิ่งอำนวยความสะดวกพื้นฐานและประเภทบริการเสริมที่มีจำหน่าย
                         </div>
                     <?php else: ?>
                         <div class="text-center py-4 text-muted">
                             <i class="fas fa-box-open fa-2x mb-2 text-gray-300"></i><br>
-                            ยังไม่มีข้อมูล
+                            ยังไม่มีข้อมูลสิ่งอำนวยความสะดวก
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+
+            <div class="card shadow mb-4 border-0">
+                <div class="card-header py-3 bg-white">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-box-open me-2"></i>รายละเอียดสินค้า/บริการเสริม
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <?php if (!empty($vendor_items)) : ?>
+                        <div class="row g-3">
+                            <?php foreach ($vendor_items as $item) : ?>
+                                <div class="col-md-6">
+                                    <div class="d-flex align-items-center border rounded p-2 h-100 bg-light">
+                                        <div class="flex-shrink-0">
+                                            <?php if($item['image']): ?>
+                                                <img src="<?= base_url('assets/uploads/items/'.$item['image']) ?>" 
+                                                     class="rounded bg-white border" 
+                                                     style="width: 60px; height: 60px; object-fit: cover;">
+                                            <?php else: ?>
+                                                <div class="bg-white rounded border d-flex align-items-center justify-content-center text-muted" 
+                                                     style="width: 60px; height: 60px;">
+                                                    <i class="fas fa-image"></i>
+                                                </div>
+                                            <?php endif; ?>
+                                        </div>
+                                        
+                                        <div class="flex-grow-1 ms-3">
+                                            <div class="fw-bold text-dark text-truncate" style="max-width: 200px;">
+                                                <?= esc($item['name']) ?>
+                                            </div>
+                                            <div class="badge bg-secondary text-white small" style="font-size: 0.7rem;">
+                                                <?= esc($item['type_name'] ?? 'ทั่วไป') ?>
+                                            </div>
+                                            <div class="text-success fw-bold small mt-1">
+                                                ฿<?= number_format($item['price'], 2) ?> / <?= esc($item['unit']) ?>
+                                            </div>
+                                        </div>
+
+                                        <div class="ms-2">
+                                            <?php if($item['status'] == 'active'): ?>
+                                                <span class="badge bg-success rounded-pill" title="พร้อมขาย"><i class="fas fa-check"></i></span>
+                                            <?php else: ?>
+                                                <span class="badge bg-secondary rounded-pill" title="ไม่พร้อม">Inactive</span>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php else : ?>
+                        <div class="text-center py-4 text-muted">
+                            <i class="fas fa-shopping-basket fa-2x mb-3 text-gray-300"></i><br>
+                            <p class="mb-3">ไม่มีสินค้า/บริการเสริมสำหรับ Vendor รายนี้</p>
+                            
+                            <a href="<?= base_url('admin/vendor-items') ?>" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-plus-circle"></i> ไปหน้าจัดการสินค้า
+                            </a>
                         </div>
                     <?php endif; ?>
                 </div>
@@ -178,7 +250,8 @@
                     <?php endif; ?>
                 </div>
             </div>
-            <?php endif; ?> </div>
+            <?php endif; ?> 
+        </div>
 
         <div class="col-xl-4 col-lg-5">
             <div class="card shadow mb-4 border-0">
@@ -186,7 +259,6 @@
                     <h6 class="m-0 font-weight-bold text-primary">ข้อมูลทั่วไป</h6>
                 </div>
                 <div class="card-body">
-                    
                     <div class="mb-4">
                         <h4 class="font-weight-bold text-dark mb-1"><?= esc($stadium['name']) ?></h4>
                         <span class="badge bg-primary me-1"><?= esc($stadium['category_name']) ?></span>
@@ -233,7 +305,6 @@
                             </div>
                         </div>
                     </div>
-
                 </div>
             </div>
 

@@ -133,7 +133,12 @@
                     <div><i class="fas fa-map-location-dot"></i> จัดการสนามกีฬา</div>
                 </a>
             </li>
-            
+
+            <li class="nav-item">
+                <a href="<?= base_url('admin/vendor-items') ?>" class="nav-link <?= (strpos($currentUrl, 'vendor-items') !== false) ? 'active-menu' : '' ?>">
+                    <div><i class="fas fa-box-open"></i> จัดการสินค้า/บริการเสริม</div>
+                </a>
+            </li>
             <li class="nav-item">
                 <a href="<?= base_url('admin/bookings') ?>" class="nav-link <?= (strpos($currentUrl, 'bookings') !== false) ? 'active-menu' : '' ?>">
                     <div><i class="fas fa-calendar-check"></i> จัดการการจอง</div>
