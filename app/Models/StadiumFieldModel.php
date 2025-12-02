@@ -1,18 +1,25 @@
-<?php
-
-namespace App\Models;
+<?php namespace App\Models;
 
 use CodeIgniter\Model;
 
 class StadiumFieldModel extends Model
 {
-    protected $table            = 'stadium_fields'; // ชื่อตารางใน DB
+    protected $table            = 'stadium_fields';
     protected $primaryKey       = 'id';
     protected $useAutoIncrement = true;
     protected $returnType       = 'array';
-    
-    // ฟิลด์ที่อนุญาตให้บันทึกได้
-    protected $allowedFields    = ['stadium_id', 'name', 'description', 'status',];
+    protected $useSoftDeletes   = false;
+
+    protected $allowedFields    = [
+        'stadium_id', 
+        'name', 
+        'description', 
+        'price', 
+        'price_daily', 
+        'status', 
+        'outside_images', // [ใหม่]
+        'inside_images'   // [ใหม่]
+    ];
 
     protected $useTimestamps = true;
     protected $createdField  = 'created_at';

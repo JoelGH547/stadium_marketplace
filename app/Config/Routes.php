@@ -38,9 +38,9 @@ $routes->group('sport', ['filter' => 'customer'], static function ($routes) {
 // ==========================================================
 // --- 2. ADMIN DASHBOARD AND LOGIN ---
 // ==========================================================
-$routes->get('admin/login', 'admin\AdminAuthController::login');
-$routes->post('admin/login', 'admin\AdminAuthController::processLogin');
-$routes->get('admin/logout', 'admin\AdminAuthController::logout');
+$routes->get('admin/login', 'Admin\AdminAuthController::login');
+$routes->post('admin/login', 'Admin\AdminAuthController::processLogin');
+$routes->get('admin/logout', 'Admin\AdminAuthController::logout');
 
 $routes->group('admin', ['filter' => ['admin']], static function ($routes) {
 
