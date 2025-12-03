@@ -3,35 +3,38 @@
 namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
-use App\Models\VendorItemModel;
+use App\Models\VendorProductModel; // ✅ เรียกใช้ Model คลังสินค้าตัวใหม่
 use App\Models\VendorModel;
 use App\Models\FacilityTypeModel;
 
 class VendorItemController extends BaseController
 {
-    protected $itemModel;
+    protected $productModel;
     protected $vendorModel;
     protected $typeModel;
 
     public function __construct()
     {
-        $this->itemModel   = new VendorItemModel();
-        $this->vendorModel = new VendorModel();
-        $this->typeModel   = new FacilityTypeModel();
+        // ✅ เปลี่ยนมาใช้ VendorProductModel
+        $this->productModel = new VendorProductModel(); 
+        $this->vendorModel  = new VendorModel();
+        $this->typeModel    = new FacilityTypeModel();
         helper(['form']);
     }
 
-    // แสดงรายการสินค้าทั้งหมด
+    // แสดงรายการสินค้าทั้งหมด (คลังสินค้า)
     public function index()
     {
-        // ใช้ฟังก์ชัน getItemsWithDetails() ที่เราเขียนไว้ใน Model
-        // หรือจะเขียน Join สดตรงนี้ก็ได้ แต่ใช้ Model สะอาดกว่า
-        $items = $this->itemModel->getItemsWithDetails();
+        // ดึงข้อมูลสินค้า + ชื่อร้าน + ชื่อหมวดหมู่
+        $items = $this->productModel->select('vendor_products.*, vendors.vendor_name, facility_types.name as type_name')
+                                    ->join('vendors', 'vendors.id = vendor_products.vendor_id')
+                                    ->join('facility_types', 'facility_types.id = vendor_products.facility_type_id', 'left')
+                                    ->orderBy('vendors.vendor_name', 'ASC')
+                                    ->findAll();
 
         $data = [
-            'title'   => 'จัดการสินค้า/บริการเสริม',
+            'title'   => 'จัดการคลังสินค้ากลาง (Master Catalog)',
             'items'   => $items,
-            // ส่งข้อมูลไปทำ Dropdown ใน Modal
             'vendors' => $this->vendorModel->orderBy('vendor_name', 'ASC')->findAll(),
             'types'   => $this->typeModel->orderBy('id', 'ASC')->findAll()
         ];
@@ -48,33 +51,31 @@ class VendorItemController extends BaseController
         
         if ($file && $file->isValid() && !$file->hasMoved()) {
             $imgName = $file->getRandomName();
-            // ตรวจสอบว่าโฟลเดอร์มีอยู่จริงไหม ถ้าไม่มีให้สร้าง
             $uploadPath = FCPATH . 'assets/uploads/items/';
             if (!is_dir($uploadPath)) { mkdir($uploadPath, 0777, true); }
-            
             $file->move($uploadPath, $imgName);
         }
 
         // 2. บันทึกข้อมูล
-        $this->itemModel->save([
+        $this->productModel->save([
             'vendor_id'        => $this->request->getPost('vendor_id'),
             'facility_type_id' => $this->request->getPost('facility_type_id'),
             'name'             => $this->request->getPost('name'),
             'description'      => $this->request->getPost('description'),
-            'price'            => $this->request->getPost('price'),
+            'base_price'       => $this->request->getPost('price'), // ✅ แมพ input 'price' เข้า 'base_price'
             'unit'             => $this->request->getPost('unit'),
             'status'           => $this->request->getPost('status'),
             'image'            => $imgName
         ]);
 
-        return redirect()->to('admin/vendor-items')->with('success', 'เพิ่มสินค้าเรียบร้อย');
+        return redirect()->to('admin/vendor-items')->with('success', 'เพิ่มสินค้าลงคลังเรียบร้อย');
     }
 
     // อัปเดตสินค้า
     public function update()
     {
         $id = $this->request->getPost('id');
-        $oldItem = $this->itemModel->find($id);
+        $oldItem = $this->productModel->find($id);
 
         if (!$oldItem) {
             return redirect()->back()->with('error', 'ไม่พบข้อมูลสินค้า');
@@ -92,19 +93,16 @@ class VendorItemController extends BaseController
             
             // อัปใหม่
             $imgName = $file->getRandomName();
-            $uploadPath = FCPATH . 'assets/uploads/items/';
-            if (!is_dir($uploadPath)) { mkdir($uploadPath, 0777, true); }
-            
-            $file->move($uploadPath, $imgName);
+            $file->move(FCPATH . 'assets/uploads/items/', $imgName);
         }
 
         // 2. อัปเดตข้อมูล
-        $this->itemModel->update($id, [
+        $this->productModel->update($id, [
             'vendor_id'        => $this->request->getPost('vendor_id'),
             'facility_type_id' => $this->request->getPost('facility_type_id'),
             'name'             => $this->request->getPost('name'),
             'description'      => $this->request->getPost('description'),
-            'price'            => $this->request->getPost('price'),
+            'base_price'       => $this->request->getPost('price'), // ✅ แมพ 'price' -> 'base_price'
             'unit'             => $this->request->getPost('unit'),
             'status'           => $this->request->getPost('status'),
             'image'            => $imgName
@@ -116,15 +114,17 @@ class VendorItemController extends BaseController
     // ลบสินค้า
     public function delete($id)
     {
-        $item = $this->itemModel->find($id);
+        $item = $this->productModel->find($id);
         
         if ($item) {
-            // ลบรูปภาพออกจาก Server
+            // ลบรูปภาพ
             if ($item['image'] && file_exists(FCPATH . 'assets/uploads/items/' . $item['image'])) {
                 @unlink(FCPATH . 'assets/uploads/items/' . $item['image']);
             }
             
-            $this->itemModel->delete($id);
+            $this->productModel->delete($id);
+            // หมายเหตุ: field_items ที่ผูกอยู่จะหายไปด้วยเพราะเราตั้ง CASCADE ใน Database แล้ว
+            
             return redirect()->to('admin/vendor-items')->with('success', 'ลบสินค้าเรียบร้อย');
         }
 

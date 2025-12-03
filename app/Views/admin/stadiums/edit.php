@@ -40,10 +40,10 @@
         <label class="fw-bold">Booking Type</label>
         <select name="booking_type" class="form-control" required>
             <option value="complex" <?= ($stadium['booking_type'] == 'complex') ? 'selected' : '' ?>>
-                🏢 มีสนามย่อย (Complex)
+                🏢 มีสนามย่อย 
             </option>
             <option value="single" <?= ($stadium['booking_type'] == 'single') ? 'selected' : '' ?>>
-                🏟️ จองเหมาสนาม (Single)
+                🏟️ ไม่มีสนามย่อย
             </option>
         </select>
     </div>

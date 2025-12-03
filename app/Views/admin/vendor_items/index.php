@@ -36,7 +36,7 @@
                             <th width="10%">รูปภาพ</th>
                             <th width="20%">ชื่อสินค้า</th>
                             <th width="15%">หมวดหมู่</th>
-                            <th width="15%">ราคา</th>
+                            <th width="15%">ราคามาตรฐาน</th> <!-- เปลี่ยนชื่อหัวข้อให้สื่อความหมาย -->
                             <th width="15%">เจ้าของร้าน (Vendor)</th>
                             <th width="10%">สถานะ</th>
                             <th class="text-end pe-4" width="10%">จัดการ</th>
@@ -75,7 +75,8 @@
                                 </td>
 
                                 <td>
-                                    <span class="text-success fw-bold">฿<?= number_format($item['price']) ?></span>
+                                    <!-- ⭐ แก้จุดที่ 1: เปลี่ยน price เป็น base_price -->
+                                    <span class="text-success fw-bold">฿<?= number_format($item['base_price']) ?></span>
                                     <span class="text-muted small">/ <?= esc($item['unit']) ?></span>
                                 </td>
 
@@ -104,7 +105,10 @@
                                             data-name="<?= esc($item['name']) ?>"
                                             data-vendor="<?= $item['vendor_id'] ?>"
                                             data-type="<?= $item['facility_type_id'] ?>"
-                                            data-price="<?= $item['price'] ?>"
+                                            
+                                            /* ⭐ แก้จุดที่ 2: เปลี่ยน price เป็น base_price */
+                                            data-price="<?= $item['base_price'] ?>"
+                                            
                                             data-unit="<?= $item['unit'] ?>"
                                             data-desc="<?= esc($item['description']) ?>"
                                             data-status="<?= $item['status'] ?>">
@@ -171,6 +175,7 @@
 
                     <div class="row mb-3">
                         <div class="col-md-6">
+                            <!-- หมายเหตุ: ชื่อ input ยังคงเป็น price ได้ เพราะ Controller รับค่า price ไปใส่ base_price -->
                             <label class="fw-bold">ราคาขาย (บาท) <span class="text-danger">*</span></label>
                             <input type="number" name="price" class="form-control" required min="0">
                         </div>
@@ -294,7 +299,10 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('edit_name').value = btn.dataset.name;
         document.getElementById('edit_vendor').value = btn.dataset.vendor;
         document.getElementById('edit_type').value = btn.dataset.type || ''; 
+        
+        // ตรงนี้ input id คือ edit_price ไม่ต้องแก้ เพราะเราส่ง dataset.price (ซึ่งเก็บค่า base_price) มาให้แล้ว
         document.getElementById('edit_price').value = btn.dataset.price;
+        
         document.getElementById('edit_unit').value = btn.dataset.unit;
         document.getElementById('edit_desc').value = btn.dataset.desc;
         document.getElementById('edit_status').value = btn.dataset.status;

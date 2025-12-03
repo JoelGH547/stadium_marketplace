@@ -124,7 +124,7 @@
                                             <a href="<?= base_url('admin/stadiums/fields/' . $stadium['id']) ?>" 
                                                class="btn btn-success btn-sm text-white shadow-sm" 
                                                title="ตั้งค่าราคาและข้อมูล">
-                                                <i class="fas fa-tag"></i> ตั้งค่าราคา
+                                                <i class="fas fa-tag"></i> ตั้งค่าสนาม
                                             </a>
                                         <?php endif; ?>
 

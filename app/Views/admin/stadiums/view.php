@@ -13,11 +13,11 @@
         <div>
             <?php if(($stadium['booking_type'] ?? 'complex') == 'complex'): ?>
                 <a href="<?= base_url('admin/stadiums/fields/' . $stadium['id']) ?>" class="btn btn-info text-white shadow-sm me-1">
-                    <i class="fas fa-list-ul"></i> จัดการสนามย่อย
+                    <i class="fas fa-list-ul"></i> จัดการราคา/สถานะ
                 </a>
             <?php else: ?>
                 <a href="<?= base_url('admin/stadiums/fields/' . $stadium['id']) ?>" class="btn btn-success text-white shadow-sm me-1">
-                    <i class="fas fa-tag"></i> ตั้งค่าราคา
+                    <i class="fas fa-tag"></i> ตั้งค่าสนาม
                 </a>
             <?php endif; ?>
 
