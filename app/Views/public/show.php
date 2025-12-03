@@ -420,15 +420,54 @@ foreach ($fieldsRaw as $f) {
                         <div class="relative col-span-1 group">
                             <img src="<?= esc($galleryImages[0] ?? $coverUrl) ?>" alt="Main stadium image"
                                 class="h-full w-full object-cover rounded-lg cursor-pointer" data-gallery-item="0">
-                            <button type="button" class="absolute bottom-4 right-4 inline-flex items-center gap-2 rounded-lg bg-black/60 px-3 py-2 text-xs font-semibold text-white backdrop-blur-sm hover:bg-black/80 transition
-                                                   opacity-0 group-hover:opacity-100 view-all-photos">
+                            <button type="button" data-gallery-open
+                                class="inline-flex items-center gap-2 rounded-lg bg-black/60 px-3 py-1.5 text-xs sm:text-sm font-semibold text-white backdrop-blur-sm hover:bg-black/80 transition">
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
                                     class="w-5 h-5">
                                     <path
-                                        d="M3.75 3.75A.75.75 0 003 4.5v11a.75.75 0 00.75.75h13.5a.75.75 0 00.75-.75v-11a.75.75 0 00-.75-.75h-13.5zM13.5 4.5v3h3V4.5h-3zM4.5 4.5h3v3h-3V4.5zM4.5 8.25h3v3h-3v-3zm9 0v3h-3v-3h3zm-4.5 0h3v3h-3v-3zm-4.5 3.75h3v3h-3v-3zm4.5 0h3v3h-3v-3zm4.5 0h3v3h-3v-3z" />
+                                        d="M3.75 3.75A.75.75 0 0 1 4.5 3h11a.75.75 0 0 1 .75.75v11a.75.75 0 0 1-.75.75h-11A.75.75 0 0 1 3.75 14.75v-11zM5 5v8h10V5H5z" />
                                 </svg>
                                 <span>ดูรูปทั้งหมด</span>
                             </button>
+                            <?php
+                            // ใช้รูปจาก controller: $stadiumImages = [url1, url2, ...]
+                            $stadiumImages = $stadiumImages ?? [];
+                            ?>
+                            <div id="stadiumGalleryOverlay"
+                                class="fixed inset-0 z-40 hidden bg-black/70 backdrop-blur-sm flex items-center justify-center px-4">
+                                <div class="relative max-w-5xl w-full bg-white rounded-2xl shadow-xl overflow-hidden">
+                                    <!-- Header -->
+                                    <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200">
+                                        <h3 class="text-base sm:text-lg font-semibold text-gray-900">
+                                            รูปภาพทั้งหมดของสนาม
+                                        </h3>
+                                        <button type="button" data-gallery-close
+                                            class="inline-flex h-8 w-8 items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 hover:text-gray-800">
+                                            <span class="sr-only">ปิด</span>
+                                            ✕
+                                        </button>
+                                    </div>
+
+                                    <!-- Body: รูปทั้งหมด -->
+                                    <div class="p-4 max-h-[70vh] overflow-y-auto">
+                                        <?php if (!empty($stadiumImages)): ?>
+                                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                                <?php foreach ($stadiumImages as $img): ?>
+                                                    <div class="w-full h-36 sm:h-40">
+                                                        <img src="<?= esc($img) ?>" alt="รูปสนาม"
+                                                            class="h-full w-full object-cover rounded-xl">
+                                                    </div>
+                                                <?php endforeach; ?>
+                                            </div>
+                                        <?php else: ?>
+                                            <p class="text-center text-sm text-gray-500">
+                                                ยังไม่มีรูปภาพสนามให้แสดง
+                                            </p>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                            </div>
+
                         </div>
                         <!-- Thumbnail Grid -->
                         <div class="col-span-1 grid grid-cols-3 grid-rows-2 gap-2">

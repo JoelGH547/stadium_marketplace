@@ -1,4 +1,6 @@
-<?php namespace App\Models;
+<?php
+
+namespace App\Models;
 
 use CodeIgniter\Model;
 
@@ -11,12 +13,13 @@ class StadiumFieldModel extends Model
     protected $useSoftDeletes   = false;
 
     protected $allowedFields    = [
-        'stadium_id', 
-        'name', 
-        'description', 
-        'price', 
-        'price_daily', 
-        'status', 
+        'stadium_id',
+        'name',
+        'short_description',
+        'description',
+        'price',
+        'price_daily',
+        'status',
         'outside_images', // [ใหม่]
         'inside_images'   // [ใหม่]
     ];

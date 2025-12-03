@@ -7,6 +7,9 @@
 
     <!-- Tailwind -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
 
     <!-- CSS Custom -->
     <style>
@@ -411,6 +414,7 @@
     <script src="<?= base_url('assets/show.js') ?>"></script>
     <script src="<?= base_url('assets/field.js') ?>"></script>
     <script src="<?= base_url('assets/booking.js') ?>"></script>
+
 </body>
 
 </html>

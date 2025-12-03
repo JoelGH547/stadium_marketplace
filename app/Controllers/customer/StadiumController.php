@@ -147,7 +147,135 @@ class StadiumController extends BaseController
 
     public function fields($id = null)
     {
-        // ขั้นนี้เรายังไม่ยุ่ง DB ใช้ field.php ที่มีข้อมูลจำลองในตัว view ไปก่อน
-        return view('public/field');
+        if ($id === null) {
+            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('ไม่พบสนามที่ต้องการ');
+        }
+
+        $stadiumModel = new StadiumModel();
+        $fieldModel   = new StadiumFieldModel();
+
+        // ดึงข้อมูลสนามหลัก + category (ใช้ฟังก์ชันที่มีอยู่แล้ว)
+        $row = $stadiumModel->getStadiumsWithCategory($id);
+
+        if (!$row) {
+            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('ไม่พบสนามที่ต้องการ');
+        }
+
+        // เตรียมข้อมูลหัวการ์ดสนามหลักให้ตรงกับที่ field.php ใช้
+        helper('url'); // ให้ใช้ base_url ได้ชัวร์
+
+        // emoji + ชื่อประเภทกีฬา
+        $sportEmoji = $row['category_emoji'] ?? '🏟️';
+        $sportName  = $row['category_name']  ?? 'สนามกีฬา';
+
+        // location ง่าย ๆ จาก address + province
+        $locationParts = [];
+        if (!empty($row['address'])) {
+            $locationParts[] = trim($row['address']);
+        }
+        if (!empty($row['province'])) {
+            $locationParts[] = trim($row['province']);
+        }
+        $location = !empty($locationParts) ? implode(', ', $locationParts) : 'ประเทศไทย';
+
+        // ✅ รวมรูป outside + inside จากตาราง stadiums
+        $imageBasePath = 'assets/uploads/stadiums/';
+
+        $outsideFiles = [];
+        if (!empty($row['outside_images'])) {
+            $decoded = json_decode($row['outside_images'], true);
+            if (is_array($decoded)) {
+                $outsideFiles = array_filter($decoded, fn($v) => is_string($v) && $v !== '');
+            }
+        }
+
+        $insideFiles = [];
+        if (!empty($row['inside_images'])) {
+            $decoded = json_decode($row['inside_images'], true);
+            if (is_array($decoded)) {
+                $insideFiles = array_filter($decoded, fn($v) => is_string($v) && $v !== '');
+            }
+        }
+
+        $stadiumImages = [];
+        foreach (array_merge($outsideFiles, $insideFiles) as $file) {
+            $stadiumImages[] = base_url($imageBasePath . $file);
+        }
+
+        // ใช้ภาพแรกเป็น hero ถ้ามี ไม่มีก็ใช้ default เดิม
+        $heroImageUrl = $stadiumImages[0] ?? base_url('assets/uploads/home/batminton.webp');
+
+
+        $stadium = [
+            'name'        => $row['name'],
+            'sport_emoji' => $sportEmoji,
+            'sport_name'  => $sportName,
+            'location'    => $location,
+            'hero_image'  => $heroImageUrl,
+            'lat'         => $row['lat'] ?? null,
+            'lng'         => $row['lng'] ?? null,
+        ];
+
+        // label เวลาเปิดแต่ละสนามย่อย (ใช้เวลาเปิด/ปิดจาก stadium หลัก)
+        $open  = $row['open_time']  ?? null;
+        $close = $row['close_time'] ?? null;
+
+        if ($open && strlen($open) >= 5) {
+            $open = substr($open, 0, 5);
+        }
+        if ($close && strlen($close) >= 5) {
+            $close = substr($close, 0, 5);
+        }
+
+        $openLabel = ($open && $close)
+            ? ($open . ' - ' . $close . ' น.')
+            : 'ยังไม่ระบุเวลาเปิด-ปิด';
+
+        $stadium['open_label'] = $openLabel;
+
+
+        // ดึงรายการสนามย่อยจาก stadium_fields
+        $fieldRows = $fieldModel
+            ->where('stadium_id', $id)
+            ->where('status', 'active')
+            ->orderBy('id', 'ASC')
+            ->findAll();
+
+        $fields = [];
+
+        foreach ($fieldRows as $f) {
+            // รูปของสนามย่อย (fallback เป็น hero ของสนามหลัก)
+            $thumb = null;
+            if (!empty($f['outside_images'])) {
+                $decoded = json_decode($f['outside_images'], true);
+                if (is_array($decoded) && !empty($decoded)) {
+                    $thumb = reset($decoded);
+                }
+            }
+
+            $imageUrl = $thumb
+                ? base_url('assets/uploads/stadiums/' . $thumb)
+                : $heroImageUrl;
+
+            $priceHour  = $f['price'] ?? null;
+            $priceDaily = $f['price_daily'] ?? null;
+
+            $fields[] = [
+                'id'         => $f['id'],
+                'name'       => $f['name'],
+                'price_hour'   => ($priceHour  !== null ? (float) $priceHour  : null),
+                'price_daily'  => ($priceDaily !== null ? (float) $priceDaily : null),
+                'image'      => $imageUrl,
+                'short_desc' => $f['short_description'] ?? '',
+            ];
+        }
+
+        // ส่งตัวแปรให้ field.php (dummy ใน view จะไม่ถูกใช้เพราะเราส่งค่ามาแล้ว)
+        return view('public/field', [
+            'stadium'   => $stadium,
+            'stadiumId' => (int) $id,
+            'fields'    => $fields,
+            'stadiumImages'  => $stadiumImages,
+        ]);
     }
 }
