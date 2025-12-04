@@ -30,7 +30,7 @@ class FieldItemModel extends Model
             p.name, 
             p.image, 
             p.unit, 
-            p.base_price,
+            p.price,
             types.name as type_name
         ');
         

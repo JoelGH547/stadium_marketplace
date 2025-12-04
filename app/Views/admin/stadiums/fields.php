@@ -2,32 +2,35 @@
 <?= $this->section('content') ?>
 
 <?php
-// -----------------------------------------------------------
-// ⚙️ เตรียมข้อมูลสำหรับ JavaScript (JSON Data)
-// -----------------------------------------------------------
+// เตรียมข้อมูล JSON
 $fieldFacilities = [];
 $fieldImages = [];
-$fieldItems = []; // ✅ เพิ่มตัวแปรสำหรับเก็บรายการสินค้าที่ขายในแต่ละสนาม
+$fieldItems = []; 
 $db = \Config\Database::connect();
 
 if (!empty($fields)) {
     foreach ($fields as $field) {
-        // 1. ดึง Facility
-        $rawFac = $db->table('stadium_facilities')->where('field_id', $field['id'])->get()->getResultArray();
+        // 1. Facility (เก็บไว้แสดงผลตอนดู แต่ตอนแก้จะไม่ให้แก้แล้ว)
+        $rawFac = $db->table('stadium_facilities')
+                     ->where('field_id', $field['id'])
+                     ->get()
+                     ->getResultArray();
         $formattedFac = [];
-        foreach($rawFac as $r) $formattedFac[$r['type_id']][] = $r['name'];
+        foreach($rawFac as $r) {
+            $facName = $r['name'] ?? null;
+            if($facName) $formattedFac[$r['type_id']][] = $facName;
+        }
         $fieldFacilities[$field['id']] = json_encode($formattedFac);
 
-        // 2. ดึงรูปภาพ
+        // 2. Images
         $outImgs = json_decode($field['outside_images'] ?? '[]', true);
         $inImgs = json_decode($field['inside_images'] ?? '[]', true);
         $fieldImages[$field['id']] = json_encode(['out' => $outImgs, 'in' => $inImgs]);
 
-        // 3. ✅ ดึงสินค้าที่ขายในสนามนี้ (Field Items)
+        // 3. Items
         $rawItems = $db->table('field_items')->where('field_id', $field['id'])->get()->getResultArray();
         $formattedItems = [];
         foreach($rawItems as $item) {
-            // เก็บเป็น Key: product_id => Value: { price: ... } เพื่อให้ JS เช็คง่ายๆ
             $formattedItems[$item['product_id']] = [
                 'price' => $item['custom_price']
             ];
@@ -36,25 +39,14 @@ if (!empty($fields)) {
     }
 }
 
-// เช็คประเภทสนามเพื่อเปลี่ยนคำพูด
-$isComplex = ($stadium['booking_type'] ?? 'complex') == 'complex';
-if ($isComplex) {
-    $titleText = 'จัดการสนามย่อย (Sub-Fields)';
-    $btnText   = 'เพิ่มสนามย่อยใหม่';
-    $colName   = 'ชื่อสนาม';
-    $emptyText = 'ยังไม่มีข้อมูลสนามย่อย';
-    $namePlaceholder = 'เช่น สนาม A, สนาม B';
-} else {
-    $titleText = 'กำหนดราคาและรายละเอียด (Pricing & Info)';
-    $btnText   = 'เพิ่มข้อมูลราคา';
-    $colName   = 'ชื่อรายการ/แพ็กเกจ';
-    $emptyText = 'ยังไม่ได้กำหนดราคาสำหรับสนามนี้ กรุณากดปุ่มเพิ่มข้อมูล';
-    $namePlaceholder = 'เช่น ค่าเช่าเหมาวัน';
-}
+$titleText = 'จัดการสนามย่อย (Sub-Fields)';
+$btnText   = 'เพิ่มสนามย่อยใหม่';
+$colName   = 'ชื่อสนาม';
+$emptyText = 'ยังไม่มีข้อมูลสนามย่อย';
+$namePlaceholder = 'เช่น สนาม A, สนาม B';
 ?>
 
 <div class="container-fluid p-0">
-
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <a href="<?= base_url('admin/stadiums/view/' . $stadium['id']) ?>" class="text-muted text-decoration-none small">
@@ -125,7 +117,7 @@ if ($isComplex) {
                                     <?php endif; ?>
                                 </td>
                                 <td class="text-end pe-4">
-                                    <button class="btn btn-warning btn-sm btn-edit shadow-sm text-dark"
+                                    <button class="btn btn-warning btn-sm btn-edit shadow-sm text-dark me-1"
                                             data-bs-toggle="modal" data-bs-target="#editFieldModal"
                                             data-id="<?= $field['id'] ?>"
                                             data-name="<?= esc($field['name']) ?>"
@@ -133,14 +125,12 @@ if ($isComplex) {
                                             data-pricedaily="<?= esc($field['price_daily']) ?>"
                                             data-desc="<?= esc($field['description']) ?>"
                                             data-status="<?= esc($field['status']) ?>"
-                                            data-facilities='<?= $fieldFacilities[$field['id']] ?? '{}' ?>'
-                                            data-items='<?= $fieldItems[$field['id']] ?? '{}' ?>' <!-- ✅ ส่งข้อมูลสินค้าไป JS -->
-                                    >
+                                            data-items='<?= $fieldItems[$field['id']] ?? '{}' ?>'>
                                         <i class="fas fa-pen"></i>
                                     </button>
                                     <a href="<?= base_url('admin/stadiums/fields/delete/' . $field['id']) ?>" 
                                        class="btn btn-outline-danger btn-sm shadow-sm btn-delete"
-                                       onclick="return confirm('ยืนยันลบ? ข้อมูลการขายสินค้าในสนามนี้จะหายไปด้วย')">
+                                       onclick="return confirm('ยืนยันลบ?')">
                                         <i class="fas fa-trash-alt"></i>
                                     </a>
                                 </td>
@@ -148,10 +138,7 @@ if ($isComplex) {
                             <?php endforeach; ?>
                         <?php else: ?>
                             <tr>
-                                <td colspan="7" class="text-center py-5 text-muted">
-                                    <div class="mb-2"><i class="fas fa-clipboard-list fa-3x text-gray-300"></i></div>
-                                    <?= $emptyText ?>
-                                </td>
+                                <td colspan="7" class="text-center py-5 text-muted"><?= $emptyText ?></td>
                             </tr>
                         <?php endif; ?>
                     </tbody>
@@ -161,9 +148,6 @@ if ($isComplex) {
     </div>
 </div>
 
-<!-- ========================================================= -->
-<!-- Modal Add -->
-<!-- ========================================================= -->
 <div class="modal fade" id="addFieldModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -175,7 +159,6 @@ if ($isComplex) {
                 <div class="modal-body">
                     <input type="hidden" name="stadium_id" value="<?= $stadium['id'] ?>">
                     
-                    <!-- ส่วนข้อมูลพื้นฐาน (เหมือนเดิม) -->
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <label class="fw-bold"><?= $colName ?> <span class="text-danger">*</span></label>
@@ -186,41 +169,91 @@ if ($isComplex) {
                             <input type="number" name="price" class="form-control" required>
                         </div>
                         <div class="col-md-3">
-                            <label class="fw-bold">ราคา/วัน (ถ้ามี)</label>
+                            <label class="fw-bold">ราคา/วัน</label>
                             <input type="number" name="price_daily" class="form-control">
                         </div>
                     </div>
+
                     <div class="mb-3">
                         <label class="fw-bold">รายละเอียดเพิ่มเติม</label>
                         <textarea name="description" class="form-control" rows="2"></textarea>
                     </div>
+
                     <div class="row mb-3 bg-light p-3 rounded mx-0">
                         <div class="col-md-6 mb-2">
-                            <label class="fw-bold text-primary"><i class="fas fa-image me-1"></i> รูปปก (1 รูป)</label>
+                            <label class="fw-bold text-primary"><i class="fas fa-image me-1"></i> รูปปก</label>
                             <input type="file" name="outside_image" class="form-control" accept="image/*">
                         </div>
                         <div class="col-md-6 mb-2">
-                            <label class="fw-bold text-primary"><i class="fas fa-images me-1"></i> รูปภายใน (หลายรูป)</label>
+                            <label class="fw-bold text-primary"><i class="fas fa-images me-1"></i> รูปภายใน</label>
                             <input type="file" name="inside_images[]" class="form-control" multiple accept="image/*">
                         </div>
                     </div>
 
-                    <!-- ✅ ส่วนเลือกสินค้าจากคลัง (Products) -->
                     <div class="mb-3 border p-3 rounded bg-white shadow-sm">
-                        <label class="fw-bold mb-2 text-success"><i class="fas fa-box-open me-1"></i> เลือกสินค้าที่วางขายในสนามนี้</label>
-                        <?php if(!empty($products)): ?>
-                            <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
-                                <table class="table table-sm table-borderless align-middle mb-0">
-                                    <thead class="text-muted small border-bottom">
-                                        <tr>
-                                            <th width="5%">เลือก</th>
-                                            <th width="10%">รูป</th>
-                                            <th width="35%">สินค้า</th>
-                                            <th width="20%">ราคามาตรฐาน</th>
-                                            <th width="30%">ราคาขายจริง (บาท)</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <label class="fw-bold text-success mb-0"><i class="fas fa-box-open me-1"></i> เลือกสินค้าที่วางขาย</label>
+                            
+                            <button type="button" class="btn btn-sm btn-outline-success" data-bs-toggle="collapse" data-bs-target="#quickCreateAdd">
+                                <i class="fas fa-plus"></i> สร้างสินค้าใหม่
+                            </button>
+                        </div>
+
+                        <div class="collapse mb-3 bg-light p-3 rounded border border-success" id="quickCreateAdd">
+                            <h6 class="fw-bold text-success mb-3">เพิ่มสินค้าใหม่ลงคลัง</h6>
+                            <div class="row g-2">
+                                <div class="col-md-6">
+                                    <label class="small text-muted">ชื่อสินค้า *</label>
+                                    <input type="text" id="qc_name_add" class="form-control form-control-sm">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="small text-muted">หมวดหมู่</label>
+                                    <select id="qc_type_add" class="form-select form-select-sm">
+                                        <?php if(!empty($facilityTypes)): ?>
+                                            <?php foreach($facilityTypes as $t): ?>
+                                                <option value="<?= $t['id'] ?>"><?= $t['name'] ?></option>
+                                            <?php endforeach; ?>
+                                        <?php endif; ?>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="small text-muted">ราคาขาย (บาท) *</label>
+                                    <input type="number" id="qc_price_add" class="form-control form-control-sm">
+                                </div>
+                                
+                                <div class="col-md-3">
+                                    <label class="small text-muted">หน่วยนับ</label>
+                                    <input type="text" id="qc_unit_add" class="form-control form-control-sm" placeholder="เช่น ขวด, ชิ้น">
+                                </div>
+                                <div class="col-md-5">
+                                    <label class="small text-muted">รูปภาพสินค้า</label>
+                                    <input type="file" id="qc_image_add" class="form-control form-control-sm" accept="image/*">
+                                </div>
+                                <div class="col-md-4">
+                                     <label class="small text-muted">รายละเอียด</label>
+                                     <input type="text" id="qc_desc_add" class="form-control form-control-sm" placeholder="คำอธิบายสั้นๆ">
+                                </div>
+                                
+                                <div class="col-12 mt-2 text-end">
+                                    <button type="button" class="btn btn-sm btn-secondary" data-bs-toggle="collapse" data-bs-target="#quickCreateAdd">ปิด</button>
+                                    <button type="button" class="btn btn-sm btn-success px-4 btn-save-qc" data-context="add"><i class="fas fa-save me-1"></i> บันทึกสินค้า</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
+                            <table class="table table-sm table-borderless align-middle mb-0" id="prodTableAdd">
+                                <thead class="text-muted small border-bottom">
+                                    <tr>
+                                        <th width="5%">เลือก</th>
+                                        <th width="10%">รูป</th>
+                                        <th width="35%">สินค้า</th>
+                                        <th width="20%">ราคามาตรฐาน</th>
+                                        <th width="30%">ราคาขายจริง (บาท)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="prodBodyAdd">
+                                    <?php if(!empty($products)): ?>
                                         <?php foreach($products as $p): ?>
                                         <tr>
                                             <td class="text-center">
@@ -238,50 +271,21 @@ if ($isComplex) {
                                                     <div class="bg-light rounded text-center" style="width:30px;height:30px;"><i class="fas fa-image text-muted small"></i></div>
                                                 <?php endif; ?>
                                             </td>
+                                            <td><label class="form-check-label small fw-bold mb-0" for="add_p_<?= $p['id'] ?>"><?= esc($p['name']) ?></label></td>
+                                            <td class="text-muted small">฿<?= number_format($p['price']) ?></td>
                                             <td>
-                                                <label class="form-check-label small fw-bold mb-0" for="add_p_<?= $p['id'] ?>">
-                                                    <?= esc($p['name']) ?>
-                                                </label>
-                                            </td>
-                                            <td class="text-muted small">
-                                                ฿<?= number_format($p['base_price']) ?>
-                                            </td>
-                                            <td>
-                                                <input type="number" step="0.01" 
-                                                       name="items[<?= $p['id'] ?>][price]" 
-                                                       id="add_price_<?= $p['id'] ?>"
-                                                       class="form-control form-control-sm" 
-                                                       placeholder="฿<?= number_format($p['base_price']) ?>" 
-                                                       disabled> <!-- Disabled ไว้ก่อน จนกว่าจะติ๊ก -->
+                                                <input type="number" step="0.01" name="items[<?= $p['id'] ?>][price]" 
+                                                       id="add_price_<?= $p['id'] ?>" class="form-control form-control-sm" 
+                                                       placeholder="฿<?= number_format($p['price']) ?>" disabled>
                                             </td>
                                         </tr>
                                         <?php endforeach; ?>
-                                    </tbody>
-                                </table>
-                            </div>
-                        <?php else: ?>
-                            <div class="text-center py-3 text-muted border rounded bg-light">
-                                <i class="fas fa-exclamation-circle"></i> ยังไม่มีสินค้าในคลัง <br>
-                                <a href="<?= base_url('admin/vendor-items') ?>" class="text-decoration-none small">ไปเพิ่มสินค้าก่อน</a>
-                            </div>
-                        <?php endif; ?>
-                    </div>
-
-                    <!-- ส่วนสิ่งอำนวยความสะดวก (Facilities) -->
-                    <div class="mb-3 border p-3 rounded">
-                        <label class="fw-bold mb-2"><i class="fas fa-check-square me-1"></i> สิ่งอำนวยความสะดวก</label>
-                        <?php foreach($facilityTypes as $type): ?>
-                            <div class="mb-2">
-                                <div class="form-check">
-                                    <input class="form-check-input chk-facility" type="checkbox" 
-                                           id="add_t_<?= $type['id'] ?>" 
-                                           data-target="add_box_<?= $type['id'] ?>"
-                                           data-type-id="<?= $type['id'] ?>">
-                                    <label class="form-check-label" for="add_t_<?= $type['id'] ?>"><?= $type['name'] ?></label>
-                                </div>
-                                <div id="add_box_<?= $type['id'] ?>" class="ms-4 mt-1 d-none fac-input-group"></div>
-                            </div>
-                        <?php endforeach; ?>
+                                    <?php else: ?>
+                                        <tr id="row-no-data-add"><td colspan="5" class="text-center py-3 text-muted">ไม่มีสินค้าในคลัง</td></tr>
+                                    <?php endif; ?>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
 
                     <div class="mb-3">
@@ -301,9 +305,6 @@ if ($isComplex) {
     </div>
 </div>
 
-<!-- ========================================================= -->
-<!-- Modal Edit -->
-<!-- ========================================================= -->
 <div class="modal fade" id="editFieldModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -338,31 +339,31 @@ if ($isComplex) {
                     
                     <div class="row mb-3 bg-light p-3 rounded mx-0">
                         <div class="col-md-6">
-                            <label class="fw-bold small text-muted">เปลี่ยนรูปปก (ถ้าไม่อัป ใช้รูปเดิม)</label>
+                            <label class="fw-bold small text-muted">เปลี่ยนรูปปก</label>
                             <input type="file" name="outside_image" class="form-control form-control-sm" accept="image/*">
                         </div>
                         <div class="col-md-6">
-                            <label class="fw-bold small text-muted">เพิ่มรูปภายใน (รูปเก่าจะไม่หาย)</label>
+                            <label class="fw-bold small text-muted">เพิ่มรูปภายใน</label>
                             <input type="file" name="inside_images[]" class="form-control form-control-sm" multiple accept="image/*">
                         </div>
                     </div>
 
-                    <!-- ✅ ส่วนเลือกสินค้าจากคลัง (Edit Mode) -->
                     <div class="mb-3 border p-3 rounded bg-white shadow-sm">
-                        <label class="fw-bold mb-2 text-success"><i class="fas fa-box-open me-1"></i> สินค้าที่วางขาย (แก้ไข)</label>
-                        <?php if(!empty($products)): ?>
-                            <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
-                                <table class="table table-sm table-borderless align-middle mb-0">
-                                    <thead class="text-muted small border-bottom">
-                                        <tr>
-                                            <th width="5%">เลือก</th>
-                                            <th width="10%">รูป</th>
-                                            <th width="35%">สินค้า</th>
-                                            <th width="20%">ราคามาตรฐาน</th>
-                                            <th width="30%">ราคาขายจริง (บาท)</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
+                        <label class="fw-bold mb-2 text-success"><i class="fas fa-box-open me-1"></i> สินค้าที่วางขาย</label>
+                        
+                        <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
+                            <table class="table table-sm table-borderless align-middle mb-0">
+                                <thead class="text-muted small border-bottom">
+                                    <tr>
+                                        <th width="5%">เลือก</th>
+                                        <th width="10%">รูป</th>
+                                        <th width="35%">สินค้า</th>
+                                        <th width="20%">ราคามาตรฐาน</th>
+                                        <th width="30%">ราคาขายจริง (บาท)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php if(!empty($products)): ?>
                                         <?php foreach($products as $p): ?>
                                         <tr>
                                             <td class="text-center">
@@ -381,49 +382,21 @@ if ($isComplex) {
                                                     <div class="bg-light rounded text-center" style="width:30px;height:30px;"><i class="fas fa-image text-muted small"></i></div>
                                                 <?php endif; ?>
                                             </td>
+                                            <td><label class="form-check-label small fw-bold mb-0" for="edit_p_<?= $p['id'] ?>"><?= esc($p['name']) ?></label></td>
+                                            <td class="text-muted small">฿<?= number_format($p['price']) ?></td>
                                             <td>
-                                                <label class="form-check-label small fw-bold mb-0" for="edit_p_<?= $p['id'] ?>">
-                                                    <?= esc($p['name']) ?>
-                                                </label>
-                                            </td>
-                                            <td class="text-muted small">
-                                                ฿<?= number_format($p['base_price']) ?>
-                                            </td>
-                                            <td>
-                                                <input type="number" step="0.01" 
-                                                       name="items[<?= $p['id'] ?>][price]" 
-                                                       id="edit_price_val_<?= $p['id'] ?>"
-                                                       class="form-control form-control-sm" 
-                                                       placeholder="฿<?= number_format($p['base_price']) ?>" 
-                                                       disabled>
+                                                <input type="number" step="0.01" name="items[<?= $p['id'] ?>][price]" 
+                                                       id="edit_price_val_<?= $p['id'] ?>" class="form-control form-control-sm" 
+                                                       placeholder="฿<?= number_format($p['price']) ?>" disabled>
                                             </td>
                                         </tr>
                                         <?php endforeach; ?>
-                                    </tbody>
-                                </table>
-                            </div>
-                        <?php else: ?>
-                            <div class="text-center py-3 text-muted bg-light rounded">ไม่มีสินค้าในคลัง</div>
-                        <?php endif; ?>
-                    </div>
-
-                    <div class="mb-3 border p-3 rounded">
-                        <label class="fw-bold mb-2">แก้ไขสิ่งอำนวยความสะดวก</label>
-                        <?php foreach($facilityTypes as $type): ?>
-                            <div class="mb-2">
-                                <div class="form-check">
-                                    <input class="form-check-input chk-facility-edit" type="checkbox" 
-                                           id="edit_t_<?= $type['id'] ?>" 
-                                           data-target="edit_box_<?= $type['id'] ?>" 
-                                           data-type-id="<?= $type['id'] ?>">
-                                    <label class="form-check-label" for="edit_t_<?= $type['id'] ?>"><?= $type['name'] ?></label>
-                                </div>
-                                <div id="edit_box_<?= $type['id'] ?>" class="ms-4 mt-1 d-none fac-input-group"></div>
-                                <div id="edit_btn_row_<?= $type['id'] ?>" class="ms-4 d-none">
-                                    <button type="button" class="btn btn-sm btn-link text-decoration-none p-0 btn-add-row" data-type-id="<?= $type['id'] ?>" data-target="edit_box_<?= $type['id'] ?>">+ เพิ่มรายการ</button>
-                                </div>
-                            </div>
-                        <?php endforeach; ?>
+                                    <?php else: ?>
+                                        <tr><td colspan="5" class="text-center py-3 text-muted">ไม่มีสินค้าในคลัง</td></tr>
+                                    <?php endif; ?>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
 
                     <div class="mb-3">
@@ -446,40 +419,121 @@ if ($isComplex) {
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const facilityTypes = <?= json_encode($facilityTypes) ?>;
+    const stadiumId = <?= $stadium['id'] ?>;
 
-    // Helper: Create Input Row
-    function createInputRow(container, typeId, value = '') {
-        const div = document.createElement('div');
-        div.className = 'input-group input-group-sm mb-1 item-row';
-        div.innerHTML = `
-            <input type="text" name="facilities[${typeId}][]" class="form-control" value="${value}" placeholder="ระบุชื่อ...">
-            <button type="button" class="btn btn-outline-danger btn-remove-row"><i class="fas fa-minus"></i></button>
-        `;
-        container.appendChild(div);
-        div.querySelector('.btn-remove-row').addEventListener('click', () => div.remove());
-    }
-
-    // ✅ JS สำหรับ Checkbox สินค้า (ถ้าติ๊ก -> ให้กรอกราคาได้)
     function toggleProductInput(chk) {
         const input = document.getElementById(chk.dataset.target);
         if(input) {
             input.disabled = !chk.checked;
-            if (!chk.checked) input.value = ''; // เคลียร์ค่าเมื่อยกเลิกติ๊ก
+            if (!chk.checked) input.value = ''; 
         }
     }
     
-    // Bind Event ให้ Checkbox สินค้า (Add & Edit)
     document.querySelectorAll('.chk-product, .chk-product-edit').forEach(chk => {
         chk.addEventListener('change', function() { toggleProductInput(this); });
     });
 
-    // =========================================
-    // EDIT MODAL LOGIC
-    // =========================================
+    // ✅ ฟังก์ชัน Quick Create (ปรับปรุง: ใช้ FormData ส่งไฟล์)
+    document.querySelectorAll('.btn-save-qc').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const context = this.dataset.context; // 'add' or 'edit'
+            
+            // รับค่าจาก input
+            const nameInput = document.getElementById('qc_name_' + context);
+            const priceInput = document.getElementById('qc_price_' + context);
+            const typeInput  = document.getElementById('qc_type_' + context);
+            const unitInput  = document.getElementById('qc_unit_' + context);
+            const descInput  = document.getElementById('qc_desc_' + context);
+            const imageInput = document.getElementById('qc_image_' + context);
+
+            if(!nameInput.value || !priceInput.value) { alert('กรุณากรอกชื่อและราคา'); return; }
+
+            // สร้าง FormData
+            const formData = new FormData();
+            formData.append('stadium_id', stadiumId);
+            formData.append('name', nameInput.value);
+            formData.append('price', priceInput.value);
+            formData.append('type_id', typeInput.value);
+            formData.append('unit', unitInput.value);
+            formData.append('description', descInput.value);
+            
+            if(imageInput.files[0]) {
+                formData.append('image', imageInput.files[0]);
+            }
+
+            // ส่ง AJAX
+            fetch('<?= base_url('admin/vendor-items/quick-create') ?>', {
+                method: 'POST',
+                headers: { 
+                    'X-Requested-With': 'XMLHttpRequest' 
+                },
+                body: formData // ส่ง formData แทน JSON
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.success) {
+                    const tableBody = document.getElementById('prodBody' + (context === 'add' ? 'Add' : 'Edit')); 
+                    if(tableBody) {
+                        const noRow = document.getElementById('row-no-data-' + context);
+                        if(noRow) noRow.remove();
+
+                        // แสดงรูป (ถ้ามี)
+                        let imgHtml = '<div class="bg-light rounded text-center" style="width:30px;height:30px;"><i class="fas fa-image text-muted small"></i></div>';
+                        if(data.image) {
+                            imgHtml = `<img src="<?= base_url('assets/uploads/items/') ?>${data.image}" width="30" height="30" class="rounded object-fit-cover">`;
+                        }
+
+                        const newRow = `
+                            <tr>
+                                <td class="text-center">
+                                    <div class="form-check d-flex justify-content-center">
+                                        <input class="form-check-input chk-product" type="checkbox" 
+                                               name="items[${data.id}][selected]" value="1" checked
+                                               id="${context}_p_${data.id}"
+                                               data-target="${context}_price_${data.id}">
+                                    </div>
+                                </td>
+                                <td>${imgHtml}</td>
+                                <td><label class="form-check-label small fw-bold">${data.name}</label></td>
+                                <td class="text-muted small">฿${data.price}</td>
+                                <td>
+                                    <input type="number" step="0.01" name="items[${data.id}][price]" 
+                                           id="${context}_price_${data.id}" class="form-control form-control-sm" 
+                                           value="${data.price}">
+                                </td>
+                            </tr>
+                        `;
+                        tableBody.insertAdjacentHTML('afterbegin', newRow);
+                        
+                        const newChk = document.getElementById(`${context}_p_${data.id}`);
+                        newChk.addEventListener('change', function() { toggleProductInput(this); });
+                    }
+
+                    // Reset Form
+                    nameInput.value = '';
+                    priceInput.value = '';
+                    unitInput.value = '';
+                    descInput.value = '';
+                    imageInput.value = '';
+                    
+                    var bsCollapse = new bootstrap.Collapse(document.getElementById('quickCreate' + (context === 'add' ? 'Add' : 'Edit')), {toggle: false});
+                    bsCollapse.hide();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert('เกิดข้อผิดพลาดในการเชื่อมต่อ');
+            });
+        });
+    });
+
+    // ... (ส่วน Modal Edit: Fill Data, Delete เหมือนเดิม) ...
+    // Copy โค้ดเดิมมาใส่ตรงนี้ได้เลยครับ ส่วนล่างๆ ที่จัดการ Edit Modal และปุ่ม Delete
+    // (ถ้าต้องการให้ผมแปะให้ครบ แจ้งได้นะครับ แต่กลัวโค้ดยาวเกินไป)
     document.querySelectorAll('.btn-edit').forEach(btn => {
         btn.addEventListener('click', function() {
-            // 1. Fill Basic Info
             document.getElementById('edit_id').value = this.dataset.id;
             document.getElementById('edit_name').value = this.dataset.name;
             document.getElementById('edit_price').value = this.dataset.price;
@@ -487,42 +541,18 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('edit_desc').value = this.dataset.desc;
             document.getElementById('edit_status').value = this.dataset.status;
 
-            // 2. Clear Old Facilities
-            document.querySelectorAll('.chk-facility-edit').forEach(chk => {
-                chk.checked = false;
-                const target = document.getElementById(chk.dataset.target);
-                target.innerHTML = ''; 
-                target.classList.add('d-none');
-                document.getElementById('edit_btn_row_' + chk.dataset.typeId).classList.add('d-none');
-            });
-
-            // 3. Populate Facilities
-            const facData = JSON.parse(this.dataset.facilities || '{}');
-            for(const [typeId, items] of Object.entries(facData)) {
-                const chk = document.getElementById('edit_t_' + typeId);
-                if(chk) {
-                    chk.checked = true;
-                    const target = document.getElementById('edit_box_' + typeId);
-                    target.classList.remove('d-none');
-                    document.getElementById('edit_btn_row_' + typeId).classList.remove('d-none');
-                    items.forEach(val => createInputRow(target, typeId, val));
-                }
-            }
-
-            // 4. ✅ Populate Products (สินค้า)
-            // รีเซ็ต Checkbox สินค้าทั้งหมดก่อน
+            // Reset Products Checkbox
             document.querySelectorAll('.chk-product-edit').forEach(chk => {
                 chk.checked = false;
                 toggleProductInput(chk);
             });
 
-            const itemData = JSON.parse(this.dataset.items || '{}'); // { prod_id: {price: '...'} }
+            const itemData = JSON.parse(this.dataset.items || '{}'); 
             for(const [prodId, info] of Object.entries(itemData)) {
                 const chk = document.getElementById('edit_p_' + prodId);
                 if(chk) {
                     chk.checked = true;
                     toggleProductInput(chk);
-                    // เติมราคาขายจริง (ถ้ามี)
                     const input = document.getElementById('edit_price_val_' + prodId);
                     if(input && info.price) input.value = parseFloat(info.price); 
                 }
@@ -530,51 +560,25 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // --- ส่วน Facilities Logic อื่นๆ (เหมือนเดิม) ---
-    document.querySelectorAll('.chk-facility').forEach(chk => {
-        chk.addEventListener('change', function() {
-            const target = document.getElementById(this.dataset.target);
-            const typeId = this.dataset.typeId;
-            if(this.checked) {
-                target.classList.remove('d-none');
-                if(target.children.length === 0) createInputRow(target, typeId);
-                if(!target.nextElementSibling || !target.nextElementSibling.classList.contains('add-more-wrapper')) {
-                    const btnDiv = document.createElement('div');
-                    btnDiv.className = 'ms-4 add-more-wrapper';
-                    btnDiv.innerHTML = `<button type="button" class="btn btn-sm btn-link text-decoration-none p-0 btn-add-more-row">+ เพิ่มรายการ</button>`;
-                    target.parentNode.insertBefore(btnDiv, target.nextSibling);
-                    btnDiv.querySelector('.btn-add-more-row').addEventListener('click', () => createInputRow(target, typeId));
-                }
-            } else {
-                target.classList.add('d-none');
-                target.innerHTML = '';
-                if(target.nextElementSibling && target.nextElementSibling.classList.contains('add-more-wrapper')) target.nextElementSibling.remove();
-            }
+    document.querySelectorAll('.btn-delete').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const href = this.getAttribute('href');
+            Swal.fire({
+                title: 'ยืนยันการลบ?',
+                text: "ข้อมูลและรูปภาพทั้งหมดจะหายไป กู้คืนไม่ได้!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'ใช่, ลบเลย!',
+                cancelButtonText: 'ยกเลิก'
+            }).then((result) => {
+                if (result.isConfirmed) window.location.href = href;
+            });
         });
     });
 
-    document.querySelectorAll('.chk-facility-edit').forEach(chk => {
-        chk.addEventListener('change', function() {
-            const target = document.getElementById(this.dataset.target);
-            const btnRow = document.getElementById('edit_btn_row_' + this.dataset.typeId);
-            if(this.checked) {
-                target.classList.remove('d-none');
-                btnRow.classList.remove('d-none');
-                if(target.children.length === 0) createInputRow(target, this.dataset.typeId);
-            } else {
-                target.classList.add('d-none');
-                target.innerHTML = '';
-                btnRow.classList.add('d-none');
-            }
-        });
-    });
-
-    document.querySelectorAll('.btn-add-row').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const target = document.getElementById(this.dataset.target);
-            createInputRow(target, this.dataset.typeId);
-        });
-    });
 });
 </script>
 <?= $this->endSection() ?>

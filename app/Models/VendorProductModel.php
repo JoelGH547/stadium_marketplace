@@ -1,26 +1,31 @@
-<?php namespace App\Models;
+<?php
+
+namespace App\Models;
 
 use CodeIgniter\Model;
 
 class VendorProductModel extends Model
 {
-    protected $table            = 'vendor_products'; // เชื่อมกับตารางคลังสินค้า
+    // ชื่อตารางใน Database (ตรงกับรูป image_91fde1.jpg)
+    protected $table            = 'vendor_products';
     protected $primaryKey       = 'id';
     protected $useAutoIncrement = true;
     protected $returnType       = 'array';
     
+    
     protected $allowedFields    = [
-        'vendor_id', 
-        'facility_type_id', // หมวดหมู่สินค้า
+        'stadium_id',       
+        'facility_type_id', 
         'name', 
         'description', 
-        'base_price',       // ราคาตั้งต้น
+        'price',           
         'unit', 
         'image', 
         'status'
     ];
 
-    protected $useTimestamps = true; 
+    
+    protected $useTimestamps = true;
     protected $createdField  = 'created_at';
     protected $updatedField  = 'updated_at';
 }

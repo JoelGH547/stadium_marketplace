@@ -73,7 +73,14 @@ $routes->group('admin', ['filter' => ['auth', 'admin']], static function ($route
         $routes->post('store', 'Admin\VendorItemController::store');
         $routes->post('update', 'Admin\VendorItemController::update');
         $routes->get('delete/(:num)', 'Admin\VendorItemController::delete/$1');
+        $routes->post('quick-create', 'Admin\VendorItemController::quickCreate');
+        // ❌ เอาบรรทัดเดิมออกไปแล้ว เพื่อไม่ให้ URL ซ้อนกัน
     });
+
+    // ✅ ย้ายออกมาไว้ตรงนี้ (ยังอยู่ใน admin group)
+    // URL ที่ถูกต้องจะเป็น: /admin/get-stadium-facility-types/1
+    $routes->get('get-stadium-facility-types/(:num)', 'Admin\VendorItemController::getStadiumFacilityTypes/$1');
+
     // ==========================================================
 
     // --- User Management (จัดการผู้ใช้) ---
@@ -109,7 +116,7 @@ $routes->group('admin', ['filter' => ['auth', 'admin']], static function ($route
 
 
 // ==========================================================
-// --- 3. CUSTOMER SECTION (Frontend - ของเพื่อน) ---
+// --- 3. CUSTOMER SECTION 
 // ==========================================================
 $routes->group('customer', ['filter' => ['auth', 'customer']], static function ($routes) {
     $routes->get('dashboard', 'CustomerController::index');

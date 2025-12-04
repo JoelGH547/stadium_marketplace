@@ -210,7 +210,7 @@
                                         <tr>
                                             <td class="ps-4">
                                                 <?php 
-                                                    $f_imgs = json_decode($field['field_images'] ?? '[]', true); 
+                                                    $f_imgs = json_decode($field['outside_images'] ?? '[]', true); 
                                                     $f_thumb = !empty($f_imgs[0]) ? $f_imgs[0] : null;
                                                 ?>
                                                 <?php if($f_thumb): ?>

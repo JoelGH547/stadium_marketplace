@@ -9,9 +9,8 @@ use App\Models\VendorModel;
 use App\Models\StadiumFieldModel;
 use App\Models\StadiumFacilityModel;
 use App\Models\FacilityTypeModel;
-// ❌ ลบอันเก่าทิ้ง: use App\Models\VendorItemModel;
-use App\Models\VendorProductModel; // ✅ อันใหม่ (คลังสินค้า)
-use App\Models\FieldItemModel;     // ✅ อันใหม่ (หน้าร้าน)
+use App\Models\VendorProductModel; // ✅ Model คลังสินค้า
+use App\Models\FieldItemModel;     // ✅ Model สินค้าในสนามย่อย
 use CodeIgniter\Database\Exceptions\DatabaseException;
 
 class StadiumController extends BaseController
@@ -245,17 +244,17 @@ class StadiumController extends BaseController
         $fieldModel = new StadiumFieldModel();
         $stadiumFields = $fieldModel->where('stadium_id', $id)->findAll();
 
-        // 4. ✅ [UPDATED] ดึงสินค้าจากคลังแม่ (Vendor Products)
+        // 4. ✅ [UPDATED] ดึงสินค้าจากคลังแม่ (แก้ไขตรงนี้!)
+        // ดึงจาก stadium_id แทน vendor_id เพราะเราเปลี่ยนโครงสร้างแล้ว
         $vendorProductModel = new VendorProductModel();
         $vendorItems = $vendorProductModel
             ->select('vendor_products.*, facility_types.name as type_name')
             ->join('facility_types', 'facility_types.id = vendor_products.facility_type_id', 'left')
-            ->where('vendor_products.vendor_id', $stadium['vendor_id'])
+            ->where('vendor_products.stadium_id', $id) // ✅ ใช้ ID สนาม
             ->findAll();
 
-        // แปลง base_price เป็น price เพื่อให้ view เดิมไม่พัง
         foreach ($vendorItems as &$item) {
-            $item['price'] = $item['base_price'];
+            $item['price'] = $item['price'];
         }
 
         $data = [
@@ -299,20 +298,33 @@ class StadiumController extends BaseController
     {
         $stadiumModel = new StadiumModel();
         $fieldModel = new StadiumFieldModel();
-        $facilityTypeModel = new FacilityTypeModel();
-        $productModel = new VendorProductModel(); // ✅ เรียกใช้คลังสินค้า
+        // $facilityTypeModel = new FacilityTypeModel(); // ❌ ไม่ต้องใช้ตัวนี้แล้ว (เพราะมันดึงทั้งหมด)
+        $productModel = new VendorProductModel();
 
-        // ดึงข้อมูลสนามหลัก
+        // 1. ดึงข้อมูลสนามหลัก
         $stadium = $stadiumModel->find($stadium_id);
+
+        // 2. ✅ [แก้ตรงนี้] ดึงเฉพาะ Type ที่สนามนี้มีอยู่จริง (ใช้ Query Builder Join เอา)
+        // เพื่อให้ Dropdown ใน Modal "สร้างสินค้าใหม่" แสดงเฉพาะหมวดหมู่ของสนามนี้
+        $db = \Config\Database::connect();
+        $filteredTypes = $db->table('stadium_facilities')
+            ->select('facility_types.*')
+            ->join('facility_types', 'facility_types.id = stadium_facilities.type_id')
+            ->where('stadium_facilities.stadium_id', $stadium_id)
+            ->groupBy('facility_types.id') // กันซ้ำ
+            ->orderBy('facility_types.id', 'ASC')
+            ->get()
+            ->getResultArray();
 
         $data = [
             'title'         => 'Manage Fields',
             'stadium'       => $stadium,
             'fields'        => $fieldModel->where('stadium_id', $stadium_id)->findAll(),
-            'facilityTypes' => $facilityTypeModel->findAll(),
             
-            // ✅ ส่งรายการสินค้าในคลัง (ของ Vendor นี้) ไปให้เลือก
-            'products'      => $productModel->where('vendor_id', $stadium['vendor_id'])
+            // ✅ ส่งตัวแปร $filteredTypes ไปแทน (ชื่อตัวแปร facilityTypes เหมือนเดิม View จะได้ไม่ต้องแก้)
+            'facilityTypes' => $filteredTypes, 
+            
+            'products'      => $productModel->where('stadium_id', $stadium['id'])
                                             ->where('status', 'active')
                                             ->findAll()
         ];
