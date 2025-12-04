@@ -85,4 +85,24 @@ $routes->group('owner', ['namespace' => 'App\Controllers\Owner'], function($rout
 
     $routes->get('fields/delete/(:num)', 'Field::delete/$1');
 
+    $routes->get('fields/view/(:num)', 'Field::view/$1');
+    $routes->get('fields/subfields/(:num)', 'Subfield::index/$1');
+    $routes->post('fields/subfields/(:num)/create', 'Subfield::create/$1');
+    $routes->get('fields/subfields/(:num)/delete/(:num)', 'Subfield::delete/$1/$2');
+    $routes->get('fields/subfields/toggle/(:num)/(:num)', 'Subfield::toggleStatus/$1/$2');
+
+    // AJAX Subfield Details
+    $routes->get('subfields/detail/(:num)', 'Subfield::getDetail/$1');
+    $routes->post('subfields/facilities/update/(:num)', 'Subfield::updateFacilities/$1');
+    $routes->get('subfields/edit/(:num)', 'Subfield::edit/$1');
+    $routes->post('subfields/update/(:num)', 'Subfield::update/$1');
+
+    $routes->get('items/add/(:num)', 'Items::add/$1');       
+    $routes->post('items/store/(:num)', 'Items::store/$1');  
+    $routes->get('items/detail/(:num)', 'Items::getDetail/$1');
+    $routes->post('items/update/(:num)', 'Items::update/$1');
+    $routes->get('items/delete/(:num)', 'Items::delete/$1'); // Also adding delete since it was in view.php
+
+
+
 });

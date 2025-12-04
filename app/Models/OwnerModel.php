@@ -1,25 +1,56 @@
 <?php
+
 namespace App\Models;
 
 use CodeIgniter\Model;
 
 class OwnerModel extends Model
 {
-    protected $table = 'vendors';
-    protected $primaryKey = 'id';
+    protected $table            = 'vendors';
+    protected $primaryKey       = 'id';
+    protected $useAutoIncrement = true;
 
-    protected $allowedFields = [
+    protected $returnType       = 'array';
+
+    protected $allowedFields    = [
         'username',
-        'vendor_name',     // ชื่อเจ้าของ
+        'email',
+        'password_hash',
+
+        // Personal info
+        'vendor_name',
         'lastname',
+        'profile_image',
+        'gender',
         'birthday',
+
+        // Address
+        'address',
+        'district',
+        'subdistrict',
+        'zipcode',
         'province',
 
-        'email',
+        // Contact
         'phone_number',
+        'line_id',
+        'facebook_url',
+
+        // Verification
         'tax_id',
+        'citizen_id',
+        'id_card_image',
+        'bank_book_image',
+        'verified_at',
+
+        // Bank
         'bank_account',
-        'password_hash'
+
+        // Role
+        'role',
+        
+        // Review status (pending, approved, rejected)
+        'status',
     ];
 
     protected $useTimestamps = true;

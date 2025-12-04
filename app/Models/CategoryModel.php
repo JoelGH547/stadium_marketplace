@@ -20,7 +20,7 @@ class CategoryModel extends Model
      * ถ้าเพื่อนมีฟิลด์อื่น เช่น icon, description ก็เพิ่มในลิสต์นี้ได้
      */
     protected $allowedFields = [
-        'name'
+        'name', 'emoji'
     ];
 
     // ถ้าตารางมี created_at, updated_at ให้เปิด

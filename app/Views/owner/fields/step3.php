@@ -77,7 +77,7 @@
 </head>
 
 <body>
-
+<?= $this->include('owner/layout/header') ?>
 <div class="container mt-5" style="max-width: 800px;">
 
   <!-- ปุ่มย้อนกลับ -->

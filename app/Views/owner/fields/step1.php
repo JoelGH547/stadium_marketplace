@@ -78,7 +78,7 @@ function sportIcon($id) {
 </head>
 
 <body>
-
+<?= $this->include('owner/layout/header') ?>
 <div class="container mt-5" style="max-width: 700px;">
 
   <!-- Back button -->
@@ -101,9 +101,8 @@ function sportIcon($id) {
       <?php foreach ($categories as $cat): ?>
         <div class="col-md-6">
           <label class="sport-card w-100" onclick="selectType(this)">
-            
             <!-- ICON -->
-            <div><?= sportIcon($cat['id']) ?></div>
+            <div class="display-4"><?= $cat['emoji'] ?></div>
 
             <!-- RADIO -->
             <input type="radio" name="category_id" value="<?= $cat['id'] ?>">

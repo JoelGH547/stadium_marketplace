@@ -48,7 +48,7 @@
 </head>
 
 <body>
-
+<?= $this->include('owner/layout/header') ?>
 <div class="container mt-5" style="max-width: 700px;">
 
   <!-- Back -->
@@ -73,11 +73,7 @@
         <input type="text" name="name" class="form-control" required>
       </div>
 
-      <!-- ราคา -->
-      <div class="mb-3">
-        <label class="form-label">ราคา / ชั่วโมง *</label>
-        <input type="number" name="price" class="form-control" min="0" required>
-      </div>
+
 
       <!-- เวลาเปิดปิด -->
       <div class="row">

@@ -16,14 +16,37 @@ class VendorModel extends Model
         'username',
         'email',
         'password_hash',
+
+        // Personal info
         'vendor_name',
         'lastname',
-        'phone_number',
-        'tax_id',
-        'bank_account',
+        'profile_image',
+        'gender',
         'birthday',
         'province',
-        'status'
+        'address',
+        'district',
+        'subdistrict',
+        'zipcode',
+
+        // Contact
+        'phone_number',
+        'line_id',
+        'facebook_url',
+
+        // Verification
+        'tax_id',
+        'citizen_id',
+        'id_card_image',
+        'bank_book_image',
+        'verified_at',
+
+        // Bank
+        'bank_account',
+
+        // Role + status
+        'role',
+        'status',
     ];
 
     protected $useTimestamps = true;
