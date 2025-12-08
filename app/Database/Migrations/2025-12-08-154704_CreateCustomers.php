@@ -4,11 +4,10 @@ namespace App\Database\Migrations;
 
 use CodeIgniter\Database\Migration;
 
-class CreateCustomersTable extends Migration
+class CreateCustomers extends Migration
 {
     public function up()
     {
-        // ⬇️ --- แก้ไข $this.forge เป็น $this->forge --- ⬇️
         $this->forge->addField([
             'id' => [
                 'type'           => 'INT',
@@ -16,26 +15,22 @@ class CreateCustomersTable extends Migration
                 'unsigned'       => true,
                 'auto_increment' => true,
             ],
-            // --- ข้อมูลล็อคอินพื้นฐาน ---
             'username' => [
                 'type'       => 'VARCHAR',
                 'constraint' => '100',
-                'unique'     => true,
+                'null'       => true,
             ],
             'email' => [
                 'type'       => 'VARCHAR',
                 'constraint' => '100',
-                'unique'     => true,
             ],
             'password_hash' => [
                 'type'       => 'VARCHAR',
                 'constraint' => '255',
             ],
-            
-            // --- ⬇️ คอลัมน์ "พิเศษ" สำหรับ Customer ⬇️ ---
-            'full_name' => [ // ชื่อนามสกุลจริง
+            'full_name' => [
                 'type'       => 'VARCHAR',
-                'constraint' => '255',
+                'constraint' => '200',
                 'null'       => true,
             ],
             'phone_number' => [
@@ -43,8 +38,6 @@ class CreateCustomersTable extends Migration
                 'constraint' => '20',
                 'null'       => true,
             ],
-            // --- ⬆️ จบส่วนคอลัมน์พิเศษ ⬆️ ---
-
             'created_at' => [
                 'type' => 'DATETIME',
                 'null' => true,
@@ -54,15 +47,12 @@ class CreateCustomersTable extends Migration
                 'null' => true,
             ],
         ]);
-
-        // ⬇️ --- แก้ไข $this.forge เป็น $this->forge --- ⬇️
         $this->forge->addKey('id', true);
-        $this->forge->createTable('customers'); // สร้างตารางชื่อ 'customers'
+        $this->forge->createTable('customers');
     }
 
     public function down()
     {
-        // ⬇️ --- แก้ไข $this.forge เป็น $this->forge --- ⬇️
         $this->forge->dropTable('customers');
     }
 }

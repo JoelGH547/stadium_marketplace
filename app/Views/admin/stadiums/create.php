@@ -32,16 +32,7 @@
                     <input type="text" name="name" class="form-control" value="<?= old('name') ?>" required placeholder="ชื่อสนาม">
                 </div>
 
-                <div class="form-group mb-3">
-                    <label class="fw-bold">Booking Type (รูปแบบการจอง) <span class="text-danger">*</span></label>
-                    <select name="booking_type" class="form-select shadow-sm" required>
-                        <option value="complex" selected>🏢 มีสนามย่อย (Complex) - เช่น มี Court 1, 2, 3</option>
-                        <option value="single">🏟️ จองเหมาทั้งสนาม (Single) - ไม่มีสนามย่อย</option>
-                    </select>
-                    <small class="text-muted">
-                        * ถ้าเลือก "มีสนามย่อย" คุณจะต้องไปเพิ่มสนามย่อยและราคาในภายหลัง
-                    </small>
-                </div>
+                
 
                 <div class="row">
                     <div class="col-md-6 form-group mb-3">

@@ -46,7 +46,7 @@
                         <input type="hidden" name="stadium_id" value="<?= $stadium['id'] ?>">
                         
                         
-                        <?php if(($stadium['booking_type'] ?? '') == 'complex'): ?>
+                        <?php if(!empty($fields)): ?>
                             <div class="mb-3">
                                 <label class="fw-bold mb-1">เลือกสนามย่อย <span class="text-danger">*</span></label>
                                 <select name="field_id" id="field_select" class="form-select" required>
@@ -83,61 +83,6 @@
 
                         <hr>
 
-                        
-                        <div class="mb-3">
-                            <label class="fw-bold mb-2 text-primary"><i class="fas fa-cart-plus"></i> บริการเสริม (เลือกเพิ่มได้)</label>
-                            
-                            
-                            <?php if(($stadium['booking_type'] ?? '') == 'complex'): ?>
-                                <div id="addons-container">
-                                    <p class="text-muted small text-center py-2" id="no-field-msg">กรุณาเลือกสนามย่อยเพื่อดูสินค้า</p>
-                                    
-                                    <?php foreach($fields as $field): ?>
-                                        <div class="field-addons d-none" id="addons-field-<?= $field['id'] ?>">
-                                            <?php if(!empty($field['addons'])): ?>
-                                                <?php foreach($field['addons'] as $item): ?>
-                                                    <?= view_cell('\App\Cells\AddonCell::render', ['item' => $item]) ?> 
-                                                    
-                                                    <div class="d-flex align-items-center justify-content-between border-bottom py-2">
-                                                        <div class="d-flex align-items-center">
-                                                            <input type="checkbox" name="addons[]" value="<?= $item['item_id'] ?>" class="form-check-input me-2 chk-addon" data-price="<?= $item['custom_price'] ?>">
-                                                            <div>
-                                                                <div class="small fw-bold"><?= esc($item['name']) ?></div>
-                                                                <div class="text-muted" style="font-size: 0.8rem;"><?= esc($item['description']) ?></div>
-                                                            </div>
-                                                        </div>
-                                                        <div class="text-success small fw-bold">+฿<?= number_format($item['custom_price']) ?></div>
-                                                    </div>
-                                                <?php endforeach; ?>
-                                            <?php else: ?>
-                                                <div class="text-muted small text-center">ไม่มีสินค้าสำหรับสนามนี้</div>
-                                            <?php endif; ?>
-                                        </div>
-                                    <?php endforeach; ?>
-                                </div>
-
-                            
-                            <?php else: ?>
-                                <div id="addons-single">
-                                    <?php if(!empty($addons)): ?>
-                                        <?php foreach($addons as $item): ?>
-                                            <div class="d-flex align-items-center justify-content-between border-bottom py-2">
-                                                <div class="d-flex align-items-center">
-                                                    <input type="checkbox" name="addons[]" value="<?= $item['item_id'] ?>" class="form-check-input me-2 chk-addon" data-price="<?= $item['custom_price'] ?>">
-                                                    <div>
-                                                        <div class="small fw-bold"><?= esc($item['name']) ?></div>
-                                                    </div>
-                                                </div>
-                                                <div class="text-success small fw-bold">+฿<?= number_format($item['custom_price']) ?></div>
-                                            </div>
-                                        <?php endforeach; ?>
-                                    <?php else: ?>
-                                        <div class="text-muted small text-center">ไม่มีบริการเสริม</div>
-                                    <?php endif; ?>
-                                </div>
-                            <?php endif; ?>
-                        </div>
-
                        
                         <div class="bg-light p-3 rounded mb-3">
                             <div class="d-flex justify-content-between">
@@ -172,73 +117,34 @@ document.addEventListener('DOMContentLoaded', function() {
     const noFieldMsg = document.getElementById('no-field-msg');
     
     
-    let fieldPricePerHour = <?= ($stadium['booking_type'] != 'complex') ? $stadium['price'] : 0 ?>;
+    const hasFields = <?= !empty($fields) ? 'true' : 'false' ?>;
+    let fieldPricePerHour = hasFields ? 0 : <?= (int)($stadium['price'] ?? 0) ?>;
     
     
     function calculateTotal() {
         const hours = parseInt(hoursInput.value) || 1;
         const fieldTotal = fieldPricePerHour * hours;
         
-        
-        let addonTotal = 0;
-        document.querySelectorAll('.chk-addon:checked').forEach(chk => {
-           
-            if(chk.closest('div').offsetParent !== null) {
-                addonTotal += parseFloat(chk.dataset.price || 0);
-            }
-        });
-
         document.getElementById('summary-field').innerText = '฿' + fieldTotal.toLocaleString();
-        document.getElementById('summary-addon').innerText = '+฿' + addonTotal.toLocaleString();
-        document.getElementById('summary-total').innerText = '฿' + (fieldTotal + addonTotal).toLocaleString();
+        document.getElementById('summary-addon').innerText = '+฿0'; // Always 0 since addons are removed
+        document.getElementById('summary-total').innerText = '฿' + (fieldTotal).toLocaleString();
     }
 
     
     if(fieldSelect) {
         fieldSelect.addEventListener('change', function() {
             const selectedOption = this.options[this.selectedIndex];
-            const fieldId = this.value;
             
             
             fieldPricePerHour = parseFloat(selectedOption.dataset.price || 0);
             
-            
-            document.querySelectorAll('.field-addons').forEach(el => el.classList.add('d-none'));
-            if(noFieldMsg) noFieldMsg.classList.add('d-none');
-
-            
-            if(fieldId) {
-                const targetAddons = document.getElementById('addons-field-' + fieldId);
-                if(targetAddons) {
-                    targetAddons.classList.remove('d-none');
-                } else {
-                    if(noFieldMsg) {
-                        noFieldMsg.innerText = 'ไม่มีสินค้าสำหรับสนามนี้';
-                        noFieldMsg.classList.remove('d-none');
-                    }
-                }
-            } else {
-                if(noFieldMsg) {
-                    noFieldMsg.innerText = 'กรุณาเลือกสนามย่อยเพื่อดูสินค้า';
-                    noFieldMsg.classList.remove('d-none');
-                }
-            }
-
-            
-            document.querySelectorAll('.chk-addon').forEach(chk => chk.checked = false);
-
             calculateTotal();
         });
     }
 
     
     hoursInput.addEventListener('input', calculateTotal);
-    document.addEventListener('change', function(e) {
-        if(e.target.classList.contains('chk-addon')) {
-            calculateTotal();
-        }
-    });
-
+    
     
     calculateTotal();
 });

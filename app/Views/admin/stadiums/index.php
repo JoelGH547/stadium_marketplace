@@ -32,16 +32,7 @@
             <form action="<?= base_url('admin/stadiums') ?>" method="get">
                 <div class="d-flex justify-content-between align-items-center">
                     
-                    <div class="d-flex align-items-center">
-                        <i class="fas fa-filter text-gray-400 me-2"></i>
-                        <span class="me-2 fw-bold text-gray-700">กรองตามรูปแบบ:</span>
-                        <select name="booking_type" class="form-select form-select-sm border-0 bg-light" 
-                                style="width: auto;" onchange="this.form.submit()">
-                            <option value="all" <?= ($filter ?? '') == 'all' ? 'selected' : '' ?>>ทั้งหมด (All)</option>
-                            <option value="complex" <?= ($filter ?? '') == 'complex' ? 'selected' : '' ?>>🏢 มีสนามย่อย (Complex)</option>
-                            <option value="single" <?= ($filter ?? '') == 'single' ? 'selected' : '' ?>>🏟️ ไม่มีสนามย่อย (Single)</option>
-                        </select>
-                    </div>
+                    
 
                     <div class="input-group" style="width: 300px;">
                         <input type="text" name="search" class="form-control form-control-sm bg-light border-0 small" 
@@ -85,7 +76,7 @@
                         <?php if(!empty($stadiums)): ?>
                             <?php foreach($stadiums as $stadium): ?>
                             
-                            <tr data-type="<?= $stadium['booking_type'] ?? 'complex' ?>">
+                            <tr data-type="complex">
                                 
                                 <td class="text-center fw-bold"><?= $stadium['id'] ?></td>
                                 
@@ -108,11 +99,6 @@
                                     <div class="small text-muted text-truncate" style="max-width: 150px;">
                                         <?= esc($stadium['description']) ?>
                                     </div>
-                                    <?php if(($stadium['booking_type'] ?? 'complex') == 'complex'): ?>
-                                        <span class="badge bg-primary mb-1" style="font-size: 0.65rem;">มีสนามย่อย</span>
-                                    <?php else: ?>
-                                        <span class="badge bg-info text-dark mb-1" style="font-size: 0.65rem;">ไม่มีสนามย่อย</span>
-                                    <?php endif; ?>
                                 </td>
 
                                 <td>
@@ -142,19 +128,11 @@
 
                                 <td class="text-center">
                                     <div class="btn-group" role="group">
-                                        <?php if(($stadium['booking_type'] ?? 'complex') == 'complex'): ?>
-                                            <a href="<?= base_url('admin/stadiums/fields/' . $stadium['id']) ?>" 
-                                            class="btn btn-info btn-sm text-white shadow-sm" 
-                                            title="จัดการสนามย่อย">
-                                                <i class="fas fa-list-ul"></i> สนามย่อย
-                                            </a>
-                                        <?php else: ?>
-                                            <a href="<?= base_url('admin/stadiums/fields/' . $stadium['id']) ?>" 
-                                            class="btn btn-success btn-sm text-white shadow-sm" 
-                                            title="ตั้งค่าราคาและข้อมูล">
-                                                <i class="fas fa-tag"></i> ตั้งค่าสนาม
-                                            </a>
-                                        <?php endif; ?>
+                                        <a href="<?= base_url('admin/stadiums/fields/' . $stadium['id']) ?>" 
+                                        class="btn btn-success btn-sm text-white shadow-sm" 
+                                        title="ตั้งค่าราคาและข้อมูล">
+                                            <i class="fas fa-tag"></i> ตั้งค่าสนาม
+                                        </a>
 
                                         <a href="<?= base_url('admin/stadiums/view/' . $stadium['id']) ?>" 
                                         class="btn btn-secondary btn-sm shadow-sm" title="ดูรายละเอียด">
@@ -254,24 +232,6 @@
             });
         });
 
-
-        // --- ส่วน Filter (คงเดิมตามที่คุณมี) ---
-        const filterDropdown = document.getElementById('filterType');
-        if(filterDropdown) {
-            filterDropdown.addEventListener('change', function() {
-                let filterValue = this.value;
-                let rows = document.querySelectorAll('tbody tr');
-                
-                rows.forEach(row => {
-                    let rowType = row.getAttribute('data-type');
-                    if (filterValue === 'all' || rowType === filterValue) {
-                        row.style.display = '';
-                    } else {
-                        row.style.display = 'none';
-                    }
-                });
-            });
-        }
 
         // --- ส่วน Delete (คงเดิมตามที่คุณมี) ---
         const deleteButtons = document.querySelectorAll('.btn-delete');

@@ -5,20 +5,17 @@ namespace App\Controllers;
 use App\Controllers\BaseController;
 use App\Models\StadiumModel;
 use App\Models\BookingModel;
-use App\Models\StadiumFieldModel;
-use App\Models\FieldItemModel; 
+use App\Models\StadiumFieldModel; 
 
 class BookingController extends BaseController
 {
     protected $stadiumModel;
     protected $bookingModel;
-    protected $fieldItemModel; 
 
     public function __construct()
     {
         $this->stadiumModel   = new StadiumModel();
         $this->bookingModel   = new BookingModel();
-        $this->fieldItemModel = new FieldItemModel(); 
     }
 
     
@@ -37,25 +34,10 @@ class BookingController extends BaseController
                              ->where('status', 'active')
                              ->findAll();
 
-        
-        $addons = []; 
-
-        if (($stadium['booking_type'] ?? '') == 'complex') {
-            
-            foreach ($fields as &$field) {
-                $field['addons'] = $this->fieldItemModel->getItemsByField($field['id']);
-            }
-            unset($field); 
-        } else {
-            
-            $addons = $this->fieldItemModel->getItemsByField(null, $stadium_id);
-        }
-
         $data = [
             'title'   => 'จองสนาม: ' . esc($stadium['name']),
             'stadium' => $stadium,
             'fields'  => $fields, 
-            'addons'  => $addons  
         ];
 
         return view('customer/booking_form', $data);

@@ -43,17 +43,7 @@
                 </div>
 
                 <div class="row">
-                    <div class="col-md-4 mb-3">
-                        <label class="fw-bold">Booking Type <span class="text-danger">*</span></label>
-                        <select name="booking_type" class="form-select" required>
-                            <option value="complex" <?= ($stadium['booking_type'] == 'complex') ? 'selected' : '' ?>>
-                                🏢 มีสนามย่อย (Complex)
-                            </option>
-                            <option value="single" <?= ($stadium['booking_type'] == 'single') ? 'selected' : '' ?>>
-                                🏟️ ไม่มีสนามย่อย (Single)
-                            </option>
-                        </select>
-                    </div>
+                    
                     
                     <div class="col-md-4 mb-3">
                         <label for="category_id" class="fw-bold">Category <span class="text-danger">*</span></label>

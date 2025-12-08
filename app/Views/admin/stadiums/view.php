@@ -86,7 +86,7 @@
                             }
                         }
                         if (!empty($vendor_items)) {
-                            $itemTypes = array_column($vendor_items, 'type_name');
+                            $itemTypes = array_column($vendor_items, 'facility_type_name');
                             $uniqueTypes = array_unique($itemTypes);
                             foreach ($uniqueTypes as $type) {
                                 if (!empty($type) && !in_array($type, $allServices)) $allServices[] = $type;

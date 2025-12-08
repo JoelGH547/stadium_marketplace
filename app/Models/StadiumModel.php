@@ -17,8 +17,7 @@ class StadiumModel extends Model
     // ==========================================================
     protected $allowedFields    = [
         'name', 
-        'description', 
-        'booking_type',   
+        'description',    
         'category_id', 
         'vendor_id',
         'open_time',

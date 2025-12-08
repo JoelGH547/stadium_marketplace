@@ -69,11 +69,11 @@ $routes->group('admin', ['filter' => ['auth', 'admin']], static function ($route
     // +++ [ระบบใหม่] Vendor Items (จัดการสินค้า/บริการเสริม) +++
     // ==========================================================
     $routes->group('vendor-items', static function ($routes) {
-        $routes->get('/', 'Admin\VendorItemController::index');
-        $routes->post('store', 'Admin\VendorItemController::store');
-        $routes->post('update', 'Admin\VendorItemController::update');
-        $routes->get('delete/(:num)', 'Admin\VendorItemController::delete/$1');
-        $routes->post('quick-create', 'Admin\VendorItemController::quickCreate');
+        $routes->get('/', 'Admin\VendorItemsController::index');
+        $routes->post('store', 'Admin\VendorItemsController::store');
+        $routes->post('update', 'Admin\VendorItemsController::update');
+        $routes->get('delete/(:num)', 'Admin\VendorItemsController::delete/$1');
+        $routes->post('quick-create', 'Admin\VendorItemsController::quickCreate');
         
     });
 
