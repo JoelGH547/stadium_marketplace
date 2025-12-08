@@ -56,6 +56,6 @@ class BookingController extends BaseController
             'total'    => $total,
         ]);
 
-        return redirect()->to(route_to('customer.cart'));
+        return redirect()->to(site_url('sport/cart'));
     }
 }

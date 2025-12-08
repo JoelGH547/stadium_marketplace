@@ -18,6 +18,10 @@ class CustomerModel extends Model
         'password_hash',
         'full_name',
         'phone_number',
+        'avatar',
+        'birthday',
+        'gender',
+        'age',
     ];
 
     protected $useTimestamps = true;

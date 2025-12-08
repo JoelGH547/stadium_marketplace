@@ -6,6 +6,7 @@ use App\Controllers\BaseController;
 use App\Models\StadiumModel;
 use App\Models\CategoryModel;
 use App\Models\StadiumFieldModel;
+use App\Models\VendorItemModel;
 
 class StadiumController extends BaseController
 {
@@ -56,83 +57,111 @@ class StadiumController extends BaseController
 
     public function show($id = null)
     {
-        // ---------------- MOCK ข้อมูลสนามหลัก ----------------
+        // ตอนนี้ $id = stadium_fields.id (สนามย่อย)
+        if ($id === null) {
+            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('ไม่พบสนามย่อยที่ต้องการ');
+        }
+
+        $fieldModel    = new StadiumFieldModel();
+        $stadiumModel  = new StadiumModel();
+        $itemModel     = new VendorItemModel();
+
+        // 1) ดึงข้อมูลสนามย่อย
+        $field = $fieldModel->find($id);
+        if (!$field) {
+            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('ไม่พบสนามย่อยที่ต้องการ');
+        }
+
+        $stadiumId = (int) ($field['stadium_id'] ?? 0);
+        if ($stadiumId <= 0) {
+            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('สนามย่อยนี้ไม่ผูกกับสนามหลัก');
+        }
+
+        // 2) ดึงข้อมูลสนามหลัก + category + emoji
+        $row = $stadiumModel->getStadiumsWithCategory($stadiumId);
+        if (!$row) {
+            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('ไม่พบสนามหลักที่เกี่ยวข้อง');
+        }
+
+        // 3) เลือก description ให้เหมาะกับสนามย่อยก่อน แล้วค่อย fallback ไปสนามหลัก
+        $description = trim((string) ($field['description'] ?? ''));
+        if ($description === '') {
+            $description = trim((string) ($field['short_description'] ?? ''));
+        }
+        if ($description === '') {
+            $description = trim((string) ($row['description'] ?? ''));
+        }
+
+        // 4) สร้าง array $stadium สำหรับให้ show.php ใช้ (บล็อคแรก)
         $stadium = [
-            'id'             => 1,
-            'name'           => 'Arena Sport Complex (Mock)',
-            'price'          => 370,
-            'category_name'  => 'แบดมินตัน',
-            'category_emoji' => '🏸',
-            'description'    => 'สนามแบดมินตันในร่ม พื้นยางมาตรฐาน แสงสว่างทั่วถึง มีที่จอดรถ และห้องน้ำสะอาด.',
-            'lat'            => null,
-            'lng'            => null,
-            'district'       => 'เขตห้วยขวาง',
-            'province'       => 'กรุงเทพฯ',
-            'contact_phone'  => '02-123-4567',
-            'contact_email'  => 'contact@arena-mock.test',
-            'open_time'      => '10:00',
-            'close_time'     => '23:00',
+            'id'             => (int) $row['id'],
+            'name'           => $row['name'] ?? '',
+            // ใช้ราคา/ชม. ของสนามย่อยเป็น price หลัก
+            'price'          => isset($field['price']) ? (float) $field['price'] : 0,
+            'category_name'  => $row['category_name']  ?? '',
+            'category_emoji' => $row['category_emoji'] ?? '🏟️',
+            'description'    => $description,
 
-            // รูปภาพแบบ mock (ปล่อยค่าว่าง เพราะ show.php เดี๋ยวสร้าง fallback เอง)
-            'cover_image'    => '',
-            'outside_images' => json_encode([]),
-            'inside_images'  => json_encode([]),
+            'lat'            => $row['lat'] ?? null,
+            'lng'            => $row['lng'] ?? null,
+            'district'       => $row['district'] ?? '',
+            'province'       => $row['province'] ?? '',
 
-            // rating mock
-            'rating'         => 4.8,
+            'contact_phone'  => $row['contact_phone'] ?? '',
+            'contact_email'  => $row['contact_email'] ?? '',
+
+            'open_time'      => $row['open_time'] ?? null,
+            'close_time'     => $row['close_time'] ?? null,
+
+            // รูปภาพ: ใช้รูปของสนามย่อยก่อน ถ้าไม่มีค่อย fallback เป็นของสนามหลัก
+            'cover_image'    => $row['cover_image'] ?? null,
+            'outside_images' => $field['outside_images'] ?: ($row['outside_images'] ?? null),
+            'inside_images'  => $field['inside_images']  ?: ($row['inside_images'] ?? null),
+
+            // rating ตอนนี้ยังไม่มีใน DB → ใส่ค่า default ไว้ก่อน
+            'rating'         => 5.0,
+
+            // ✅ เพิ่ม status ของสนามย่อยเข้ามาใน array หลัก เพื่อให้ view นำไปใช้ได้สะดวก
+            'status'         => $field['status'] ?? 'active',
         ];
 
-        // ---------------- MOCK สนามย่อย ----------------
+        // 5) สร้าง $fields สำหรับ show.php (ตอนนี้มีแค่ "สนามย่อยที่เลือก" ตัวเดียว)
+        $priceHour  = $field['price']        ?? null;
+        $priceDaily = $field['price_daily']  ?? null;
+
         $fields = [
             [
-                'id'          => 1,
-                'name'        => 'คอร์ท 1 (พื้นยาง)',
-                'description' => 'คอร์ทในร่ม พื้นยางมาตรฐาน เหมาะสำหรับซ้อมจริงจัง.',
-                'status'      => 'active',
-            ],
-            [
-                'id'          => 2,
-                'name'        => 'คอร์ท 2 (พื้นยาง)',
-                'description' => 'คอร์ทในร่ม บรรยากาศสงบ เหมาะสำหรับเล่นชิลๆ.',
-                'status'      => 'active',
+                'id'         => (int) $field['id'],
+                'name'       => $field['name'] ?? '',
+                'status'     => $field['status'] ?? 'active',
+                // show.php ใช้ key "price_hour" และ "price_day"
+                'price_hour' => $priceHour  !== null ? (float) $priceHour  : null,
+                'price_day'  => $priceDaily !== null ? (float) $priceDaily : null,
             ],
         ];
 
-        // ---------------- MOCK อุปกรณ์/บริการเสริม ----------------
-        $items = [
-            [
-                'id'    => 1,
-                'name'  => 'ไม้แบด Yonex Pro',
-                'price' => 50,
-                'unit'  => 'ชม.'
-            ],
-            [
-                'id'    => 2,
-                'name'  => 'ลูกแบดฝึกซ้อม (1 กระป๋อง)',
-                'price' => 120,
-                'unit'  => 'ชุด'
-            ]
-        ];
+        // 6) ดึง items ตาม vendor ของสนามหลัก (ถ้ามี)
+        $items = [];
+        if (!empty($row['vendor_id'])) {
+            $items = $itemModel->getItemsByVendor((int) $row['vendor_id']);
+        }
 
-        // ---------------- ตัวแปรที่ show.php ต้องใช้ ----------------
+        // 7) ตัวช่วยเสริม (ไม่บังคับ แต่ให้ค่าไว้เหมือน mock เดิม)
+        $district = trim((string) ($stadium['district'] ?? ''));
+        $province = trim((string) ($stadium['province'] ?? ''));
+        $addressFull = trim($district . ($district && $province ? ', ' : '') . $province);
 
-        // 1) coverUrl
-        $coverUrl = base_url('assets/uploads/home/batminton.webp'); // mock
+        $openTimeRaw  = isset($stadium['open_time'])  ? substr($stadium['open_time'], 0, 5)  : '';
+        $closeTimeRaw = isset($stadium['close_time']) ? substr($stadium['close_time'], 0, 5) : '';
+        $timeLabel    = ($openTimeRaw && $closeTimeRaw)
+            ? ($openTimeRaw . ' – ' . $closeTimeRaw)
+            : 'ยังไม่ระบุเวลา';
 
-        // 2) galleryImages
-        $galleryImages = [
-            $coverUrl,
-            $coverUrl,
-            $coverUrl,
-        ];
+        // coverUrl / galleryImages จริงๆ show.php คำนวนเองแล้ว ใช้ค่า default ไว้เฉยๆ
+        $coverUrl      = null;
+        $galleryImages = [];
 
-        // 3) addressFull
-        $addressFull = trim($stadium['district'] . ' ' . $stadium['province']);
-
-        // 4) timeLabel (ใช้ open_time/close_time)
-        $timeLabel = $stadium['open_time'] . ' - ' . $stadium['close_time'];
-
-        // ส่งให้ View
+        // 8) ส่งให้ View
         return view('public/show', [
             'stadium'       => $stadium,
             'fields'        => $fields,
@@ -143,6 +172,7 @@ class StadiumController extends BaseController
             'timeLabel'     => $timeLabel,
         ]);
     }
+
 
 
     public function fields($id = null)
@@ -234,10 +264,9 @@ class StadiumController extends BaseController
         $stadium['open_label'] = $openLabel;
 
 
-        // ดึงรายการสนามย่อยจาก stadium_fields
+        // ดึงรายการสนามย่อยจาก stadium_fields (ทั้งหมด, ไม่กรอง status)
         $fieldRows = $fieldModel
             ->where('stadium_id', $id)
-            ->where('status', 'active')
             ->orderBy('id', 'ASC')
             ->findAll();
 
@@ -263,6 +292,7 @@ class StadiumController extends BaseController
             $fields[] = [
                 'id'         => $f['id'],
                 'name'       => $f['name'],
+                'status'     => $f['status'] ?? 'active', // ส่ง status ไปให้ view
                 'price_hour'   => ($priceHour  !== null ? (float) $priceHour  : null),
                 'price_daily'  => ($priceDaily !== null ? (float) $priceDaily : null),
                 'image'      => $imageUrl,

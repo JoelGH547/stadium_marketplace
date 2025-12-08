@@ -413,7 +413,6 @@
     <script src="<?= base_url('assets/view.js') ?>"></script>
     <script src="<?= base_url('assets/show.js') ?>"></script>
     <script src="<?= base_url('assets/field.js') ?>"></script>
-    <script src="<?= base_url('assets/booking.js') ?>"></script>
 
 </body>
 

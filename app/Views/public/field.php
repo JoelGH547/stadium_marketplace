@@ -93,7 +93,7 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
                     <?php foreach ($fields as $field): ?>
                         <?php
-                        $detailUrl = site_url('sport/show/' . $stadiumId);
+                        $detailUrl = site_url('sport/show/' . $field['id']);
                         ?>
                         <article
                             class="group relative flex flex-col overflow-hidden rounded-2xl bg-white shadow-sm shadow-black/5 ring-1 ring-gray-100 hover:-translate-y-0.5 hover:shadow-md hover:ring-gray-200 transition">
@@ -120,7 +120,7 @@
                                     $priceDaily = $field['price_daily'] ?? null;
                                     ?>
                                     <div class="space-y-1 text-sm">
-                                        <?php if ($priceHour !== null): ?>
+                                        <?php if ($priceHour !== null && $priceHour > 0): ?>
                                             <p class="flex justify-between font-medium text-gray-700">
                                                 <span class="text-gray-500">ราคา/ชม.</span>
                                                 <span class="text-emerald-600">
@@ -129,7 +129,7 @@
                                             </p>
                                         <?php endif; ?>
 
-                                        <?php if ($priceDaily !== null): ?>
+                                        <?php if ($priceDaily !== null && $priceDaily > 0): ?>
                                             <p class="flex justify-between font-medium text-gray-700">
                                                 <span class="text-gray-500">ราคา/วัน</span>
                                                 <span class="text-emerald-600">
@@ -138,10 +138,21 @@
                                             </p>
                                         <?php endif; ?>
                                     </div>
-                                    <a href="<?= esc($detailUrl) ?>"
-                                        class="relative z-10 block w-full text-center rounded-lg bg-[var(--primary)] px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:ring-offset-2">
-                                        ดูรายละเอียด / จอง
-                                    </a>
+                                    <?php
+                                    $isActive = ($field['status'] ?? 'active') === 'active';
+                                    ?>
+
+                                    <?php if ($isActive): ?>
+                                        <a href="<?= esc($detailUrl) ?>"
+                                            class="relative z-10 block w-full text-center rounded-lg bg-[var(--primary)] px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:ring-offset-2">
+                                            ดูรายละเอียด / จอง
+                                        </a>
+                                    <?php else: ?>
+                                        <a href="<?= esc($detailUrl) ?>"
+                                            class="relative z-10 block w-full text-center rounded-lg bg-gray-200 px-4 py-2.5 text-sm font-medium text-gray-500 shadow-sm cursor-pointer">
+                                            ปิดปรับปรุง
+                                        </a>
+                                    <?php endif; ?>
                                 </div>
                             </div>
                         </article>
@@ -213,7 +224,7 @@
             $stadiumImages = $stadiumImages ?? [];
             ?>
             <div id="stadiumGalleryOverlay"
-                class="fixed inset-0 z-40 hidden bg-black/70 backdrop-blur-sm flex items-center justify-center px-4"
+                class="fixed inset-0 z-50 hidden bg-black/70 backdrop-blur-sm flex items-center justify-center px-4"
                 role="dialog" aria-modal="true" aria-labelledby="galleryModalTitle">
                 <div
                     class="relative max-w-4xl w-full bg-gray-800 rounded-2xl shadow-xl overflow-hidden flex flex-col max-h-[90vh]">
@@ -290,11 +301,11 @@
 
             <!-- Section: แผนที่สนาม -->
             <div class="p-4 sm:p-6 space-y-3">
-                <h2 class="text-lg sm:text-xl font-semibold text-gray-900">แผนที่สนาม</h2>
+                <h2 class="text-lg sm:text-xl font-semibold text-gray-900">สนามบนแผนที่</h2>
 
                 <?php if (!empty($stadium['lat']) && !empty($stadium['lng'])): ?>
                     <div id="stadium-map" data-lat="<?= esc($stadium['lat']) ?>" data-lng="<?= esc($stadium['lng']) ?>"
-                        class="w-full h-80 rounded-xl overflow-hidden border border-gray-200">
+                        class="relative z-10 w-full h-80 rounded-xl overflow-hidden border border-gray-200">
                     </div>
                 <?php else: ?>
                     <p class="text-gray-500 text-sm">ยังไม่ระบุพิกัดแผนที่</p>

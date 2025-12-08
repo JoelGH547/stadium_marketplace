@@ -1,131 +1,275 @@
 document.addEventListener('DOMContentLoaded', function () {
-  // ====== 1. ระยะห่างจากผู้ใช้ + เวลาเปิดปิดสนาม ======
-  const article = document.getElementById('stadiumDetail');
-  let openTimeRaw = '';
-  let closeTimeRaw = '';
+    console.log('DOM Content Loaded - Consolidated Script Started');
 
-  if (article) {
-    const lat = parseFloat(article.dataset.lat || '');
-    const lng = parseFloat(article.dataset.lng || '');
-    const distBadgeSpan = article.querySelector('.dist-badge span:last-child');
+    // --- Elements ---
+    const article = document.getElementById('stadiumDetail');
+    const bookingTypeSelect = document.getElementById('bookingTypeSelect');
+    const hourlyBookingFields = document.getElementById('hourlyBookingFields');
+    const dailyBookingFields = document.getElementById('dailyBookingFields');
+    const dateInput = document.getElementById('bookingDate'); // Hourly date
+    const startTimeSelect = document.getElementById('startTimeSelect');
+    const endTimeSelect = document.getElementById('endTimeSelect');
+    const startDateInput = document.getElementById('startDate'); // Daily start date
+    const endDateInput = document.getElementById('endDate');
+    const timeHelpText = document.getElementById('timeHelpText');
+    const timeErrorText = document.getElementById('timeErrorText');
+    const bookingDurationWrapper = document.getElementById('bookingDurationWrapper');
+    const bookingHoursLabel = document.getElementById('bookingHoursLabel');
+    const bookingFieldPriceEl = document.getElementById('bookingFieldPrice');
+    const bookingServiceFeeEl = document.getElementById('bookingServiceFee');
+    const infoBoxPriceHourEl = document.getElementById('infoBoxPriceHour');
+    const infoBoxPriceDayEl = document.getElementById('infoBoxPriceDay');
 
-    // เวลาเปิด-ปิดจาก data-attribute (เช่น 09:00 หรือ 09:00:00)
-    openTimeRaw = (article.dataset.openTime || '').trim();
-    closeTimeRaw = (article.dataset.closeTime || '').trim();
+    // --- Data from DOM ---
+    const openTimeRaw = (article.dataset.openTime || '').trim();
+    const closeTimeRaw = (article.dataset.closeTime || '').trim();
 
-    function haversine(lat1, lon1, lat2, lon2) {
-      const toRad = (deg) => (deg * Math.PI) / 180;
-      const R = 6371; // km
-      const dLat = toRad(lat2 - lat1);
-      const dLon = toRad(lon2 - lon1);
-      const a =
-        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-        Math.cos(toRad(lat1)) *
-        Math.cos(toRad(lat2)) *
-        Math.sin(dLon / 2) *
-        Math.sin(dLon / 2);
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-      return R * c;
+    // --- Helper Functions ---
+    const getPriceFromElement = (element) => {
+        if (!element || !element.textContent) return 0;
+        const priceText = element.textContent.replace(/[^0-9.]/g, '');
+        return parseFloat(priceText) || 0;
+    };
+
+    function parseTimeToMinutes(str) {
+        if (!str) return null;
+        const parts = str.split(':');
+        if (parts.length < 2) return null;
+        const h = parseInt(parts[0], 10);
+        const m = parseInt(parts[1], 10);
+        if (Number.isNaN(h) || Number.isNaN(m)) return null;
+        return h * 60 + m;
     }
 
-    function updateDistance(userLat, userLng) {
-      if (!distBadgeSpan || isNaN(lat) || isNaN(lng)) return;
-
-      const d = haversine(userLat, userLng, lat, lng);
-      let text = '-- km.';
-
-      if (d < 1) {
-        text = (d * 1000).toFixed(0) + ' m.';
-      } else {
-        text = d.toFixed(1) + ' km.';
-      }
-
-      distBadgeSpan.textContent = text;
+    function minutesToLabel(mins) {
+        const h = Math.floor(mins / 60);
+        const m = mins % 60;
+        return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
     }
 
-    if (navigator.geolocation && !isNaN(lat) && !isNaN(lng)) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          updateDistance(pos.coords.latitude, pos.coords.longitude);
-        },
-        () => {
-          // ถ้า user ไม่ยอมแชร์ location ก็ปล่อยเป็น -- km. ไป
-        },
-        { enableHighAccuracy: false, maximumAge: 300000, timeout: 8000 }
-      );
-    }
-  }
-
-  // ====== 4. แกลเลอรี Hero รูปสนาม + อนิเมชัน ======
-  const heroSection = document.getElementById('stadiumHero');
-  if (!heroSection) return;
-
-  const imgEl = document.getElementById('heroImage');
-  if (!imgEl) return;
-
-  let images = [];
-  try {
-    const raw = heroSection.dataset.images || '[]';
-    const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed)) {
-      images = parsed.filter(
-        (src) => typeof src === 'string' && src.trim() !== ''
-      );
-    }
-  } catch (e) {
-    console.error('Invalid gallery images JSON in stadiumHero', e);
-  }
-
-  if (images.length === 0 && imgEl.src) {
-    images = [imgEl.src];
-  }
-
-  let index = 0;
-
-  function showImage(target) {
-    if (!images.length) return;
-
-    if (target < 0) {
-      target = images.length - 1;
-    } else if (target >= images.length) {
-      target = 0;
+    function clearSelectOptions(selectEl, placeholder) {
+        if (!selectEl) return;
+        while (selectEl.firstChild) {
+            selectEl.removeChild(selectEl.firstChild);
+        }
+        const opt = document.createElement('option');
+        opt.value = '';
+        opt.textContent = placeholder;
+        selectEl.appendChild(opt);
     }
 
-    // slide + fade ออกจากเฟรม
-    imgEl.classList.add('opacity-0', 'translate-x-4');
+    function getDurationHours() {
+        if (!startTimeSelect || !endTimeSelect) return 0;
+        const startVal = startTimeSelect.value;
+        const endVal = endTimeSelect.value;
+        const startM = parseTimeToMinutes(startVal);
+        const endM = parseTimeToMinutes(endVal);
+        if (startM === null || endM === null) return 0;
+        const diff = endM - startM;
+        if (diff <= 0) return 0;
+        return diff / 60;
+    }
 
-    setTimeout(() => {
-      index = target;
-      imgEl.src = images[index];
+    // --- Time Slot Generation ---
+    function buildTimeOptionsForDate(dateStr) {
+        if (!startTimeSelect || !endTimeSelect) return;
 
-      imgEl.onload = () => {
-        imgEl.classList.remove('translate-x-4');
-        requestAnimationFrame(() => {
-          imgEl.classList.remove('opacity-0');
-        });
-      };
-    }, 150);
-  }
+        const todayStr = new Date().toISOString().split('T')[0];
+        clearSelectOptions(startTimeSelect, '— เลือกเวลาเริ่มต้น —');
+        clearSelectOptions(endTimeSelect, '— เลือกเวลาสิ้นสุด —');
+        startTimeSelect.disabled = false;
+        endTimeSelect.disabled = true;
 
-  // คลิกที่ภาพให้เลื่อนไปภาพถัดไป
-  heroSection.addEventListener('click', () => {
-    showImage(index + 1);
-  });
+        if (!dateStr) {
+            if (timeErrorText) timeErrorText.classList.add('hidden');
+            return;
+        }
 
-  const prevBtn = heroSection.querySelector('[data-hero-prev]');
-  const nextBtn = heroSection.querySelector('[data-hero-next]');
+        let openMinutes = parseTimeToMinutes(openTimeRaw);
+        let closeMinutes = parseTimeToMinutes(closeTimeRaw);
+        if (openMinutes === null || closeMinutes === null || closeMinutes <= openMinutes) {
+            openMinutes = 9 * 60;
+            closeMinutes = 22 * 60;
+        }
 
-  if (prevBtn) {
-    prevBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      showImage(index - 1);
+        let startBase = openMinutes;
+        if (dateStr === todayStr) {
+            const now = new Date();
+            const currentMinutes = now.getHours() * 60 + now.getMinutes();
+            const nextHour = (Math.floor(currentMinutes / 60) + 1) * 60;
+            if (nextHour > startBase) startBase = nextHour;
+        }
+
+        if (startBase > closeMinutes - 60) {
+            startTimeSelect.disabled = true;
+            if (timeErrorText) {
+                timeErrorText.textContent = dateStr === todayStr ? 'วันนี้เลยเวลาเปิดให้จองแล้ว' : 'ไม่พบช่วงเวลาที่จองได้';
+                timeErrorText.classList.remove('hidden');
+            }
+            return;
+        }
+
+        if (timeErrorText) timeErrorText.classList.add('hidden');
+
+        for (let t = startBase; t <= closeMinutes - 60; t += 60) {
+            const label = minutesToLabel(t);
+            const opt = document.createElement('option');
+            opt.value = label;
+            opt.textContent = label;
+            startTimeSelect.appendChild(opt);
+        }
+    }
+
+    function rebuildEndTimeOptions() {
+        if (!startTimeSelect || !endTimeSelect) return;
+        const startVal = startTimeSelect.value;
+        clearSelectOptions(endTimeSelect, '— เลือกเวลาสิ้นสุด —');
+        if (!startVal) {
+            endTimeSelect.disabled = true;
+            return;
+        }
+        let closeMinutes = parseTimeToMinutes(closeTimeRaw);
+        if (closeMinutes === null) closeMinutes = 22 * 60;
+        const startMinutes = parseTimeToMinutes(startVal);
+        if (startMinutes === null) {
+            endTimeSelect.disabled = true;
+            return;
+        }
+        const minEnd = startMinutes + 60;
+        if (minEnd > closeMinutes) {
+            endTimeSelect.disabled = true;
+            return;
+        }
+        for (let t = minEnd; t <= closeMinutes; t += 60) {
+            const label = minutesToLabel(t);
+            const opt = document.createElement('option');
+            opt.value = label;
+            opt.textContent = label;
+            endTimeSelect.appendChild(opt);
+        }
+        endTimeSelect.disabled = false;
+    }
+
+    // --- Main UI Update Functions ---
+    function updateHourlyPrice() {
+        const hours = getDurationHours();
+        const pricePerHour = getPriceFromElement(infoBoxPriceHourEl);
+
+        // For now, price calculation is simplified to focus on the label.
+        // A full implementation would also consider cart items.
+        if (hours > 0 && pricePerHour > 0) {
+            const basePrice = hours * pricePerHour;
+            const serviceFee = basePrice * 0.05;
+            bookingFieldPriceEl.textContent = `${basePrice.toLocaleString()}฿`;
+            bookingServiceFeeEl.textContent = `${serviceFee.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}฿`;
+            bookingHoursLabel.textContent = `${hours} ชั่วโมง`;
+            bookingDurationWrapper.classList.remove('hidden');
+        } else {
+            bookingFieldPriceEl.textContent = '--฿';
+            bookingServiceFeeEl.textContent = '--฿';
+            bookingDurationWrapper.classList.add('hidden');
+            bookingHoursLabel.textContent = '';
+        }
+    }
+
+    function updateDailyPrice() {
+        const dailyPrice = getPriceFromElement(infoBoxPriceDayEl);
+        const startDate = startDateInput.value;
+        const endDate = endDateInput.value;
+        if (startDate && endDate && dailyPrice > 0) {
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            if (end < start) {
+                bookingFieldPriceEl.textContent = '--฿';
+                bookingServiceFeeEl.textContent = '--฿';
+                bookingDurationWrapper.classList.add('hidden');
+                bookingHoursLabel.textContent = '';
+                return;
+            }
+            const diffTime = Math.abs(end - start);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+            const totalFieldPrice = diffDays * dailyPrice;
+            const serviceFee = totalFieldPrice * 0.05;
+            bookingFieldPriceEl.textContent = `${totalFieldPrice.toLocaleString()}฿`;
+            bookingServiceFeeEl.textContent = `${serviceFee.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}฿`;
+            bookingHoursLabel.textContent = `${diffDays} วัน`;
+            bookingDurationWrapper.classList.remove('hidden');
+        } else {
+            bookingFieldPriceEl.textContent = '--฿';
+            bookingServiceFeeEl.textContent = '--฿';
+            bookingDurationWrapper.classList.add('hidden');
+            bookingHoursLabel.textContent = '';
+        }
+    }
+
+    function updateBookingUI() {
+        const bookingType = bookingTypeSelect.value;
+        if (bookingType === 'daily') {
+            hourlyBookingFields.classList.add('hidden');
+            dailyBookingFields.classList.remove('hidden');
+            if(timeHelpText) timeHelpText.textContent = 'กรุณาเลือกช่วงวันที่ที่ต้องการจอง';
+            updateDailyPrice();
+        } else { // hourly
+            hourlyBookingFields.classList.remove('hidden');
+            dailyBookingFields.classList.add('hidden');
+            if(timeHelpText) timeHelpText.textContent = 'สามารถจองได้เป็นช่วงชั่วโมงเต็ม และไม่สามารถเลือกเวลาที่ผ่านมาแล้วในวันนี้ได้';
+            updateHourlyPrice();
+        }
+    }
+
+    // --- Initialization & Event Listeners ---
+    const hourlyPrice = getPriceFromElement(infoBoxPriceHourEl);
+    const dailyPrice = getPriceFromElement(infoBoxPriceDayEl);
+    const hourlyOption = bookingTypeSelect.querySelector('option[value="hourly"]');
+    const dailyOption = bookingTypeSelect.querySelector('option[value="daily"]');
+    let initialSelectedValue = 'hourly';
+
+    if (hourlyOption && (!hourlyPrice || hourlyPrice <= 0)) {
+        hourlyOption.remove();
+        if (dailyOption && (dailyPrice > 0)) {
+            initialSelectedValue = 'daily';
+        }
+    }
+    if (dailyOption && (!dailyPrice || dailyPrice <= 0)) {
+        dailyOption.remove();
+    }
+
+    if (bookingTypeSelect.options.length > 0) {
+        bookingTypeSelect.value = initialSelectedValue;
+        if (bookingTypeSelect.value !== initialSelectedValue) {
+            bookingTypeSelect.value = bookingTypeSelect.options[0].value;
+        }
+    }
+
+    if (bookingTypeSelect.options.length === 0) {
+        const bookingSection = document.getElementById('bookingTypeSelect').closest('.space-y-3');
+        if(bookingSection) {
+            bookingSection.innerHTML = '<p class="text-sm text-gray-500">ไม่มีประเภทการจองที่ว่างสำหรับสนามนี้</p>';
+        }
+    } else {
+        updateBookingUI();
+    }
+
+    // Listeners
+    bookingTypeSelect.addEventListener('change', updateBookingUI);
+    dateInput.addEventListener('change', () => { buildTimeOptionsForDate(dateInput.value); updateHourlyPrice(); });
+    startTimeSelect.addEventListener('change', () => { rebuildEndTimeOptions(); updateHourlyPrice(); });
+    endTimeSelect.addEventListener('change', updateHourlyPrice);
+    startDateInput.addEventListener('change', () => {
+        if (startDateInput.value) {
+            endDateInput.min = startDateInput.value;
+            if (endDateInput.value && endDateInput.value < startDateInput.value) endDateInput.value = '';
+        }
+        updateDailyPrice();
     });
-  }
+    endDateInput.addEventListener('change', updateDailyPrice);
 
-  if (nextBtn) {
-    nextBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      showImage(index + 1);
-    });
-  }
+    // Initial setup for date inputs
+    const todayStr = new Date().toISOString().split('T')[0];
+    if (!dateInput.value) dateInput.value = todayStr;
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    startDateInput.min = tomorrow.toISOString().split('T')[0];
+    
+    buildTimeOptionsForDate(dateInput.value);
 });

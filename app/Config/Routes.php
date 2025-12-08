@@ -29,9 +29,12 @@ $routes->group('sport', ['filter' => 'customer'], static function ($routes) {
     $routes->get('view', 'customer\StadiumController::view');
     $routes->get('show/(:num)', 'customer\StadiumController::show/$1');
     $routes->get('fields/(:num)', 'customer\StadiumController::fields/$1');
-    $routes->get('cart', 'customer\CartController::index', ['as' => 'customer.cart']);
-    $routes->get('checkout', 'customer\CheckoutController::index', ['as' => 'customer.checkout']);
-    $routes->post('customer/booking/add', 'Customer\\BookingController::add', ['as' => 'customer.booking.add']);
+    $routes->get('cart', 'customer\CartController::index');
+    $routes->get('checkout', 'customer\CheckoutController::index');
+    $routes->post('customer/booking/add', 'Customer\\BookingController::add');
+    $routes->get('profile', 'customer\ProfileController::show');
+    $routes->get('profile/edit', 'customer\ProfileController::edit');
+    $routes->post('profile/update', 'customer\ProfileController::update');
 });
 
 

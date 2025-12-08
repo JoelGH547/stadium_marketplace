@@ -136,7 +136,7 @@ $total      = $total ?? ($subtotal + $serviceFee);
                 </div>
             </div>
 
-            <a href="<?= route_to('customer.checkout') ?>" class="inline-flex w-full items-center justify-center rounded-xl bg-[var(--primary)]
+            <a href="<?= site_url('sport/checkout') ?>" class="inline-flex w-full items-center justify-center rounded-xl bg-[var(--primary)]
           px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-teal-600 transition text-center">
                 ดำเนินการจองขั้นถัดไป
             </a>

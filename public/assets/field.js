@@ -206,6 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
     imageContainer.addEventListener('mouseleave', stopPanning);
 });
 
+
 // ========== Leaflet Map ==========
 document.addEventListener("DOMContentLoaded", () => {
     const mapEl = document.getElementById("stadium-map");

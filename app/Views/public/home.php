@@ -188,15 +188,15 @@
 
                     foreach ($popularStadiums as $stadium):
                     ?>
-                    <div class="flex-none w-[200px] snap-start cursor-pointer group/card">
-                        <div class="relative aspect-[4/3] overflow-hidden rounded-xl bg-gray-200 mb-3">
-                            <img src="<?= base_url('assets/uploads/home/' . $stadium['img']) ?>"
-                                alt="<?= esc($stadium['name']) ?>"
-                                class="h-full w-full object-cover group-hover/card:scale-110 transition-transform duration-500">
+                        <div class="flex-none w-[200px] snap-start cursor-pointer group/card">
+                            <div class="relative aspect-[4/3] overflow-hidden rounded-xl bg-gray-200 mb-3">
+                                <img src="<?= base_url('assets/uploads/home/' . $stadium['img']) ?>"
+                                    alt="<?= esc($stadium['name']) ?>"
+                                    class="h-full w-full object-cover group-hover/card:scale-110 transition-transform duration-500">
+                            </div>
+                            <h3 class="font-bold text-gray-900 text-lg truncate"><?= esc($stadium['name']) ?></h3>
+                            <p class="text-gray-500 text-sm"><?= esc($stadium['location']) ?></p>
                         </div>
-                        <h3 class="font-bold text-gray-900 text-lg truncate"><?= esc($stadium['name']) ?></h3>
-                        <p class="text-gray-500 text-sm"><?= esc($stadium['location']) ?></p>
-                    </div>
                     <?php endforeach; ?>
                 </div>
 
@@ -308,14 +308,13 @@
                     class="mt-2 -mx-4 px-4 flex gap-4 overflow-x-auto no-scrollbar scroll-smooth snap-x snap-mandatory relative z-[15]">
 
                     <?php if (!empty($nearby)): ?>
-                    <?php foreach ($nearby as $i => $v): ?>
-                    <?php
+                        <?php foreach ($nearby as $i => $v): ?>
+                            <?php
                             $id        = $v['id'] ?? null; // << เพิ่ม
                             $detailUrl = $id
                                 ? site_url('sport/fields/' . $id) // ถ้าหน้า detail คือ /sport/stadium/{id}
                                 : site_url('sport/fields'); // fallback ไปหน้า show รวมสนาม
                             $name  = $v['name'] ?? 'ชื่อสนาม';
-                            $price = isset($v['price']) ? (float) $v['price'] : 0;
 
                             $typeLabel = $v['type_label'] ?? ($v['category_name'] ?? 'สนามกีฬา');
                             $typeIcon  = $v['type_icon']  ?? ($v['category_emoji'] ?? '🏟️');
@@ -334,57 +333,54 @@
                             $uid = 'nearCard' . $i;
                             ?>
 
-                    <article
-                        class="relative snap-start flex-none min-w-[260px] sm:min-w-[280px] max-w-xs cursor-pointer"
-                        <?php if (!empty($lat) && !empty($lng)): ?> data-lat="<?= esc($lat) ?>"
-                        data-lng="<?= esc($lng) ?>" <?php endif; ?> <?php if (!empty($id) && !empty($detailUrl)): ?>
-                        onclick="window.location.href='<?= esc($detailUrl) ?>'" <?php endif; ?>>
-                        <div class="near-jelly-wrap">
-                            <!-- พื้นหลังเบลอ -->
-                            <div class="near-jelly-bg" style="background-image:url('<?= esc($coverUrl) ?>');"></div>
+                            <article
+                                class="relative snap-start flex-none min-w-[260px] sm:min-w-[280px] max-w-xs cursor-pointer"
+                                <?php if (!empty($lat) && !empty($lng)): ?> data-lat="<?= esc($lat) ?>"
+                                data-lng="<?= esc($lng) ?>" <?php endif; ?> <?php if (!empty($id) && !empty($detailUrl)): ?>
+                                onclick="window.location.href='<?= esc($detailUrl) ?>'" <?php endif; ?>>
+                                <div class="near-jelly-wrap">
+                                    <!-- พื้นหลังเบลอ -->
+                                    <div class="near-jelly-bg" style="background-image:url('<?= esc($coverUrl) ?>');"></div>
 
-                            <!-- การ์ดด้านหน้า -->
-                            <div class="near-jelly-card" style="background-image:url('<?= esc($coverUrl) ?>');">
-                                <div class="near-jelly-blur"></div>
-                                <div class="near-jelly-footer">
-                                    <!-- SVG curve แบบ CodePen -->
+                                    <!-- การ์ดด้านหน้า -->
+                                    <div class="near-jelly-card" style="background-image:url('<?= esc($coverUrl) ?>');">
+                                        <div class="near-jelly-blur"></div>
+                                        <div class="near-jelly-footer">
+                                            <!-- SVG curve แบบ CodePen -->
 
 
-                                    <!-- ข้อมูลสนาม -->
-                                    <div class="near-jelly-info">
-                                        <div class="near-jelly-name">
-                                            <?= esc($name) ?>
+                                            <!-- ข้อมูลสนาม -->
+                                            <div class="near-jelly-info">
+                                                <div class="near-jelly-name">
+                                                    <?= esc($name) ?>
+                                                </div>
+                                                <div class="near-jelly-meta">
+                                                    <span class="stars">
+                                                        <span>⭐</span>
+                                                        <span><?= number_format($stars, 1) ?></span>
+                                                    </span>
+                                                    <span class="dist-badge">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3"
+                                                            viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                            stroke-width="2">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                d="M12 2C8.134 2 5 5.134 5 9c0 4.5 4 9 7 11 3-2 7-6.5 7-11 0-3.866-3.134-7-7-7z" />
+                                                            <circle cx="12" cy="9" r="2.5" />
+                                                        </svg>
+                                                        <span>-- km.</span>
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            <!-- Badge ประเภทกีฬา + emoji มุมขวาล่าง -->
+                                            <!-- Badge ประเภทกีฬา -->
+                                            <div class="near-jelly-sport">
+                                                <span class="near-jelly-sport-emoji"><?= esc($typeIcon) ?></span>
+                                                <span><?= esc($typeLabel) ?></span>
+                                            </div>
                                         </div>
-                                        <div class="near-jelly-meta">
-                                            <span class="stars">
-                                                <span>⭐</span>
-                                                <span><?= number_format($stars, 1) ?></span>
-                                            </span>
-                                            <span class="dist-badge">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3"
-                                                    viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                    stroke-width="2">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        d="M12 2C8.134 2 5 5.134 5 9c0 4.5 4 9 7 11 3-2 7-6.5 7-11 0-3.866-3.134-7-7-7z" />
-                                                    <circle cx="12" cy="9" r="2.5" />
-                                                </svg>
-                                                <span>-- km.</span>
-                                            </span>
-                                        </div>
-                                        <div class="near-jelly-price">
-                                            ฿<?= number_format($price, 0) ?>/hr.
-                                        </div>
-                                    </div>
-
-                                    <!-- Badge ประเภทกีฬา + emoji มุมขวาล่าง -->
-                                    <!-- Badge ประเภทกีฬา -->
-                                    <div class="near-jelly-sport">
-                                        <span class="near-jelly-sport-emoji"><?= esc($typeIcon) ?></span>
-                                        <span><?= esc($typeLabel) ?></span>
-                                    </div>
-                                </div>
-                    </article>
-                    <?php endforeach; ?>
+                            </article>
+                        <?php endforeach; ?>
                     <?php endif; ?>
                 </div>
             </div>
@@ -448,12 +444,12 @@
                         <h3 class="font-bold text-gray-900 mb-4">ระดับดาว</h3>
                         <div class="space-y-3">
                             <?php foreach ([5, 4, 3, 2, 1] as $star): ?>
-                            <label class="flex items-center gap-3 cursor-pointer group">
-                                <input type="checkbox"
-                                    class="w-5 h-5 rounded border-gray-300 text-[var(--primary)] focus:ring-[var(--primary)] transition">
-                                <span class="text-gray-600 group-hover:text-[var(--primary)] text-sm"><?= $star ?>
-                                    ดาว</span>
-                            </label>
+                                <label class="flex items-center gap-3 cursor-pointer group">
+                                    <input type="checkbox"
+                                        class="w-5 h-5 rounded border-gray-300 text-[var(--primary)] focus:ring-[var(--primary)] transition">
+                                    <span class="text-gray-600 group-hover:text-[var(--primary)] text-sm"><?= $star ?>
+                                        ดาว</span>
+                                </label>
                             <?php endforeach; ?>
                         </div>
                     </div>
@@ -470,12 +466,12 @@
                             ];
                             foreach ($reviews as $review):
                             ?>
-                            <label class="flex items-center gap-3 cursor-pointer group">
-                                <input type="checkbox"
-                                    class="w-5 h-5 rounded border-gray-300 text-[var(--primary)] focus:ring-[var(--primary)] transition">
-                                <span
-                                    class="text-gray-600 group-hover:text-[var(--primary)] text-sm"><?= $review ?></span>
-                            </label>
+                                <label class="flex items-center gap-3 cursor-pointer group">
+                                    <input type="checkbox"
+                                        class="w-5 h-5 rounded border-gray-300 text-[var(--primary)] focus:ring-[var(--primary)] transition">
+                                    <span
+                                        class="text-gray-600 group-hover:text-[var(--primary)] text-sm"><?= $review ?></span>
+                                </label>
                             <?php endforeach; ?>
                         </div>
                     </div>
@@ -493,12 +489,12 @@
                             ];
                             foreach ($sports as $sport):
                             ?>
-                            <label class="flex items-center gap-3 cursor-pointer group">
-                                <input type="checkbox"
-                                    class="w-5 h-5 rounded border-gray-300 text-[var(--primary)] focus:ring-[var(--primary)] transition">
-                                <span
-                                    class="text-gray-600 group-hover:text-[var(--primary)] text-sm"><?= $sport ?></span>
-                            </label>
+                                <label class="flex items-center gap-3 cursor-pointer group">
+                                    <input type="checkbox"
+                                        class="w-5 h-5 rounded border-gray-300 text-[var(--primary)] focus:ring-[var(--primary)] transition">
+                                    <span
+                                        class="text-gray-600 group-hover:text-[var(--primary)] text-sm"><?= $sport ?></span>
+                                </label>
                             <?php endforeach; ?>
                         </div>
                     </div>
@@ -516,11 +512,11 @@
                             ];
                             foreach ($facilities as $fac):
                             ?>
-                            <label class="flex items-center gap-3 cursor-pointer group">
-                                <input type="checkbox"
-                                    class="w-5 h-5 rounded border-gray-300 text-[var(--primary)] focus:ring-[var(--primary)] transition">
-                                <span class="text-gray-600 group-hover:text-[var(--primary)] text-sm"><?= $fac ?></span>
-                            </label>
+                                <label class="flex items-center gap-3 cursor-pointer group">
+                                    <input type="checkbox"
+                                        class="w-5 h-5 rounded border-gray-300 text-[var(--primary)] focus:ring-[var(--primary)] transition">
+                                    <span class="text-gray-600 group-hover:text-[var(--primary)] text-sm"><?= $fac ?></span>
+                                </label>
                             <?php endforeach; ?>
                         </div>
                     </div>
@@ -557,15 +553,14 @@
                         ?>
                         <ul id="venueItems" class="flex flex-col gap-4">
                             <?php if (empty($venueCards)): ?>
-                            <div class="text-center py-10 text-gray-500">ไม่พบสนามที่ค้นหา</div>
+                                <div class="text-center py-10 text-gray-500">ไม่พบสนามที่ค้นหา</div>
                             <?php else: ?>
-                            <?php
+                                <?php
                                 $limitedVenues = array_slice($venueCards, 0, 20);
                                 foreach ($limitedVenues as $idx => $v):
                                     $id = $v['id'] ?? null;
                                     $detailUrl = $id ? site_url('sport/fields/' . $id) : site_url('sport/fields');
                                     $name = $v['name'] ?? 'ชื่อสนาม';
-                                    $price = isset($v['price']) ? (float) $v['price'] : 0;
                                     $address = trim(($v['address'] ?? '') . ' ' . ($v['province'] ?? ''));
                                     $address = $address !== '' ? $address : 'ยังไม่ระบุที่อยู่';
                                     $open = $v['open_time'] ?? null;
@@ -580,89 +575,82 @@
                                     $lat = $v['lat'] ?? null;
                                     $lng = $v['lng'] ?? null;
                                 ?>
-                            <li class="relative bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-200 overflow-hidden"
-                                data-price="<?= esc($price) ?>" data-distance-km="" data-rating="0"
-                                data-popular="<?= 100 - (int) $idx ?>" <?php if (!empty($lat) && !empty($lng)): ?>
-                                data-lat="<?= esc($lat) ?>" data-lng="<?= esc($lng) ?>" <?php endif; ?>>
+                                    <li class="relative bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-200 overflow-hidden"
+                                        data-distance-km="" data-rating="0"
+                                        data-popular="<?= 100 - (int) $idx ?>" <?php if (!empty($lat) && !empty($lng)): ?>
+                                        data-lat="<?= esc($lat) ?>" data-lng="<?= esc($lng) ?>" <?php endif; ?>>
 
-                                <div class="flex flex-col md:flex-row">
-                                    <!-- Image Section -->
-                                    <div class="relative w-full md:w-80 h-56 flex-shrink-0">
-                                        <?php if (!empty($detailUrl)): ?>
-                                        <a href="<?= esc($detailUrl) ?>" class="absolute inset-0 z-[5]">
-                                            <span class="sr-only">ดูรายละเอียดสนาม</span>
-                                        </a>
-                                        <?php endif; ?>
-                                        <img src="<?= esc($coverUrl) ?>" class="w-full h-full object-cover"
-                                            alt="<?= esc($name) ?>">
+                                        <div class="flex flex-col md:flex-row">
+                                            <!-- Image Section -->
+                                            <div class="relative w-full md:w-80 h-56 flex-shrink-0">
+                                                <?php if (!empty($detailUrl)): ?>
+                                                    <a href="<?= esc($detailUrl) ?>" class="absolute inset-0 z-[5]">
+                                                        <span class="sr-only">ดูรายละเอียดสนาม</span>
+                                                    </a>
+                                                <?php endif; ?>
+                                                <img src="<?= esc($coverUrl) ?>" class="w-full h-full object-cover"
+                                                    alt="<?= esc($name) ?>">
 
-                                        <!-- Sport Type Badge -->
-                                        <div
-                                            class="absolute bottom-3 left-3 z-[6] inline-flex items-center gap-1 text-[var(--primary)] text-xs font-semibold px-3 py-1.5 rounded-full bg-white/90 shadow-md backdrop-blur-sm border border-white/60">
-                                            <span class="text-sm"><?= esc($typeIcon) ?></span>
-                                            <span><?= esc($typeLabel) ?></span>
-                                        </div>
+                                                <!-- Sport Type Badge -->
+                                                <div
+                                                    class="absolute bottom-3 left-3 z-[6] inline-flex items-center gap-1 text-[var(--primary)] text-xs font-semibold px-3 py-1.5 rounded-full bg-white/90 shadow-md backdrop-blur-sm border border-white/60">
+                                                    <span class="text-sm"><?= esc($typeIcon) ?></span>
+                                                    <span><?= esc($typeLabel) ?></span>
+                                                </div>
 
-                                        <!-- Heart Icon (Favorite) -->
-                                        <button
-                                            class="absolute top-3 right-3 z-[6] w-10 h-10 rounded-full bg-white/90 hover:bg-white flex items-center justify-center shadow-md transition-colors">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-600"
-                                                fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                                            </svg>
-                                        </button>
-                                    </div>
-                                    <!-- Content Section -->
-                                    <div class="flex-1 p-5 md:p-6">
-                                        <h3 class="text-xl font-bold text-gray-900 mb-2 line-clamp-2">
-                                            <?= esc($name) ?>
-                                        </h3>
-
-                                        <div class="flex items-center gap-2 text-sm text-gray-600 mb-3">
-                                            <span class="inline-flex items-center gap-1">
-                                                ⭐ <strong class="text-gray-900">0.0</strong>
-                                            </span>
-                                            <span class="text-gray-400">•</span>
-                                            <span class="inline-flex items-center gap-1 dist-badge">
-                                                📍 <span>-- km.</span>
-                                            </span>
-                                        </div>
-                                        <p class="text-sm text-gray-600 mb-3 line-clamp-1">
-                                            <?= esc($address) ?>
-                                        </p>
-                                        <div class="flex flex-wrap items-center gap-2 text-sm">
-                                            <span
-                                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full border border-gray-200 text-gray-600">
-                                                ⏰ <?= esc($timeLabel) ?>
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <!-- Price Section -->
-                                    <div
-                                        class="flex flex-col items-end justify-between p-5 md:p-6 md:w-48 bg-gray-50 border-t md:border-t-0 md:border-l border-gray-100">
-                                        <div class="text-right mb-auto">
-                                            <div class="text-xs text-gray-500 mb-1">เริ่มต้น</div>
-                                            <div class="text-2xl font-bold text-[var(--primary)]">
-                                                ฿<?= number_format($price, 0) ?>
+                                                <!-- Heart Icon (Favorite) -->
+                                                <button
+                                                    class="absolute top-3 right-3 z-[6] w-10 h-10 rounded-full bg-white/90 hover:bg-white flex items-center justify-center shadow-md transition-colors">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-600"
+                                                        fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                            d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                                    </svg>
+                                                </button>
                                             </div>
-                                            <div class="text-xs text-gray-500">ต่อชั่วโมง</div>
-                                        </div>
+                                            <!-- Content Section -->
+                                            <div class="flex-1 p-5 md:p-6">
+                                                <h3 class="text-xl font-bold text-gray-900 mb-2 line-clamp-2">
+                                                    <?= esc($name) ?>
+                                                </h3>
 
-                                        <?php if (!empty($detailUrl)): ?>
-                                        <a href="<?= esc($detailUrl) ?>"
-                                            class="relative z-[6] w-full mt-4 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[var(--primary)] text-white font-semibold hover:bg-emerald-600 transition-colors shadow-md">
-                                            <span>ดูรายละเอียด</span>
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24"
-                                                fill="none" stroke="currentColor" stroke-width="2">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
-                                            </svg>
-                                        </a>
-                                        <?php endif; ?>
-                                    </div>
-                                </div>
-                            </li>
-                            <?php endforeach; ?>
+                                                <div class="flex items-center gap-2 text-sm text-gray-600 mb-3">
+                                                    <span class="inline-flex items-center gap-1">
+                                                        ⭐ <strong class="text-gray-900">0.0</strong>
+                                                    </span>
+                                                    <span class="text-gray-400">•</span>
+                                                    <span class="inline-flex items-center gap-1 dist-badge">
+                                                        📍 <span>-- km.</span>
+                                                    </span>
+                                                </div>
+                                                <p class="text-sm text-gray-600 mb-3 line-clamp-1">
+                                                    <?= esc($address) ?>
+                                                </p>
+                                                <div class="flex flex-wrap items-center gap-2 text-sm">
+                                                    <span
+                                                        class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full border border-gray-200 text-gray-600">
+                                                        ⏰ <?= esc($timeLabel) ?>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <!-- CTA Section -->
+                                            <div
+                                                class="flex flex-col items-end justify-end p-5 md:p-6 md:w-48 bg-gray-50 border-t md:border-t-0 md:border-l border-gray-100">
+
+                                                <?php if (!empty($detailUrl)): ?>
+                                                    <a href="<?= esc($detailUrl) ?>"
+                                                        class="relative z-[6] w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[var(--primary)] text-white font-semibold hover:bg-emerald-600 transition-colors shadow-md whitespace-nowrap">
+                                                        <span>ดูรายละเอียด</span>
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24"
+                                                            fill="none" stroke="currentColor" stroke-width="2">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                                                        </svg>
+                                                    </a>
+                                                <?php endif; ?>
+                                            </div>
+                                        </div>
+                                    </li>
+                                <?php endforeach; ?>
                             <?php endif; ?>
                         </ul>
                     </div>

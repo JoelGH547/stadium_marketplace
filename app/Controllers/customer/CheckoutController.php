@@ -13,7 +13,7 @@ class CheckoutController extends BaseController
 
         // ถ้าไม่มีตะกร้า / ยังไม่ได้จองอะไร ให้เด้งกลับไปหน้าตะกร้า
         if (!is_array($cart) || empty($cart['items'])) {
-            return redirect()->to(route_to('customer.cart'));
+            return redirect()->to(site_url('sport/cart'));
         }
 
         $stadiumName       = (string) ($cart['stadium_name'] ?? '');

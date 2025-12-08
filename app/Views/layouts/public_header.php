@@ -90,7 +90,7 @@ $siteName = $siteName ?? 'Stadium Marketplace';
 
                             <nav class="py-1 text-sm text-gray-700">
 
-                                <a href="#"
+                                <a href="<?= base_url('sport/profile') ?>"
                                     class="flex items-center gap-3 px-4 py-2 hover:bg-gray-100 transition rounded-md">
                                     <svg class="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24"
                                         stroke="currentColor">
