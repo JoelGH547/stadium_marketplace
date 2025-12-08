@@ -74,10 +74,10 @@ $routes->group('admin', ['filter' => ['auth', 'admin']], static function ($route
         $routes->post('update', 'Admin\VendorItemController::update');
         $routes->get('delete/(:num)', 'Admin\VendorItemController::delete/$1');
         $routes->post('quick-create', 'Admin\VendorItemController::quickCreate');
-        // ❌ เอาบรรทัดเดิมออกไปแล้ว เพื่อไม่ให้ URL ซ้อนกัน
+        
     });
 
-    // ✅ ย้ายออกมาไว้ตรงนี้ (ยังอยู่ใน admin group)
+    
     // URL ที่ถูกต้องจะเป็น: /admin/get-stadium-facility-types/1
     $routes->get('get-stadium-facility-types/(:num)', 'Admin\VendorItemController::getStadiumFacilityTypes/$1');
 
@@ -125,4 +125,7 @@ $routes->group('customer', ['filter' => ['auth', 'customer']], static function (
     $routes->get('payment/checkout/(:num)', 'BookingController::checkout/$1');
     $routes->post('payment/process', 'BookingController::processPayment');
     $routes->get('payment/success/(:num)', 'BookingController::paymentSuccess/$1');
+
+    
+
 });

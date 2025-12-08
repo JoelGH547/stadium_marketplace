@@ -6,7 +6,6 @@ use CodeIgniter\Model;
 
 class VendorProductModel extends Model
 {
-    // ชื่อตารางใน Database (ตรงกับรูป image_91fde1.jpg)
     protected $table            = 'vendor_products';
     protected $primaryKey       = 'id';
     protected $useAutoIncrement = true;

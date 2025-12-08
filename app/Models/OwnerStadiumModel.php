@@ -13,7 +13,7 @@ class OwnerStadiumModel extends Model
         'vendor_id',
         'category_id',
         'name',
-        'price', // ราคา/ชั่วโมง
+        'price', 
         'description',
         
         'open_time',

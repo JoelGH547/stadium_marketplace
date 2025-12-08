@@ -12,7 +12,7 @@
 
     <style>
         :root {
-            /* Theme Colors */
+           
             --sidebar-bg: #111827;
             --sidebar-bg-accent: #134e4a;
             --mint-primary: #14b8a6;
@@ -28,7 +28,7 @@
             font-size: 0.9rem; 
         }
 
-        /* Sidebar */
+       
         .sidebar {
             width: 240px;
             min-height: 100vh;
@@ -67,28 +67,28 @@
             font-size: 1.1rem;
         }
         
-        /* Submenu */
+       
         .submenu { background-color: #00000030; }
         .submenu .nav-link { padding-left: 55px; font-size: 0.85rem; border-left: none; }
         .submenu .nav-link.active-sub { color: var(--mint-hover) !important; font-weight: 500; }
 
-        /* Content */
+        
         .content { width: 100%; padding: 25px; overflow-y: auto; height: 100vh; }
         
-        /* Custom Buttons */
+       
         .btn-mint { background-color: var(--mint-primary); color: white; border: none; }
         .btn-mint:hover { background-color: #0d9488; color: white; }
         
-        /* Table & Buttons (Compact Mode) */
+        
         .table td, .table th { padding: 0.5rem 0.5rem !important; vertical-align: middle; font-size: 0.9rem; }
         .btn-sm { padding: 0.2rem 0.5rem; font-size: 0.85rem; }
         .card-body { padding: 1rem; }
 
-        /* Misc */
+        
         .collapse.show ~ .nav-link .fa-chevron-down { transform: rotate(180deg); }
         .fa-chevron-down { transition: transform 0.3s; font-size: 0.75em; }
         
-        /* DataTables Style */
+        
         .dataTables_wrapper { padding: 1rem 0; }
         .dataTables_filter input, .dataTables_length select {
             border-radius: 0.375rem !important; border: 1px solid #ddd !important; padding: 0.4rem 0.75rem;
@@ -181,13 +181,13 @@
 
     <script>
         $(document).ready(function() {
-            // DataTables
+            
             $('.table-datatable').DataTable({
                 "language": { "search": "ค้นหา:", "lengthMenu": "แสดง _MENU_", "info": "แสดง _START_ ถึง _END_ จาก _TOTAL_", "paginate": { "first": "หน้าแรก", "last": "หน้าสุดท้าย", "next": "ถัดไป", "previous": "ก่อนหน้า" }, "zeroRecords": "ไม่พบข้อมูล", "infoEmpty": "ไม่มีข้อมูล", "infoFiltered": "(กรองจาก _MAX_)" },
                 "ordering": false
             });
 
-            // Alerts
+            
             <?php if(session()->getFlashdata('success')): ?>
                 Swal.fire({ icon: 'success', title: 'สำเร็จ!', text: '<?= session()->getFlashdata('success') ?>', confirmButtonColor: '#14b8a6', timer: 3000, timerProgressBar: true });
             <?php endif; ?>
@@ -195,7 +195,7 @@
                 Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: '<?= session()->getFlashdata('error') ?>', confirmButtonColor: '#ef4444' });
             <?php endif; ?>
 
-            // Confirm Delete
+            
             $(document).on('click', '.btn-delete', function(e) {
                 e.preventDefault(); 
                 const href = $(this).attr('href'); 
@@ -218,7 +218,7 @@
     </div>
 
     <script>
-        // Script สำหรับจับคลิกรูปภาพที่มี class "img-zoomable"
+      
         document.addEventListener('DOMContentLoaded', function() {
             const zoomImages = document.querySelectorAll('.img-zoomable');
             const modalImage = document.getElementById('previewImage');

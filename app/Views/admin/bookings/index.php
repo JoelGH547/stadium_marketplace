@@ -192,12 +192,12 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // 1. ดูสลิป
+        
         $('.btn-view-slip').on('click', function() {
             $('#slipImagePreview').attr('src', $(this).data('img'));
         });
         
-        // 2. SweetAlert (สำหรับปุ่มด่วน Approve/Cancel)
+       
         $('.btn-confirm-action').on('click', function(e) {
             e.preventDefault();
             const href = $(this).attr('href');
@@ -214,7 +214,7 @@
         });
     });
 
-    // 3. Setup Modal แก้ไขสถานะ
+    
     function setEditData(id, currentStatus) {
         document.getElementById('modal_booking_id').value = id;
         if(currentStatus === 'paid') currentStatus = 'confirmed';

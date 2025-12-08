@@ -23,7 +23,7 @@
             width: 100%;
             height: 180px;
             background-color: #eee;
-            /* (ในอนาคต: ใส่รูปสนามตรงนี้) */
+            
         }
         .stadium-card-content {
             padding: 15px;

@@ -17,8 +17,8 @@ class StadiumFieldModel extends Model
         'price', 
         'price_daily', 
         'status', 
-        'outside_images', // [ใหม่]
-        'inside_images'   // [ใหม่]
+        'outside_images', 
+        'inside_images'   
     ];
 
     protected $useTimestamps = true;

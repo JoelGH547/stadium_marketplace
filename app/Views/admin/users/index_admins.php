@@ -116,7 +116,7 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // ใช้ delegation (on click document) เพื่อรองรับกรณีมีหลายหน้าใน DataTables
+        
         $(document).on('click', '.btn-view-details', function() {
             const username = $(this).data('username');
             const email = $(this).data('email');

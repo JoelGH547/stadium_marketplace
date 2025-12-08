@@ -132,28 +132,28 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
-        // 1. ชื่อไฟล์ขึ้นตอนเลือกรูป
+        
         $('.custom-file-input').on('change', function() {
             let fileName = $(this).val().split('\\').pop();
             $(this).next('.custom-file-label').addClass("selected").html(fileName);
         });
 
-        // 2. จำลองการตัดบัตรเครดิต
+        
         document.querySelector('.btn-pay-card').addEventListener('click', function() {
             const form = document.getElementById('creditCardForm');
             
-            // Check validation
+            
             if(!form.checkValidity()) {
                 form.reportValidity();
                 return;
             }
 
-            // Loading Simulation
+            
             let timerInterval;
             Swal.fire({
                 title: 'กำลังเชื่อมต่อธนาคาร...',
                 html: 'กรุณาอย่าปิดหน้าต่างนี้',
-                timer: 2000, // หมุน 2 วิ
+                timer: 2000, 
                 timerProgressBar: true,
                 didOpen: () => {
                     Swal.showLoading();
@@ -162,7 +162,7 @@
                     clearInterval(timerInterval);
                 }
             }).then((result) => {
-                // ส่งฟอร์มเมื่อโหลดเสร็จ
+                
                 form.submit();
             });
         });

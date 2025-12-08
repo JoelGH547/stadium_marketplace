@@ -10,7 +10,7 @@ class OwnerModel extends Model
 
     protected $allowedFields = [
         'username',
-        'vendor_name',     // ชื่อเจ้าของ
+        'vendor_name',     
         'lastname',
         'birthday',
         'province',

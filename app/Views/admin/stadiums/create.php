@@ -7,13 +7,13 @@
 
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="h3 text-gray-800">Add New Stadium</h1>
-        <a href="<?= base_url('admin/stadiums') ?>" class="btn btn-secondary">
+        <a href="<?= base_url('admin/stadiums') ?>" class="btn btn-secondary shadow-sm">
             <i class="fas fa-arrow-left"></i> Back to List
         </a>
     </div>
 
     <?php if (session()->getFlashdata('validation')): ?>
-        <div class="alert alert-danger">
+        <div class="alert alert-danger shadow-sm">
             <?= session()->getFlashdata('validation')->listErrors() ?>
         </div>
     <?php endif; ?>
@@ -79,6 +79,36 @@
 
                 <hr>
 
+                <div class="mb-4 p-3 border rounded bg-light">
+                    <label class="fw-bold text-primary mb-2">
+                        <i class="fas fa-concierge-bell me-1"></i> สิ่งอำนวยความสะดวกและบริการที่มี
+                    </label>
+                    <div class="row">
+                        <?php if(!empty($facilityTypes)): ?>
+                            <?php foreach($facilityTypes as $type): ?>
+                                <div class="col-md-3 col-sm-6 mb-2">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" 
+                                               name="stadium_facilities[]" 
+                                               value="<?= $type['id'] ?>" 
+                                               id="fac_<?= $type['id'] ?>">
+                                        
+                                        <label class="form-check-label" for="fac_<?= $type['id'] ?>">
+                                            <?= esc($type['name']) ?>
+                                        </label>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <div class="col-12 text-muted small">ยังไม่มีข้อมูลประเภทสิ่งอำนวยความสะดวก (กรุณาเพิ่มที่เมนู Facility Types)</div>
+                        <?php endif; ?>
+                    </div>
+                    <small class="text-muted d-block mt-2">
+                        <i class="fas fa-info-circle"></i> เลือกหมวดหมู่ที่สนามนี้มีให้บริการ เพื่อให้ระบบแสดงตัวเลือกตอนเพิ่มสินค้า/บริการเสริมได้ถูกต้อง
+                    </small>
+                </div>
+                <hr>
+
                 <div class="row">
                     <div class="col-md-6 form-group mb-3">
                         <label class="fw-bold">Open Time</label>
@@ -123,7 +153,7 @@
 
                 <div class="form-group mb-3">
                     <label class="fw-bold">Custom Map Link (Optional)</label>
-                    <input type="text" name="map_link" class="form-control" value="<?= old('map_link') ?>" placeholder="https://maps.google.com/...">
+                    <input type="text" name="map_link" class="form-control" value="<?= old('map_link') ?>" placeholder="http://googleusercontent.com/maps.google.com/...">
                 </div>
 
                 <hr>
@@ -139,7 +169,7 @@
                 </div>
 
                 <div class="form-group mt-4 text-end">
-                    <button type="submit" class="btn btn-primary px-4 py-2">
+                    <button type="submit" class="btn btn-primary px-4 py-2 shadow-sm">
                         <i class="fas fa-save me-1"></i> Save Stadium
                     </button>
                 </div>
@@ -157,7 +187,7 @@
         var latInput = document.getElementById('lat');
         var lngInput = document.getElementById('lng');
 
-        // Default: Bangkok coordinates if empty
+     
         var defaultLat = latInput.value ? parseFloat(latInput.value) : 13.7563;
         var defaultLng = lngInput.value ? parseFloat(lngInput.value) : 100.5018;
 
@@ -185,4 +215,5 @@
     });
 </script>
 
-<?= $this->endSection() ?>
+<?= $this->endSection() ?> 
+

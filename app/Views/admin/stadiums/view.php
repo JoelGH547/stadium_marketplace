@@ -1,6 +1,8 @@
 <?= $this->extend('layouts/admin') ?>
 <?= $this->section('content') ?>
 
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
 <div class="container-fluid p-0">
 
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -13,11 +15,11 @@
         <div>
             <?php if(($stadium['booking_type'] ?? 'complex') == 'complex'): ?>
                 <a href="<?= base_url('admin/stadiums/fields/' . $stadium['id']) ?>" class="btn btn-info text-white shadow-sm me-1">
-                    <i class="fas fa-list-ul"></i> จัดการราคา/สถานะ
+                    <i class="fas fa-list-ul"></i> จัดการสนามย่อย
                 </a>
             <?php else: ?>
                 <a href="<?= base_url('admin/stadiums/fields/' . $stadium['id']) ?>" class="btn btn-success text-white shadow-sm me-1">
-                    <i class="fas fa-tag"></i> ตั้งค่าสนาม
+                    <i class="fas fa-tag"></i> ตั้งค่าราคา
                 </a>
             <?php endif; ?>
 
@@ -76,29 +78,18 @@
                 <div class="card-body">
                     <?php 
                         $allServices = [];
-
-                        // 2.1 ดึงประเภทจากสิ่งอำนวยความสะดวกที่ติ๊กเลือก (Facilities)
                         if (!empty($facilities)) {
                             foreach ($facilities as $type => $items) {
-                                // เช็คว่าในหมวดนั้นมีรายการจริงๆ ไหม
                                 if (!empty(array_filter($items))) {
-                                     if (!in_array($type, $allServices)) {
-                                         $allServices[] = $type; 
-                                     }
+                                     if (!in_array($type, $allServices)) $allServices[] = $type; 
                                 }
                             }
                         }
-
-                        // 2.2 ดึงประเภทจากสินค้าที่มีขาย (Vendor Items)
                         if (!empty($vendor_items)) {
-                            // ดึงชื่อ type_name ของสินค้าแต่ละชิ้น
                             $itemTypes = array_column($vendor_items, 'type_name');
                             $uniqueTypes = array_unique($itemTypes);
-                            
                             foreach ($uniqueTypes as $type) {
-                                if (!empty($type) && !in_array($type, $allServices)) {
-                                    $allServices[] = $type;
-                                }
+                                if (!empty($type) && !in_array($type, $allServices)) $allServices[] = $type;
                             }
                         }
                     ?>
@@ -314,14 +305,8 @@
                 </div>
                 <div class="card-body p-0">
                     <?php if(!empty($stadium['lat']) && !empty($stadium['lng'])): ?>
-                        <iframe 
-                            width="100%" 
-                            height="300" 
-                            style="border:0;" 
-                            loading="lazy" 
-                            allowfullscreen
-                            src="https://maps.google.com/maps?q=<?= $stadium['lat'] ?>,<?= $stadium['lng'] ?>&z=15&output=embed">
-                        </iframe>
+                        <div id="stadiumMap" style="width: 100%; height: 300px;"></div>
+                        
                         <div class="p-3 bg-light small">
                             <i class="fas fa-map-pin me-1 text-danger"></i> <?= esc($stadium['address']) ?>
                         </div>
@@ -338,5 +323,31 @@
     </div>
 
 </div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // ตรวจสอบว่ามีพิกัดหรือไม่ก่อนวาดแผนที่
+        <?php if(!empty($stadium['lat']) && !empty($stadium['lng'])): ?>
+            var lat = <?= $stadium['lat'] ?>;
+            var lng = <?= $stadium['lng'] ?>;
+            var stadiumName = "<?= esc($stadium['name']) ?>";
+
+            // สร้างแผนที่
+            var map = L.map('stadiumMap').setView([lat, lng], 15);
+
+            // เพิ่ม Tile Layer (OpenStreetMap)
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+
+            // ปักหมุด
+            L.marker([lat, lng]).addTo(map)
+                .bindPopup(`<b>${stadiumName}</b><br>ที่ตั้งสนาม`)
+                .openPopup();
+        <?php endif; ?>
+    });
+</script>
 
 <?= $this->endSection() ?>

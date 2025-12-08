@@ -5,12 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= (isset($title) ? esc($title) . ' | ' : '') ?>Stadium Admin</title>
     
-    <!-- (CSS สำหรับ Auth Layout) -->
+    
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             margin: 0;
-            background-color: #f4f6f9; /* สีพื้นหลังเทาอ่อน */
+            background-color: #f4f6f9; 
             display: flex;
             justify-content: center;
             align-items: center;
@@ -34,7 +34,7 @@
             margin-bottom: 25px;
         }
         
-        /* (สไตล์สำหรับฟอร์ม) */
+       
         .form-group {
             margin-bottom: 15px;
         }
@@ -46,7 +46,7 @@
         .form-control {
             width: 100%;
             padding: 10px;
-            box-sizing: border-box; /* แก้ปัญหา padding ทำให้ล้น */
+            box-sizing: border-box; 
             border: 1px solid #ddd;
             border-radius: 4px;
         }
@@ -68,7 +68,7 @@
             margin-top: 20px;
         }
         
-        /* (สไตล์สำหรับข้อความ Error/Success) */
+        
         .message { padding: 10px; margin-bottom: 15px; border-radius: 4px; border: 1px solid transparent; }
         .success { background-color: #d4edda; color: #155724; border-color: #c3e6cb; }
         .error { background-color: #f8d7da; color: #721c24; border-color: #f5c6cb; }
@@ -80,10 +80,8 @@
 
     <div class="auth-container">
     
-        <!-- 
-          - นี่คือจุดที่เราจะ "ฉีด" เนื้อหา (เช่น ฟอร์ม Login หรือ Register)
-          - เข้ามาแทนที่
-        -->
+      
+          
         <?= $this->renderSection('content') ?>
         
     </div>

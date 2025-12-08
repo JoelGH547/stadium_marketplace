@@ -5,7 +5,7 @@ namespace App\Controllers\Admin;
 use App\Controllers\BaseController;
 use App\Models\VendorProductModel;
 use App\Models\VendorModel;
-use App\Models\StadiumModel; // ✅ เพิ่ม Model สนาม
+use App\Models\StadiumModel; 
 use App\Models\FacilityTypeModel;
 
 class VendorItemController extends BaseController
@@ -19,40 +19,34 @@ class VendorItemController extends BaseController
     {
         $this->productModel = new VendorProductModel(); 
         $this->vendorModel  = new VendorModel();
-        $this->stadiumModel = new StadiumModel(); // ✅ เรียกใช้
+        $this->stadiumModel = new StadiumModel(); 
         $this->typeModel    = new FacilityTypeModel();
         helper(['form']);
     }
 
-    // แสดงรายการสินค้าทั้งหมด
+    
     public function index()
     {
-        // ✅ แก้ไข Query: เชื่อมจาก สินค้า -> สนาม -> เจ้าของสนาม (Vendor)
-        // ใช้ LEFT JOIN เพื่อให้สินค้าโชว์ออกมาแม้ข้อมูลสนาม/Vendor จะไม่สมบูรณ์
+        
         $items = $this->productModel->select('vendor_products.*, stadiums.name as stadium_name, vendors.vendor_name, facility_types.name as type_name')
-            // 1. Join ไปหา Stadium (กุญแจหลักตัวใหม่)
             ->join('stadiums', 'stadiums.id = vendor_products.stadium_id', 'left') 
-            // 2. จากนั้นค่อย Join ไปหา Vendor ผ่านทางตาราง stadiums
             ->join('vendors', 'vendors.id = stadiums.vendor_id', 'left')
-            // 3. Join ประเภทสินค้า
             ->join('facility_types', 'facility_types.id = vendor_products.facility_type_id', 'left')
-            
             ->orderBy('vendor_products.id', 'DESC')
             ->findAll();
 
         $data = [
             'title'    => 'จัดการคลังสินค้ากลาง (Master Catalog)',
             'items'    => $items,
-            // ส่งรายชื่อสนามไปให้เลือกใน Dropdown (แทน Vendors เดิม)
             'stadiums' => $this->stadiumModel->orderBy('name', 'ASC')->findAll(), 
-            'vendors'  => $this->vendorModel->orderBy('vendor_name', 'ASC')->findAll(), // เผื่อใช้
+            'vendors'  => $this->vendorModel->orderBy('vendor_name', 'ASC')->findAll(), 
             'types'    => $this->typeModel->orderBy('id', 'ASC')->findAll()
         ];
 
         return view('admin/vendor_items/index', $data);
     }
 
-    // บันทึกสินค้าใหม่ (Form หน้าหลัก)
+    
     public function store()
     {
         $imgName = null;
@@ -65,9 +59,9 @@ class VendorItemController extends BaseController
             $file->move($uploadPath, $imgName);
         }
 
-        // ✅ บันทึก stadium_id แทน vendor_id
+        
         $this->productModel->save([
-            'stadium_id'       => $this->request->getPost('stadium_id'), // รับค่า ID สนาม
+            'stadium_id'       => $this->request->getPost('stadium_id'), 
             'facility_type_id' => $this->request->getPost('facility_type_id'),
             'name'             => $this->request->getPost('name'),
             'description'      => $this->request->getPost('description'),
@@ -80,7 +74,7 @@ class VendorItemController extends BaseController
         return redirect()->to('admin/vendor-items')->with('success', 'เพิ่มสินค้าลงคลังเรียบร้อย');
     }
 
-    // อัปเดตสินค้า
+    
     public function update()
     {
         $id = $this->request->getPost('id');
@@ -101,7 +95,7 @@ class VendorItemController extends BaseController
             $file->move(FCPATH . 'assets/uploads/items/', $imgName);
         }
 
-        // ✅ อัปเดต stadium_id
+        
         $this->productModel->update($id, [
             'stadium_id'       => $this->request->getPost('stadium_id'),
             'facility_type_id' => $this->request->getPost('facility_type_id'),
@@ -116,7 +110,7 @@ class VendorItemController extends BaseController
         return redirect()->to('admin/vendor-items')->with('success', 'แก้ไขสินค้าเรียบร้อย');
     }
 
-    // ลบสินค้า
+    
     public function delete($id)
     {
         $item = $this->productModel->find($id);
@@ -132,11 +126,11 @@ class VendorItemController extends BaseController
         return redirect()->to('admin/vendor-items')->with('error', 'ไม่พบสินค้าที่ต้องการลบ');
     }
 
-    // ✅ ฟังก์ชัน Quick Create (สำหรับ Modal หน้าสนามย่อย)
+    
     public function quickCreate()
     {
-        // รับค่าแบบ POST (เพราะอาจมีการส่งไฟล์)
-        $stadium_id = $this->request->getPost('stadium_id'); // ✅ ใช้ stadium_id
+        
+        $stadium_id = $this->request->getPost('stadium_id'); 
         $type_id    = $this->request->getPost('type_id');
         $name       = $this->request->getPost('name');
         $price      = $this->request->getPost('price');
@@ -157,7 +151,7 @@ class VendorItemController extends BaseController
         }
 
         $data = [
-            'stadium_id'       => $stadium_id, // ✅ บันทึก ID สนาม
+            'stadium_id'       => $stadium_id, 
             'facility_type_id' => $type_id,
             'name'             => $name,
             'price'            => $price,
@@ -190,12 +184,12 @@ class VendorItemController extends BaseController
     {
         $db = \Config\Database::connect();
         
-        // Query นี้จะดึงเฉพาะ Type ที่มีการระบุไว้ในตาราง stadium_facilities ของสนามนั้นๆ
+        
         $types = $db->table('stadium_facilities')
             ->select('facility_types.id, facility_types.name')
             ->join('facility_types', 'facility_types.id = stadium_facilities.type_id')
             ->where('stadium_facilities.stadium_id', $stadium_id)
-            ->groupBy('facility_types.id') // กันซ้ำ (เผื่อมีสิ่งอำนวยความสะดวกหลายอันในหมวดเดียวกัน)
+            ->groupBy('facility_types.id')
             ->orderBy('facility_types.id', 'ASC')
             ->get()
             ->getResultArray();

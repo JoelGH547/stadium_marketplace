@@ -87,9 +87,9 @@
                                                 data-status="<?= esc($item['status']) ?>">
                                             <i class="fas fa-pen"></i>
                                         </button>
+                                        
                                         <a href="<?= base_url('admin/vendor-items/delete/' . $item['id']) ?>" 
-                                           class="btn btn-outline-danger btn-sm shadow-sm"
-                                           onclick="return confirm('ยืนยันลบ?');">
+                                           class="btn btn-outline-danger btn-sm shadow-sm btn-delete">
                                             <i class="fas fa-trash-alt"></i>
                                         </a>
                                     </td>
@@ -241,9 +241,9 @@
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // ใช้ base_url('/') เพื่อให้มั่นใจว่ามี / ปิดท้ายเสมอ
     const baseUrl = '<?= base_url('/') ?>';
 
     // ฟังก์ชันโหลดหมวดหมู่ตามสนาม (ใช้ร่วมกันทั้ง Add และ Edit)
@@ -259,7 +259,6 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        // ยิง Ajax ไปที่ Route: /admin/get-stadium-facility-types/{id}
         fetch(`${baseUrl}admin/get-stadium-facility-types/${stadiumId}`)
             .then(res => res.json())
             .then(data => {
@@ -269,14 +268,13 @@ document.addEventListener('DOMContentLoaded', function() {
                         const opt = document.createElement('option');
                         opt.value = type.id;
                         opt.textContent = type.name;
-                        // ถ้าเป็นการแก้ไข ให้เลือกค่าเดิมกลับมาด้วย
                         if (selectedValue && type.id == selectedValue) opt.selected = true;
                         targetSelect.appendChild(opt);
                     });
-                    targetSelect.disabled = false; // ปลดล็อก
+                    targetSelect.disabled = false;
                 } else {
                     targetSelect.innerHTML = '<option value="">❌ สนามนี้ไม่มีหมวดหมู่บริการ</option>';
-                    targetSelect.disabled = true; // ล็อกถ้าไม่มี
+                    targetSelect.disabled = true;
                 }
             })
             .catch(err => {
@@ -285,22 +283,20 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }
 
-    // --- Logic หน้า Add ---
+    // Logic หน้า Add
     const addStadiumSelect = document.getElementById('add_stadium_id');
     if (addStadiumSelect) {
         addStadiumSelect.addEventListener('change', function() { 
-            // เมื่อเลือกสนาม -> โหลดหมวดหมู่ลง Dropdown Add
             loadCategories(this.value, 'add_type_id'); 
         });
     }
 
-    // --- Logic หน้า Edit ---
+    // Logic หน้า Edit
     var editModal = document.getElementById('editItemModal');
     if(editModal) {
         editModal.addEventListener('show.bs.modal', function (event) {
             var btn = event.relatedTarget;
             
-            // 1. ดึงข้อมูลจากปุ่ม Edit มาใส่ในฟอร์ม
             document.getElementById('edit_id').value = btn.getAttribute('data-id');
             document.getElementById('edit_name').value = btn.getAttribute('data-name');
             document.getElementById('edit_price').value = btn.getAttribute('data-price');
@@ -311,22 +307,39 @@ document.addEventListener('DOMContentLoaded', function() {
             var stadiumId = btn.getAttribute('data-stadium-id');
             var typeId = btn.getAttribute('data-type-id');
 
-            // 2. เลือกสนามใน Dropdown Edit ให้ตรงกับของเดิม
             var editStadiumSelect = document.getElementById('edit_stadium_id');
             if(editStadiumSelect) editStadiumSelect.value = stadiumId;
             
-            // 3. สั่งโหลดหมวดหมู่ใหม่ และเลือก facility_type_id เดิมให้
             loadCategories(stadiumId, 'edit_type_id', typeId);
         });
     }
     
-    // กรณีเปลี่ยนสนามในหน้า Edit (เผื่ออยากย้ายสนาม)
     const editStadiumSelect = document.getElementById('edit_stadium_id');
     if(editStadiumSelect) {
         editStadiumSelect.addEventListener('change', function() {
             loadCategories(this.value, 'edit_type_id');
         });
     }
+
+    // ✅✅✅ ส่วนจัดการปุ่มลบ (SweetAlert2) ✅✅✅
+    document.querySelectorAll('.btn-delete').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const href = this.getAttribute('href');
+            Swal.fire({
+                title: 'ยืนยันการลบ?',
+                text: "ข้อมูลและรูปภาพทั้งหมดจะหายไป กู้คืนไม่ได้!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'ใช่, ลบเลย!',
+                cancelButtonText: 'ยกเลิก'
+            }).then((result) => {
+                if (result.isConfirmed) window.location.href = href;
+            });
+        });
+    });
 });
 </script>
 <?= $this->endSection() ?>
