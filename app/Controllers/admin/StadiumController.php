@@ -6,10 +6,10 @@ use App\Controllers\BaseController;
 use App\Models\StadiumModel;
 use App\Models\CategoryModel;
 use App\Models\VendorModel;
-use App\Models\StadiumFieldModel;    // Model สนามย่อย
-use App\Models\StadiumFacilityModel; // Model ของในสนาม
-use App\Models\FacilityTypeModel;    // Model หมวดหมู่
-use App\Models\VendorItemModel;      // Model สินค้า/บริการเสริม
+use App\Models\StadiumFieldModel;
+use App\Models\StadiumFacilityModel;
+use App\Models\FacilityTypeModel;
+use App\Models\VendorProductModel;
 use CodeIgniter\Database\Exceptions\DatabaseException;
 
 class StadiumController extends BaseController
@@ -17,13 +17,19 @@ class StadiumController extends BaseController
     protected $stadiumModel;
     protected $categoryModel;
     protected $vendorModel;
+    protected $stadiumFacilityModel;
+    protected $facilityTypeModel;
 
     public function __construct()
     {
-        $this->stadiumModel  = new StadiumModel();
+        $this->stadiumModel = new StadiumModel();
         $this->categoryModel = new CategoryModel();
         $this->vendorModel   = new VendorModel();
-        
+
+
+        $this->stadiumFacilityModel = new StadiumFacilityModel();
+        $this->facilityTypeModel = new FacilityTypeModel();
+
         helper(['form']);
     }
 
@@ -33,16 +39,37 @@ class StadiumController extends BaseController
 
     public function index()
     {
-        $stadiums = $this->stadiumModel
+        // 1. รับค่าจากช่องค้นหา และ ตัวกรอง
+        $search = $this->request->getGet('search');
+        $filter = $this->request->getGet('booking_type'); // เผื่อตัวกรอง dropdown เดิม
+
+        // 2. เริ่มสร้าง Query
+        $builder = $this->stadiumModel
             ->select('stadiums.*, categories.name AS category_name, categories.emoji AS category_emoji, vendors.vendor_name AS vendor_name')
             ->join('categories', 'categories.id = stadiums.category_id', 'left')
-            ->join('vendors', 'vendors.id = stadiums.vendor_id', 'left')
-            ->orderBy('stadiums.id', 'DESC')
-            ->findAll();
+            ->join('vendors', 'vendors.id = stadiums.vendor_id', 'left');
+
+        // 3. ถ้ามีการค้นหา (Search)
+        if (!empty($search)) {
+            $builder->groupStart() // ใช้วงเล็บครอบเงื่อนไข OR
+                ->like('stadiums.name', $search)
+                ->orLike('vendors.vendor_name', $search) // แถม: ค้นหาชื่อเจ้าของได้ด้วย
+                ->groupEnd();
+        }
+
+        // 4. ถ้ามีการกรองประเภทการจอง (Dropdown เดิม)
+        if (!empty($filter) && $filter != 'all') {
+            $builder->where('stadiums.booking_type', $filter);
+        }
+
+        // 5. ดึงข้อมูล
+        $stadiums = $builder->orderBy('stadiums.id', 'DESC')->findAll();
 
         $data = [
             'title'    => 'Stadiums List',
             'stadiums' => $stadiums,
+            'search'   => $search, // ส่งค่ากลับไปแปะในช่อง input
+            'filter'   => $filter  // ส่งค่ากลับไป select dropdown
         ];
 
         return view('admin/stadiums/index', $data);
@@ -54,6 +81,7 @@ class StadiumController extends BaseController
             'title'      => 'Add New Stadium',
             'categories' => $this->categoryModel->findAll(),
             'vendors'    => $this->vendorModel->findAll(),
+            'facilityTypes' => $this->facilityTypeModel->findAll(),
         ];
 
         return view('admin/stadiums/create', $data);
@@ -61,6 +89,7 @@ class StadiumController extends BaseController
 
     public function store()
     {
+
         if (!$this->validate([
             'name'          => 'required|max_length[100]',
             'category_id'   => 'required|integer',
@@ -71,18 +100,18 @@ class StadiumController extends BaseController
         }
 
         $uploadPath = FCPATH . 'assets/uploads/stadiums/';
-        if (!is_dir($uploadPath)) { mkdir($uploadPath, 0777, true); }
+        if (!is_dir($uploadPath)) {
+            mkdir($uploadPath, 0777, true);
+        }
 
-        // --- รูปปก (Outside) ---
-        $outsideImagesJson = '[]'; 
+        $outsideImagesJson = '[]';
         $outsideFile = $this->request->getFile('outside_image');
         if ($outsideFile && $outsideFile->isValid() && !$outsideFile->hasMoved()) {
             $newName = 'outside_' . time() . '_' . $outsideFile->getRandomName();
             $outsideFile->move($uploadPath, $newName);
-            $outsideImagesJson = json_encode([$newName]); 
+            $outsideImagesJson = json_encode([$newName]);
         }
 
-        // --- รูปภายใน (Inside) ---
         $insideFiles = $this->request->getFileMultiple('inside_images');
         $insideImagesArray = [];
         if (!empty($insideFiles)) {
@@ -114,8 +143,10 @@ class StadiumController extends BaseController
             'inside_images'  => json_encode($insideImagesArray),
         ]);
 
+
         return redirect()->to(base_url('admin/stadiums'))->with('success', 'เพิ่มสนามเรียบร้อยแล้ว');
     }
+
 
     public function edit($id = null)
     {
@@ -124,15 +155,32 @@ class StadiumController extends BaseController
             return redirect()->to(base_url('admin/stadiums'))->with('error', 'ไม่พบข้อมูลสนาม');
         }
 
+
+        // ดึง facility type ที่ใช้อยู่ในสนามนี้ (จากสนามย่อยทั้งหมด)
+        $db = \Config\Database::connect();
+
+        $currentFacilities = $db->table('stadium_facilities')
+            ->select('stadium_facilities.facility_type_id')
+            ->join('stadium_fields', 'stadium_fields.id = stadium_facilities.field_id', 'left')
+            ->where('stadium_fields.stadium_id', $id)
+            ->groupBy('stadium_facilities.facility_type_id')
+            ->get()
+            ->getResultArray();
+
+        $selectedTypeIds = array_column($currentFacilities, 'facility_type_id');
+
         $data = [
-            'title'      => 'Edit Stadium',
-            'stadium'    => $stadium,
-            'categories' => $this->categoryModel->findAll(),
-            'vendors'    => $this->vendorModel->findAll(),
+            'title'           => 'Edit Stadium',
+            'stadium'         => $stadium,
+            'categories'      => $this->categoryModel->findAll(),
+            'vendors'         => $this->vendorModel->findAll(),
+            'facilityTypes'   => $this->facilityTypeModel->findAll(),
+            'selectedTypeIds' => $selectedTypeIds
         ];
 
         return view('admin/stadiums/edit', $data);
     }
+
 
     public function update($id = null)
     {
@@ -150,15 +198,18 @@ class StadiumController extends BaseController
             return redirect()->back()->withInput()->with('validation', $this->validator);
         }
 
+
         $uploadPath = FCPATH . 'assets/uploads/stadiums/';
-        if (!is_dir($uploadPath)) { mkdir($uploadPath, 0777, true); }
+        if (!is_dir($uploadPath)) {
+            mkdir($uploadPath, 0777, true);
+        }
 
         $outsideOld = json_decode($stadium['outside_images'] ?? '[]', true) ?? [];
         $outsideResult = $outsideOld;
 
         if ($this->request->getPost('delete_outside') == '1') {
             if (!empty($outsideOld[0]) && file_exists($uploadPath . $outsideOld[0])) unlink($uploadPath . $outsideOld[0]);
-            $outsideResult = []; 
+            $outsideResult = [];
         }
         $outsideFile = $this->request->getFile('outside_image');
         if ($outsideFile && $outsideFile->isValid() && !$outsideFile->hasMoved()) {
@@ -190,6 +241,8 @@ class StadiumController extends BaseController
             }
         }
 
+
+
         $this->stadiumModel->update($id, [
             'name'           => $this->request->getPost('name'),
             'description'    => $this->request->getPost('description'),
@@ -209,12 +262,15 @@ class StadiumController extends BaseController
             'inside_images'  => json_encode(array_values($insideResult)),
         ]);
 
+
+
+
         return redirect()->to(base_url('admin/stadiums'))->with('success', 'อัปเดตข้อมูลสนามเรียบร้อยแล้ว');
     }
 
     public function view($id = null)
     {
-        // 1. ดึงข้อมูลสนาม
+
         $stadium = $this->stadiumModel
             ->select('stadiums.*, categories.name AS category_name, vendors.vendor_name AS vendor_name, vendors.email AS vendor_email, vendors.phone_number AS vendor_phone')
             ->join('categories', 'categories.id = stadiums.category_id', 'left')
@@ -225,33 +281,40 @@ class StadiumController extends BaseController
             return redirect()->to(base_url('admin/stadiums'))->with('error', 'ไม่พบข้อมูลสนาม');
         }
 
-        // 2. ดึงสิ่งอำนวยความสะดวก (ที่ติ๊กเลือกไว้)
+
         $db = \Config\Database::connect();
+
         $rawFacilities = $db->table('stadium_facilities')
-            ->select('stadium_facilities.name as item_name, facility_types.name as type_name')
-            ->join('facility_types', 'facility_types.id = stadium_facilities.type_id', 'left')
-            ->where('stadium_facilities.stadium_id', $id)
+            ->select('facility_types.name AS type_name')
+            ->join('stadium_fields', 'stadium_fields.id = stadium_facilities.field_id', 'left')
+            ->join('facility_types', 'facility_types.id = stadium_facilities.facility_type_id', 'left')
+            ->where('stadium_fields.stadium_id', $id)
+            ->groupBy('facility_types.id')
             ->orderBy('facility_types.id', 'ASC')
             ->get()
             ->getResultArray();
 
         $groupedFacilities = [];
         foreach ($rawFacilities as $row) {
-            $type = $row['type_name'] ?? 'อื่นๆ';
-            $groupedFacilities[$type][] = $row['item_name'];
+            $typeName = $row['type_name'] ?? null;
+            if (!$typeName) {
+                continue;
+            }
+            if (!isset($groupedFacilities[$typeName])) {
+                $groupedFacilities[$typeName] = ['available'];
+            }
         }
 
-        // 3. ดึงสนามย่อย
+
         $fieldModel = new StadiumFieldModel();
         $stadiumFields = $fieldModel->where('stadium_id', $id)->findAll();
 
-        // 4. ✅ [UPDATED] ดึงสินค้า พร้อมชื่อหมวดหมู่ (facility_types.name)
-        // เพื่อเอาไปโชว์ในกล่องสิ่งอำนวยความสะดวกว่ามี "อุปกรณ์กีฬา", "อาหาร" ฯลฯ
-        $vendorItemModel = new VendorItemModel();
-        $vendorItems = $vendorItemModel->select('vendor_items.*, facility_types.name as type_name')
-                                       ->join('facility_types', 'facility_types.id = vendor_items.facility_type_id', 'left')
-                                       ->where('vendor_items.vendor_id', $stadium['vendor_id'])
-                                       ->findAll();
+
+        $vendorProductModel = new VendorProductModel();
+        $vendorItems = $vendorProductModel
+            ->withRelations()
+            ->where('stadiums.id', $id)
+            ->findAll();
 
         $data = [
             'title'        => 'Detail: ' . $stadium['name'],
@@ -271,52 +334,202 @@ class StadiumController extends BaseController
 
         try {
             $uploadPath = FCPATH . 'assets/uploads/stadiums/';
-            
+
             $outsideImages = json_decode($stadium['outside_images'] ?? '[]', true);
             foreach ($outsideImages as $img) @unlink($uploadPath . $img);
-            
+
             $insideImages = json_decode($stadium['inside_images'] ?? '[]', true);
             foreach ($insideImages as $img) @unlink($uploadPath . $img);
 
             $this->stadiumModel->delete($id);
             return redirect()->to(base_url('admin/stadiums'))->with('success', 'ลบข้อมูลเรียบร้อยแล้ว');
-
         } catch (DatabaseException $e) {
             return redirect()->to(base_url('admin/stadiums'))->with('error', 'ไม่สามารถลบได้ (ติดข้อมูลการจองหรืออื่นๆ)');
         }
     }
 
     // =================================================================================
-    // 🥅 [PART 2] จัดการสนามย่อย (Fields)
+    // 🥅 [PART 2] จัดการสนามย่อย (Fields) + สินค้า (Items)
     // =================================================================================
+
 
     public function fields($stadium_id)
     {
         $stadiumModel = new StadiumModel();
-        $fieldModel = new StadiumFieldModel();
-        $facilityTypeModel = new FacilityTypeModel(); 
+        $fieldModel   = new StadiumFieldModel();
+
+        // หา stadium ถ้าไม่เจอให้เด้งกลับ
+        $stadium = $stadiumModel->find($stadium_id);
+        if (!$stadium) {
+            return redirect()->to('admin/stadiums')
+                ->with('error', 'ไม่พบข้อมูลสนาม');
+        }
+
+        // สนามย่อยทั้งหมดของสนามนี้
+        $fields = $fieldModel->where('stadium_id', $stadium_id)->findAll();
+
+        // ประเภทสิ่งอำนวยความสะดวกทั้งหมด
+        $facilityTypes = $this->facilityTypeModel->orderBy('id', 'ASC')->findAll();
+
+        $fieldFacilities = [];
+        $fieldProducts   = [];
+
+        if (!empty($fields)) {
+            $fieldIds = array_column($fields, 'id');
+
+            // ดึง stadium_facilities ของ field เหล่านี้
+            $sfModel = $this->stadiumFacilityModel;
+            $sfRows  = $sfModel->whereIn('field_id', $fieldIds)->findAll();
+
+            $facilityIdMap = [];
+            foreach ($sfRows as $row) {
+                $fieldFacilities[$row['field_id']][] = $row;
+                $facilityIdMap[$row['id']] = $row;
+            }
+
+            // ดึงสินค้าใน vendor_products ที่ผูกกับ stadium_facilities เหล่านี้
+            if (!empty($facilityIdMap)) {
+                $productModel = new VendorProductModel();
+                $products     = $productModel->withRelations()
+                    ->whereIn('stadium_facility_id', array_keys($facilityIdMap))
+                    ->findAll();
+
+                foreach ($products as $prod) {
+                    $sfId = $prod['stadium_facility_id'];
+                    if (!isset($facilityIdMap[$sfId])) {
+                        continue;
+                    }
+                    $fieldId = $facilityIdMap[$sfId]['field_id'];
+                    $typeId  = $facilityIdMap[$sfId]['facility_type_id'];
+
+                    if (!isset($fieldProducts[$fieldId][$typeId])) {
+                        $fieldProducts[$fieldId][$typeId] = [];
+                    }
+                    $fieldProducts[$fieldId][$typeId][] = $prod;
+                }
+            }
+        }
 
         $data = [
-            'title'         => 'Manage Fields',
-            'stadium'       => $stadiumModel->find($stadium_id),
-            'fields'        => $fieldModel->where('stadium_id', $stadium_id)->findAll(),
-            'facilityTypes' => $facilityTypeModel->findAll()
+            'title'           => 'Manage Fields',
+            'stadium'         => $stadium,
+            'fields'          => $fields,
+            'facilityTypes'   => $facilityTypes,
+            'fieldFacilities' => $fieldFacilities,
+            'fieldProducts'   => $fieldProducts,
         ];
 
         return view('admin/stadiums/fields', $data);
     }
 
-    // [UPDATED] สร้างสนามย่อย (รองรับ outside/inside image)
+
+
+
+
+    /**
+     * AJAX: เปิด/ปิดหมวดหมู่ (facility type) สำหรับสนามย่อย
+     * - checked = 1  -> สร้าง row ใน stadium_facilities
+     * - checked = 0  -> ลบ row ที่เกี่ยวข้อง (FK จะลบสินค้าใน vendor_products ให้ถ้าตั้ง CASCADE)
+     */
+    public function toggleFieldFacility()
+    {
+        if (! $this->request->isAJAX()) {
+            return $this->response->setStatusCode(400)->setJSON([
+                'success' => false,
+                'message' => 'Invalid request type',
+            ]);
+        }
+
+        $fieldId = (int) $this->request->getPost('field_id');
+        $typeId  = (int) $this->request->getPost('facility_type_id');
+        $checked = $this->request->getPost('checked') === '1';
+
+        if ($fieldId <= 0 || $typeId <= 0) {
+            return $this->response->setStatusCode(400)->setJSON([
+                'success' => false,
+                'message' => 'Missing field_id or facility_type_id',
+            ]);
+        }
+
+        $sfModel      = $this->stadiumFacilityModel;
+        $productModel = new \App\Models\VendorProductModel();
+
+        // เช็คว่ามี row นี้อยู่แล้วหรือยัง
+        $existing = $sfModel
+            ->where('field_id', $fieldId)
+            ->where('facility_type_id', $typeId)
+            ->first();
+
+        if ($checked) {
+            // ติ๊กเปิดหมวดหมู่
+            if ($existing) {
+                return $this->response->setJSON([
+                    'success'             => true,
+                    'stadium_facility_id' => $existing['id'] ?? null,
+                ]);
+            }
+
+            $id = $sfModel->insert([
+                'field_id'         => $fieldId,
+                'facility_type_id' => $typeId,
+            ], true);
+
+            return $this->response->setJSON([
+                'success'             => true,
+                'stadium_facility_id' => $id,
+            ]);
+        }
+
+        // unchecked -> ลบ row + ลบสินค้าใน vendor_products ที่ผูกกับ stadium_facility นี้
+        $deletedProducts = 0;
+
+        if ($existing) {
+            $sfId = $existing['id'];
+
+            // ดึงสินค้าเพื่อจะลบรูปออกจากดิสก์ด้วย
+            $products = $productModel
+                ->where('stadium_facility_id', $sfId)
+                ->findAll();
+
+            $uploadPath = FCPATH . 'assets/uploads/items/';
+
+            foreach ($products as $prod) {
+                if (! empty($prod['image'])) {
+                    $filePath = $uploadPath . $prod['image'];
+                    if (is_file($filePath)) {
+                        @unlink($filePath);
+                    }
+                }
+            }
+
+            $deletedProducts = count($products);
+
+            // ลบสินค้าใน DB
+            $productModel->where('stadium_facility_id', $sfId)->delete();
+
+            // แล้วค่อยลบ row ใน stadium_facilities
+            $sfModel->delete($sfId);
+        }
+
+        return $this->response->setJSON([
+            'success'          => true,
+            'deleted_products' => $deletedProducts,
+        ]);
+    }
+
+
     public function createField()
     {
         $fieldModel = new StadiumFieldModel();
         $facModel = new StadiumFacilityModel();
+
         $stadium_id = $this->request->getPost('stadium_id');
         $uploadPath = FCPATH . 'assets/uploads/fields/';
 
-        if (!is_dir($uploadPath)) { mkdir($uploadPath, 0777, true); }
+        if (!is_dir($uploadPath)) {
+            mkdir($uploadPath, 0777, true);
+        }
 
-        // 1. จัดการรูปภาพ Outside (รูปปก)
         $outsideImagesJson = '[]';
         $outsideFile = $this->request->getFile('outside_image');
         if ($outsideFile && $outsideFile->isValid() && !$outsideFile->hasMoved()) {
@@ -325,7 +538,6 @@ class StadiumController extends BaseController
             $outsideImagesJson = json_encode([$newName]);
         }
 
-        // 2. จัดการรูปภาพ Inside (รูปภายใน)
         $insideImagesArray = [];
         $insideFiles = $this->request->getFileMultiple('inside_images');
         if ($insideFiles) {
@@ -338,7 +550,6 @@ class StadiumController extends BaseController
             }
         }
 
-        // 3. บันทึกข้อมูล
         $fieldData = [
             'stadium_id'     => $stadium_id,
             'name'           => $this->request->getPost('name'),
@@ -347,28 +558,23 @@ class StadiumController extends BaseController
             'price_daily'    => $this->request->getPost('price_daily') ?: null,
             'status'         => $this->request->getPost('status'),
             'outside_images' => $outsideImagesJson,
-            'inside_images'  => json_encode($insideImagesArray) 
+            'inside_images'  => json_encode($insideImagesArray)
         ];
 
         $fieldModel->save($fieldData);
         $field_id = $fieldModel->getInsertID();
 
-        // 4. บันทึก Facilities
+
         $facilities = $this->request->getPost('facilities');
         if (!empty($facilities) && is_array($facilities)) {
             $facData = [];
             foreach ($facilities as $type_id => $items) {
-                if(is_array($items)) {
-                    foreach ($items as $itemName) {
-                        if (!empty(trim($itemName))) {
-                            $facData[] = [
-                                'stadium_id'       => $stadium_id,
-                                'stadium_field_id' => $field_id,
-                                'type_id'          => $type_id,
-                                'name'             => trim($itemName)
-                            ];
-                        }
-                    }
+                // ตอนนี้เราไม่เก็บชื่อแล้ว เหลือแค่ field_id + facility_type_id
+                if (!empty($items) && is_array($items)) {
+                    $facData[] = [
+                        'field_id'         => $field_id,
+                        'facility_type_id' => $type_id,
+                    ];
                 }
             }
             if (!empty($facData)) {
@@ -376,39 +582,29 @@ class StadiumController extends BaseController
             }
         }
 
-        return redirect()->to('admin/stadiums/fields/' . $stadium_id)->with('success', 'เพิ่มสนามย่อยเรียบร้อย');
+        return redirect()->to('admin/stadiums/fields/' . $stadium_id)->with('success', 'เพิ่มข้อมูลเรียบร้อย');
     }
 
-    // [UPDATED] อัปเดตสนามย่อย
     public function updateField()
     {
         $fieldModel = new StadiumFieldModel();
         $facModel = new StadiumFacilityModel();
+
         $uploadPath = FCPATH . 'assets/uploads/fields/';
-        
         $id = $this->request->getPost('id');
         $stadium_id = $this->request->getPost('stadium_id');
-        
-        // 1. ดึงข้อมูลเก่า
+
         $oldData = $fieldModel->find($id);
-        
-        // --- รูปปก (Outside) ---
         $outsideResult = json_decode($oldData['outside_images'] ?? '[]', true);
         $outsideFile = $this->request->getFile('outside_image');
-        
         if ($outsideFile && $outsideFile->isValid() && !$outsideFile->hasMoved()) {
-            if (!empty($outsideResult[0]) && file_exists($uploadPath . $outsideResult[0])) {
-                @unlink($uploadPath . $outsideResult[0]);
-            }
+            if (!empty($outsideResult[0]) && file_exists($uploadPath . $outsideResult[0])) @unlink($uploadPath . $outsideResult[0]);
             $newName = 'field_out_' . time() . '_' . $outsideFile->getRandomName();
             $outsideFile->move($uploadPath, $newName);
             $outsideResult = [$newName];
         }
-
-        // --- รูปภายใน (Inside) ---
         $insideResult = json_decode($oldData['inside_images'] ?? '[]', true);
         $insideFiles = $this->request->getFileMultiple('inside_images');
-        
         if ($insideFiles) {
             foreach ($insideFiles as $file) {
                 if ($file->isValid() && !$file->hasMoved()) {
@@ -419,35 +615,31 @@ class StadiumController extends BaseController
             }
         }
 
-        // 2. อัปเดตข้อมูล
         $fieldModel->update($id, [
             'name'           => $this->request->getPost('name'),
             'description'    => $this->request->getPost('description'),
-            'price'          => $this->request->getPost('price'),
+            'price'          => $this->request->getPost('price') ?: null,
             'price_daily'    => $this->request->getPost('price_daily') ?: null,
             'status'         => $this->request->getPost('status'),
             'outside_images' => json_encode($outsideResult),
             'inside_images'  => json_encode($insideResult)
         ]);
 
-        // 3. อัปเดต Facilities
+
         $facilities = $this->request->getPost('facilities');
-        $facModel->where('stadium_field_id', $id)->delete(); 
+
+        // ลบของเก่าออกก่อนตาม field_id
+        $facModel->where('field_id', $id)->delete();
 
         if (!empty($facilities) && is_array($facilities)) {
             $facData = [];
             foreach ($facilities as $type_id => $items) {
-                if(is_array($items)) {
-                    foreach ($items as $itemName) {
-                        if (!empty(trim($itemName))) {
-                            $facData[] = [
-                                'stadium_id'       => $stadium_id,
-                                'stadium_field_id' => $id,
-                                'type_id'          => $type_id,
-                                'name'             => trim($itemName)
-                            ];
-                        }
-                    }
+                // ไม่เก็บ name แล้ว เหลือแค่ field_id + facility_type_id
+                if (!empty($items) && is_array($items)) {
+                    $facData[] = [
+                        'field_id'         => $id,
+                        'facility_type_id' => $type_id,
+                    ];
                 }
             }
             if (!empty($facData)) {
@@ -458,34 +650,114 @@ class StadiumController extends BaseController
         return redirect()->to('admin/stadiums/fields/' . $stadium_id)->with('success', 'แก้ไขข้อมูลเรียบร้อย');
     }
 
-    // [UPDATED] ลบสนามย่อย
     public function deleteField($id)
     {
         $fieldModel = new StadiumFieldModel();
         $field = $fieldModel->find($id);
-        
+
         if ($field) {
             $uploadPath = FCPATH . 'assets/uploads/fields/';
-
-            // ลบรูป Outside
             $outsideImages = json_decode($field['outside_images'] ?? '[]', true);
-            foreach($outsideImages as $img) {
-                if(file_exists($uploadPath . $img)) @unlink($uploadPath . $img);
-            }
-
-            // ลบรูป Inside
+            foreach ($outsideImages as $img) if (file_exists($uploadPath . $img)) @unlink($uploadPath . $img);
             $insideImages = json_decode($field['inside_images'] ?? '[]', true);
-            foreach($insideImages as $img) {
-                if(file_exists($uploadPath . $img)) @unlink($uploadPath . $img);
-            }
+            foreach ($insideImages as $img) if (file_exists($uploadPath . $img)) @unlink($uploadPath . $img);
 
-            // ลบ Facility
             $facModel = new StadiumFacilityModel();
-            $facModel->where('stadium_field_id', $id)->delete();
+            $facModel->where('field_id', $id)->delete();
 
             $fieldModel->delete($id);
-            return redirect()->to('admin/stadiums/fields/' . $field['stadium_id'])->with('success', 'ลบสนามย่อยเรียบร้อย');
+            return redirect()->to('admin/stadiums/fields/' . $field['stadium_id'])->with('success', 'ลบข้อมูลเรียบร้อย');
         }
         return redirect()->back()->with('error', 'ไม่พบข้อมูล');
+    }
+
+    // =================================================================================
+    // 🛍️ [PART 3] จัดการสินค้า (Items) แบบ AJAX
+    // =================================================================================
+
+    public function saveProduct()
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setStatusCode(400)->setJSON(['success' => false, 'message' => 'Invalid request']);
+        }
+
+        $productModel = new VendorProductModel();
+        $id = $this->request->getPost('id'); // ถ้ามี ID คือการแก้ไข
+        $sfId = $this->request->getPost('stadium_facility_id');
+
+        // Validation
+        if (empty($sfId)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Missing stadium_facility_id']);
+        }
+
+        $uploadPath = FCPATH . 'assets/uploads/items/';
+        if (!is_dir($uploadPath)) mkdir($uploadPath, 0777, true);
+
+        $imageName = null;
+        
+        // ถ้าเป็นการแก้ไข ให้ดึงรูปเดิมมาตั้งต้นก่อน
+        if ($id) {
+            $existing = $productModel->find($id);
+            if ($existing) {
+                $imageName = $existing['image'];
+            }
+        }
+
+        // จัดการไฟล์รูปภาพ
+        $file = $this->request->getFile('image');
+        if ($file && $file->isValid() && !$file->hasMoved()) {
+            // ลบรูปเก่าทิ้งถ้ามี
+            if ($imageName && file_exists($uploadPath . $imageName)) {
+                @unlink($uploadPath . $imageName);
+            }
+            $newName = 'item_' . time() . '_' . $file->getRandomName();
+            $file->move($uploadPath, $newName);
+            $imageName = $newName;
+        }
+
+        $data = [
+            'stadium_facility_id' => $sfId,
+            'name'                => $this->request->getPost('name'),
+            'description'         => $this->request->getPost('description'),
+            'price'               => $this->request->getPost('price'),
+            'unit'                => $this->request->getPost('unit'),
+            'status'              => $this->request->getPost('status'),
+            'image'               => $imageName
+        ];
+
+        if ($id) {
+            $productModel->update($id, $data);
+            $newId = $id;
+        } else {
+            $newId = $productModel->insert($data);
+        }
+
+        return $this->response->setJSON([
+            'success' => true, 
+            'id' => $newId,
+            'image_url' => $imageName ? base_url('assets/uploads/items/' . $imageName) : null
+        ]);
+    }
+
+    public function deleteProduct($id)
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setStatusCode(400);
+        }
+
+        $productModel = new VendorProductModel();
+        $item = $productModel->find($id);
+
+        if ($item) {
+            // ลบรูป
+            if (!empty($item['image'])) {
+                $path = FCPATH . 'assets/uploads/items/' . $item['image'];
+                if (file_exists($path)) @unlink($path);
+            }
+            $productModel->delete($id);
+            return $this->response->setJSON(['success' => true]);
+        }
+
+        return $this->response->setJSON(['success' => false, 'message' => 'Item not found']);
     }
 }

@@ -125,23 +125,23 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // เมื่อกดปุ่มลูกตา
+       
         $('.btn-view-details').on('click', function() {
-            // ดึงข้อมูลจาก data-attribute
+           
             const username = $(this).data('username');
             const fullname = $(this).data('fullname');
             const email = $(this).data('email');
             const phone = $(this).data('phone');
             const created = $(this).data('created');
 
-            // เอาไปใส่ใน Modal
+            
             $('#view_username').text(username);
             $('#view_fullname').text(fullname);
             $('#view_email').text(email);
             $('#view_phone').text(phone);
             $('#view_created').text(created);
 
-            // เปิด Modal
+           
             var myModal = new bootstrap.Modal(document.getElementById('viewCustomerModal'));
             myModal.show();
         });

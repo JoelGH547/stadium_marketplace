@@ -49,9 +49,9 @@
                         class="btn btn-sm btn-warning">
                         Edit
                         </a>
+                        
                         <a href="<?= base_url('admin/categories/delete/' . $category['id']) ?>"
-                        class="btn btn-sm btn-danger"
-                        onclick="return confirm('Are you sure you want to delete this category?');">
+                        class="btn btn-sm btn-danger btn-delete">
                         Delete
                         </a>
                     </td>
@@ -64,5 +64,32 @@
         <?php endif; ?>
     </tbody>
 </table>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.btn-delete').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault(); // หยุดการทำงานปกติของลิงก์
+            const href = this.getAttribute('href'); // ดึง URL
+
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You won't be able to revert this!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, delete it!',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = href; // ถ้ากดยืนยัน ให้ไปที่ URL ลบ
+                }
+            });
+        });
+    });
+});
+</script>
 
 <?= $this->endSection() ?>

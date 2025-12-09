@@ -1,34 +1,24 @@
-<?php namespace App\Models;
+<?php
+
+namespace App\Models;
 
 use CodeIgniter\Model;
 
 class StadiumFacilityModel extends Model
 {
-    protected $table = 'stadium_facilities';
-    protected $primaryKey = 'id';
-    protected $allowedFields = ['stadium_id', 'facility_id'];
-    
-    // ดึง ID สิ่งอำนวยความสะดวกที่เลือกไว้
-    public function getSelectedFacilities($stadiumId)
-    {
-        return $this->where('stadium_id', $stadiumId)->findColumn('facility_id') ?? [];
-    }
 
-    // ฟังก์ชันลบของเก่าแล้วบันทึกใหม่
-    public function updateFacilities($stadiumId, $selectedFacilityIds)
-    {
-        $this->where('stadium_id', $stadiumId)->delete();
+    protected $table            = 'stadium_facilities';
+    protected $primaryKey       = 'id';
+    protected $returnType       = 'array';
+    protected $useSoftDeletes   = false;
 
-        if (!empty($selectedFacilityIds) && is_array($selectedFacilityIds)) {
-            $data = [];
-            foreach ($selectedFacilityIds as $facId) {
-                $data[] = [
-                    'stadium_id'  => $stadiumId,
-                    'facility_id' => $facId
-                ];
-            }
-            return $this->insertBatch($data);
-        }
-        return true;
-    }
+    // NOTE:
+    // ตาราง stadium_facilities ปัจจุบันเหลือแค่ field_id + facility_type_id
+    // ไม่ได้ใช้ stadium_id / name / timestamps แล้ว
+    protected $allowedFields    = [
+        'field_id',
+        'facility_type_id',
+    ];
+
+    protected $useTimestamps = false;
 }

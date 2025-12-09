@@ -43,7 +43,7 @@ class UserController extends BaseController
         return view('admin/users/index_customers', ['title' => 'จัดการลูกค้า (Customers)', 'users' => $this->customerModel->findAll()]);
     }
 
-    // [เพิ่มใหม่] แสดงลูกค้าใหม่ใน 24 ชม.
+    
     public function newCustomers()
     {
         $timeLimit = date('Y-m-d H:i:s', strtotime('-24 hours'));
@@ -89,7 +89,7 @@ class UserController extends BaseController
             $data['username'] = $this->request->getPost('username');
         } 
         elseif ($role == 'vendors') {
-            // [แก้ตรงนี้] ใช้อีเมลเป็น Username ป้องกัน Error Duplicate ''
+            
             $data['username']     = $this->request->getPost('email'); 
 
             $data['vendor_name']  = $this->request->getPost('vendor_name');
@@ -99,7 +99,7 @@ class UserController extends BaseController
             $data['phone_number'] = $this->request->getPost('phone'); 
         } 
         elseif ($role == 'customers') {
-            // [แก้ตรงนี้] ใช้อีเมลเป็น Username เช่นกัน
+            
             $data['username']     = $this->request->getPost('email');
 
             $data['full_name']    = $this->request->getPost('full_name');

@@ -6,41 +6,41 @@ use App\Controllers\BaseController;
 use App\Models\VendorModel;
 use App\Models\CustomerModel;
 use App\Models\StadiumModel;
-use App\Models\BookingModel; // [1] เปิดใช้งาน Model นี้
+use App\Models\BookingModel; 
 
 class DashboardController extends BaseController
 {
     protected $vendorModel;
     protected $customerModel;
     protected $stadiumModel;
-    protected $bookingModel; // [2] ประกาศตัวแปร
+    protected $bookingModel; 
 
     public function __construct()
     {
         $this->vendorModel   = new VendorModel();
         $this->customerModel = new CustomerModel();
         $this->stadiumModel  = new StadiumModel();
-        $this->bookingModel  = new BookingModel(); // [3] เรียกใช้งาน
+        $this->bookingModel  = new BookingModel(); 
     }
 
     public function index()
     {
-        // 1. นับ Vendor รออนุมัติ
+        
         $pendingVendors = $this->vendorModel->where('status', 'pending')->countAllResults();
 
-        // 2. นับลูกค้าใหม่ (ใน 24 ชม.)
+        
         $timeLimit = date('Y-m-d H:i:s', strtotime('-24 hours'));
         $newCustomers = $this->customerModel->where('created_at >=', $timeLimit)->countAllResults();
 
-        // 3. นับสนามทั้งหมด
+        
         $totalStadiums = $this->stadiumModel->countAllResults();
 
-        // 4. [เพิ่มใหม่] นับยอดจอง "วันนี้"
+        
         $today = date('Y-m-d');
-        // ใช้ like เพื่อหาวันที่ปัจจุบันจาก timestamp (เช่น 2025-11-24 %)
+        
         $todayBookings = $this->bookingModel->like('created_at', $today, 'after')->countAllResults();
         
-        // 5. ดึงรายการล่าสุด
+        
         $recentVendors = $this->vendorModel->orderBy('id', 'DESC')->findAll(5);
         $recentCustomers = $this->customerModel->orderBy('id', 'DESC')->findAll(5);
 
@@ -49,7 +49,7 @@ class DashboardController extends BaseController
             'pendingCount'    => $pendingVendors,
             'newCustomerCount'=> $newCustomers,
             'stadiumCount'    => $totalStadiums,
-            'todayBookings'   => $todayBookings, // [4] ส่งค่านี้ไปหน้า View
+            'todayBookings'   => $todayBookings, 
             'recentVendors'   => $recentVendors,
             'recentCustomers' => $recentCustomers
         ];

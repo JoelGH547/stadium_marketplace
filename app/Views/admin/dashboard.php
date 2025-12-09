@@ -32,7 +32,7 @@
     .card-title-text { color: #64748b; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; }
     .card-value-text { color: #1e293b; font-size: 2.2rem; font-weight: 700; line-height: 1.2; }
     
-    /* Table Styles */
+    
     .table-custom thead th {
         background-color: #f8fafc; color: #64748b; font-weight: 600; font-size: 0.85rem; border-top: none; padding: 1rem;
     }
@@ -68,7 +68,7 @@
             <div class="stat-card p-4 d-flex align-items-center justify-content-between">
                 <div>
                     <div class="card-title-text mb-2">ลูกค้าใหม่ (24 ชม.)</div>
-                    <!-- ตรงนี้คุณทำถูกแล้ว -->
+                    
                     <div class="card-value-text text-primary"><?= number_format($newCustomerCount) ?></div>
                     <a href="<?= base_url('admin/users/new_customers') ?>" class="text-decoration-none small text-muted mt-2 d-block">
                         ดูรายชื่อ <i class="fas fa-arrow-right ms-1"></i>
@@ -82,7 +82,7 @@
             <div class="stat-card p-4 d-flex align-items-center justify-content-between">
                 <div>
                     <div class="card-title-text mb-2">ยอดจอง (วันนี้)</div>
-                    <!-- [แก้ไข] ใส่ตัวแปร $todayBookings และลบ Coming Soon ออก -->
+                    
                     <div class="card-value-text text-dark"><?= number_format($todayBookings ?? 0) ?></div>
                     <span class="text-muted small mt-2 d-block">รายการ</span>
                 </div>

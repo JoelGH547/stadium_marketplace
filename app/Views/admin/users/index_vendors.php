@@ -141,9 +141,9 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // เมื่อกดปุ่มลูกตา
+        
         $('.btn-view-details').on('click', function() {
-            // ดึงข้อมูลจาก data-attribute
+            
             const username = $(this).data('username');
             const vendor = $(this).data('vendor');
             const email = $(this).data('email');
@@ -153,7 +153,7 @@
             const status = $(this).data('status');
             const created = $(this).data('created');
 
-            // เอาไปใส่ใน Modal
+            
             $('#view_username').text(username);
             $('#view_vendor').text(vendor);
             $('#view_email').text(email);
@@ -163,7 +163,7 @@
             $('#view_status').html(status === 'approved' ? '<span class="badge bg-success">Approved</span>' : '<span class="badge bg-warning text-dark">Pending</span>');
             $('#view_created').text(created);
 
-            // เปิด Modal
+            
             var myModal = new bootstrap.Modal(document.getElementById('viewVendorModal'));
             myModal.show();
         });

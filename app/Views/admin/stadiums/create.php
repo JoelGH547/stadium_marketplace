@@ -7,13 +7,13 @@
 
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="h3 text-gray-800">Add New Stadium</h1>
-        <a href="<?= base_url('admin/stadiums') ?>" class="btn btn-secondary">
+        <a href="<?= base_url('admin/stadiums') ?>" class="btn btn-secondary shadow-sm">
             <i class="fas fa-arrow-left"></i> Back to List
         </a>
     </div>
 
     <?php if (session()->getFlashdata('validation')): ?>
-        <div class="alert alert-danger">
+        <div class="alert alert-danger shadow-sm">
             <?= session()->getFlashdata('validation')->listErrors() ?>
         </div>
     <?php endif; ?>
@@ -32,16 +32,7 @@
                     <input type="text" name="name" class="form-control" value="<?= old('name') ?>" required placeholder="ชื่อสนาม">
                 </div>
 
-                <div class="form-group mb-3">
-                    <label class="fw-bold">Booking Type (รูปแบบการจอง) <span class="text-danger">*</span></label>
-                    <select name="booking_type" class="form-select shadow-sm" required>
-                        <option value="complex" selected>🏢 มีสนามย่อย (Complex) - เช่น มี Court 1, 2, 3</option>
-                        <option value="single">🏟️ จองเหมาทั้งสนาม (Single) - ไม่มีสนามย่อย</option>
-                    </select>
-                    <small class="text-muted">
-                        * ถ้าเลือก "มีสนามย่อย" คุณจะต้องไปเพิ่มสนามย่อยและราคาในภายหลัง
-                    </small>
-                </div>
+                
 
                 <div class="row">
                     <div class="col-md-6 form-group mb-3">
@@ -79,8 +70,7 @@
 
                 <hr>
 
-                <div class="row">
-                    <div class="col-md-6 form-group mb-3">
+                
                         <label class="fw-bold">Open Time</label>
                         <input type="time" name="open_time" class="form-control" value="<?= old('open_time') ?>">
                     </div>
@@ -123,7 +113,7 @@
 
                 <div class="form-group mb-3">
                     <label class="fw-bold">Custom Map Link (Optional)</label>
-                    <input type="text" name="map_link" class="form-control" value="<?= old('map_link') ?>" placeholder="https://maps.google.com/...">
+                    <input type="text" name="map_link" class="form-control" value="<?= old('map_link') ?>" placeholder="http://googleusercontent.com/maps.google.com/...">
                 </div>
 
                 <hr>
@@ -139,7 +129,7 @@
                 </div>
 
                 <div class="form-group mt-4 text-end">
-                    <button type="submit" class="btn btn-primary px-4 py-2">
+                    <button type="submit" class="btn btn-primary px-4 py-2 shadow-sm">
                         <i class="fas fa-save me-1"></i> Save Stadium
                     </button>
                 </div>
@@ -157,7 +147,7 @@
         var latInput = document.getElementById('lat');
         var lngInput = document.getElementById('lng');
 
-        // Default: Bangkok coordinates if empty
+     
         var defaultLat = latInput.value ? parseFloat(latInput.value) : 13.7563;
         var defaultLng = lngInput.value ? parseFloat(lngInput.value) : 100.5018;
 
@@ -185,4 +175,5 @@
     });
 </script>
 
-<?= $this->endSection() ?>
+<?= $this->endSection() ?> 
+

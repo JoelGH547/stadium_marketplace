@@ -12,7 +12,7 @@ class FacilityTypeController extends BaseController
         $this->typeModel = new FacilityTypeModel();
     }
 
-    // แสดงรายการหมวดหมู่
+    
     public function index()
     {
         $data = [
@@ -22,7 +22,7 @@ class FacilityTypeController extends BaseController
         return view('admin/facility_types/index', $data);
     }
 
-    // บันทึกหมวดหมู่ใหม่
+    
     public function create()
     {
         $name = $this->request->getPost('name');
@@ -33,7 +33,7 @@ class FacilityTypeController extends BaseController
         return redirect()->back()->with('error', 'กรุณากรอกชื่อหมวดหมู่');
     }
 
-    // ลบหมวดหมู่
+    
     public function delete($id)
     {
         $this->typeModel->delete($id);

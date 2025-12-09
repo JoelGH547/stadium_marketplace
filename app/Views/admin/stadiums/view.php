@@ -1,6 +1,8 @@
 <?= $this->extend('layouts/admin') ?>
 <?= $this->section('content') ?>
 
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
 <div class="container-fluid p-0">
 
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -69,121 +71,6 @@
                 </div>
             </div>
 
-            <div class="card shadow mb-4 border-0">
-                <div class="card-header py-3 bg-white">
-                    <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-concierge-bell me-2"></i>สิ่งอำนวยความสะดวก & บริการ</h6>
-                </div>
-                <div class="card-body">
-                    <?php 
-                        $allServices = [];
-
-                        // 2.1 ดึงประเภทจากสิ่งอำนวยความสะดวกที่ติ๊กเลือก (Facilities)
-                        if (!empty($facilities)) {
-                            foreach ($facilities as $type => $items) {
-                                // เช็คว่าในหมวดนั้นมีรายการจริงๆ ไหม
-                                if (!empty(array_filter($items))) {
-                                     if (!in_array($type, $allServices)) {
-                                         $allServices[] = $type; 
-                                     }
-                                }
-                            }
-                        }
-
-                        // 2.2 ดึงประเภทจากสินค้าที่มีขาย (Vendor Items)
-                        if (!empty($vendor_items)) {
-                            // ดึงชื่อ type_name ของสินค้าแต่ละชิ้น
-                            $itemTypes = array_column($vendor_items, 'type_name');
-                            $uniqueTypes = array_unique($itemTypes);
-                            
-                            foreach ($uniqueTypes as $type) {
-                                if (!empty($type) && !in_array($type, $allServices)) {
-                                    $allServices[] = $type;
-                                }
-                            }
-                        }
-                    ?>
-
-                    <?php if (!empty($allServices)): ?>
-                        <div class="d-flex flex-wrap gap-2">
-                            <?php foreach ($allServices as $service): ?>
-                                <span class="badge bg-info text-white border px-3 py-2 shadow-sm rounded-pill" style="font-size: 0.9rem;">
-                                    <i class="fas fa-check-circle me-1"></i> <?= esc($service) ?>
-                                </span>
-                            <?php endforeach; ?>
-                        </div>
-                        <div class="mt-2 text-muted small">
-                            * รายการข้างต้นรวมสิ่งอำนวยความสะดวกพื้นฐานและประเภทบริการเสริมที่มีจำหน่าย
-                        </div>
-                    <?php else: ?>
-                        <div class="text-center py-4 text-muted">
-                            <i class="fas fa-box-open fa-2x mb-2 text-gray-300"></i><br>
-                            ยังไม่มีข้อมูลสิ่งอำนวยความสะดวก
-                        </div>
-                    <?php endif; ?>
-                </div>
-            </div>
-
-            <div class="card shadow mb-4 border-0">
-                <div class="card-header py-3 bg-white">
-                    <h6 class="m-0 font-weight-bold text-primary">
-                        <i class="fas fa-box-open me-2"></i>รายละเอียดสินค้า/บริการเสริม
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <?php if (!empty($vendor_items)) : ?>
-                        <div class="row g-3">
-                            <?php foreach ($vendor_items as $item) : ?>
-                                <div class="col-md-6">
-                                    <div class="d-flex align-items-center border rounded p-2 h-100 bg-light">
-                                        <div class="flex-shrink-0">
-                                            <?php if($item['image']): ?>
-                                                <img src="<?= base_url('assets/uploads/items/'.$item['image']) ?>" 
-                                                     class="rounded bg-white border" 
-                                                     style="width: 60px; height: 60px; object-fit: cover;">
-                                            <?php else: ?>
-                                                <div class="bg-white rounded border d-flex align-items-center justify-content-center text-muted" 
-                                                     style="width: 60px; height: 60px;">
-                                                    <i class="fas fa-image"></i>
-                                                </div>
-                                            <?php endif; ?>
-                                        </div>
-                                        
-                                        <div class="flex-grow-1 ms-3">
-                                            <div class="fw-bold text-dark text-truncate" style="max-width: 200px;">
-                                                <?= esc($item['name']) ?>
-                                            </div>
-                                            <div class="badge bg-secondary text-white small" style="font-size: 0.7rem;">
-                                                <?= esc($item['type_name'] ?? 'ทั่วไป') ?>
-                                            </div>
-                                            <div class="text-success fw-bold small mt-1">
-                                                ฿<?= number_format($item['price'], 2) ?> / <?= esc($item['unit']) ?>
-                                            </div>
-                                        </div>
-
-                                        <div class="ms-2">
-                                            <?php if($item['status'] == 'active'): ?>
-                                                <span class="badge bg-success rounded-pill" title="พร้อมขาย"><i class="fas fa-check"></i></span>
-                                            <?php else: ?>
-                                                <span class="badge bg-secondary rounded-pill" title="ไม่พร้อม">Inactive</span>
-                                            <?php endif; ?>
-                                        </div>
-                                    </div>
-                                </div>
-                            <?php endforeach; ?>
-                        </div>
-                    <?php else : ?>
-                        <div class="text-center py-4 text-muted">
-                            <i class="fas fa-shopping-basket fa-2x mb-3 text-gray-300"></i><br>
-                            <p class="mb-3">ไม่มีสินค้า/บริการเสริมสำหรับ Vendor รายนี้</p>
-                            
-                            <a href="<?= base_url('admin/vendor-items') ?>" class="btn btn-sm btn-outline-primary">
-                                <i class="fas fa-plus-circle"></i> ไปหน้าจัดการสินค้า
-                            </a>
-                        </div>
-                    <?php endif; ?>
-                </div>
-            </div>
-
             <?php if(($stadium['booking_type'] ?? 'complex') == 'complex'): ?>
             <div class="card shadow mb-4 border-0">
                 <div class="card-header bg-white py-3">
@@ -210,7 +97,7 @@
                                         <tr>
                                             <td class="ps-4">
                                                 <?php 
-                                                    $f_imgs = json_decode($field['field_images'] ?? '[]', true); 
+                                                    $f_imgs = json_decode($field['outside_images'] ?? '[]', true); 
                                                     $f_thumb = !empty($f_imgs[0]) ? $f_imgs[0] : null;
                                                 ?>
                                                 <?php if($f_thumb): ?>
@@ -314,14 +201,8 @@
                 </div>
                 <div class="card-body p-0">
                     <?php if(!empty($stadium['lat']) && !empty($stadium['lng'])): ?>
-                        <iframe 
-                            width="100%" 
-                            height="300" 
-                            style="border:0;" 
-                            loading="lazy" 
-                            allowfullscreen
-                            src="https://maps.google.com/maps?q=<?= $stadium['lat'] ?>,<?= $stadium['lng'] ?>&z=15&output=embed">
-                        </iframe>
+                        <div id="stadiumMap" style="width: 100%; height: 300px;"></div>
+                        
                         <div class="p-3 bg-light small">
                             <i class="fas fa-map-pin me-1 text-danger"></i> <?= esc($stadium['address']) ?>
                         </div>
@@ -338,5 +219,31 @@
     </div>
 
 </div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // ตรวจสอบว่ามีพิกัดหรือไม่ก่อนวาดแผนที่
+        <?php if(!empty($stadium['lat']) && !empty($stadium['lng'])): ?>
+            var lat = <?= $stadium['lat'] ?>;
+            var lng = <?= $stadium['lng'] ?>;
+            var stadiumName = "<?= esc($stadium['name']) ?>";
+
+            // สร้างแผนที่
+            var map = L.map('stadiumMap').setView([lat, lng], 15);
+
+            // เพิ่ม Tile Layer (OpenStreetMap)
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+
+            // ปักหมุด
+            L.marker([lat, lng]).addTo(map)
+                .bindPopup(`<b>${stadiumName}</b><br>ที่ตั้งสนาม`)
+                .openPopup();
+        <?php endif; ?>
+    });
+</script>
 
 <?= $this->endSection() ?>

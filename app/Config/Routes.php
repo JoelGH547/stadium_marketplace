@@ -46,7 +46,6 @@ $routes->post('admin/login', 'Admin\AdminAuthController::processLogin');
 $routes->get('admin/logout', 'Admin\AdminAuthController::logout');
 
 $routes->group('admin', ['filter' => ['admin']], static function ($routes) {
-
     // --- Dashboard ---
     $routes->get('dashboard', 'Admin\DashboardController::index');
 
@@ -79,17 +78,28 @@ $routes->group('admin', ['filter' => ['admin']], static function ($routes) {
     $routes->get('stadiums/fields/(:num)', 'Admin\StadiumController::fields/$1');
     $routes->post('stadiums/fields/create', 'Admin\StadiumController::createField');
     $routes->post('stadiums/fields/update', 'Admin\StadiumController::updateField');
+    $routes->post('stadiums/fields/toggle-facility', 'Admin\StadiumController::toggleFieldFacility');
     $routes->get('stadiums/fields/delete/(:num)', 'Admin\StadiumController::deleteField/$1');
+
+    // --- Vendor Products (สินค้าในสนามย่อย) ---
+    $routes->post('stadiums/fields/product/save', 'Admin\StadiumController::saveProduct');
+    $routes->get('stadiums/fields/product/delete/(:num)', 'Admin\StadiumController::deleteProduct/$1');
 
     // ==========================================================
     // +++ [ระบบใหม่] Vendor Items (จัดการสินค้า/บริการเสริม) +++
     // ==========================================================
     $routes->group('vendor-items', static function ($routes) {
-        $routes->get('/', 'Admin\VendorItemController::index');
-        $routes->post('store', 'Admin\VendorItemController::store');
-        $routes->post('update', 'Admin\VendorItemController::update');
-        $routes->get('delete/(:num)', 'Admin\VendorItemController::delete/$1');
+        $routes->get('/', 'Admin\VendorItemsController::index');
+        $routes->post('store', 'Admin\VendorItemsController::store');
+        $routes->post('update', 'Admin\VendorItemsController::update');
+        $routes->get('delete/(:num)', 'Admin\VendorItemsController::delete/$1');
+        $routes->post('quick-create', 'Admin\VendorItemsController::quickCreate');
     });
+
+
+    // URL ที่ถูกต้องจะเป็น: /admin/get-stadium-facility-types/1
+    $routes->get('get-stadium-facility-types/(:num)', 'Admin\VendorItemController::getStadiumFacilityTypes/$1');
+
     // ==========================================================
 
     // --- User Management (จัดการผู้ใช้) ---
@@ -122,6 +132,7 @@ $routes->group('admin', ['filter' => ['admin']], static function ($routes) {
     $routes->get('bookings/approve/(:num)', 'Admin\BookingController::approve/$1');
     $routes->get('bookings/cancel/(:num)', 'Admin\BookingController::cancel/$1');
 });
+
 
 
 // ==========================================================

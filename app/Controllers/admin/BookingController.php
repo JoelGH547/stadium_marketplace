@@ -12,7 +12,7 @@ class BookingController extends BaseController
         $this->bookingModel = new BookingModel();
     }
 
-    // แสดงหน้า index (View ที่คุณมี)
+    
     public function index()
     {
         $data = [
@@ -22,7 +22,7 @@ class BookingController extends BaseController
         return view('admin/bookings/index', $data);
     }
 
-    // 1. ฟังก์ชันรับค่าจาก Modal (แก้ไขสถานะ)
+    
     public function updateStatus()
     {
         $id = $this->request->getPost('booking_id');
@@ -35,15 +35,15 @@ class BookingController extends BaseController
         return redirect()->back()->with('error', 'เกิดข้อผิดพลาดในการแก้ไข');
     }
 
-    // 2. ฟังก์ชันอนุมัติด่วน (ปุ่มเขียว)
+    
     public function approve($id)
     {
-        // เปลี่ยนสถานะเป็น confirmed (หรือ paid ตามระบบคุณ)
+        
         $this->bookingModel->update($id, ['status' => 'confirmed']);
         return redirect()->back()->with('success', 'อนุมัติรายการเรียบร้อยแล้ว');
     }
 
-    // 3. ฟังก์ชันยกเลิกด่วน (ปุ่มแดง)
+    
     public function cancel($id)
     {
         $this->bookingModel->update($id, ['status' => 'cancelled']);

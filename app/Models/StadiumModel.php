@@ -17,9 +17,7 @@ class StadiumModel extends Model
     // ==========================================================
     protected $allowedFields    = [
         'name', 
-        'description', 
-        'booking_type',   // [เพิ่มใหม่] รองรับ ENUM('single', 'complex')
-        // 'price',       // [ลบออก] เพราะย้ายราคาไปที่ตาราง stadium_fields แล้ว
+        'description',    
         'category_id', 
         'vendor_id',
         'open_time',
@@ -35,16 +33,13 @@ class StadiumModel extends Model
         'inside_images'   
     ];
 
-    // Dates
+    
     protected $useTimestamps = true;
     protected $dateFormat    = 'datetime';
     protected $createdField  = 'created_at';
     protected $updatedField  = 'updated_at';
 
-    /**
-     * 1. (ฟังก์ชันที่ Error ถามหา)
-     * สำหรับ Admin และ Customer: ดึงข้อมูลสนามพร้อมชื่อหมวดหมู่
-     */
+    
     public function getStadiumsWithCategory($id = null)
     {
         $builder = $this->select('stadiums.*, categories.name as category_name, categories.emoji as category_emoji')
@@ -57,10 +52,7 @@ class StadiumModel extends Model
         return $builder->findAll();
     }
 
-    /**
-     * 2. (ฟังก์ชันสำหรับ Vendor)
-     * ดึงข้อมูลสนาม เฉพาะของ Vendor คนนั้น
-     */
+    
     public function getStadiumsByVendor($vendorId, $stadiumId = null)
     {
         $builder = $this->select('stadiums.*, categories.name as category_name')
