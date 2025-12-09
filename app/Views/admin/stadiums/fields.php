@@ -2,14 +2,57 @@
 <?= $this->section('content') ?>
 
 <?php
-// ตอนนี้ยังไม่ได้ใช้ fieldFacilities/fieldImages จริง
-// เลยไม่ต้องดึงจาก stadium_facilities เพื่อลด error
-$fieldFacilities = [];
-$fieldImages     = [];
-
 $colName   = 'ชื่อสนาม';
 $emptyText = 'ยังไม่มีข้อมูลสนามย่อย';
 ?>
+
+<?php
+// เตรียมข้อมูล mapping สำหรับสิ่งอำนวยความสะดวกและสินค้าในสนามย่อย
+$fieldFacilities = $fieldFacilities ?? [];
+$fieldProducts   = $fieldProducts ?? [];
+$facilityTypes   = $facilityTypes ?? [];
+
+$facilityTypesById = [];
+foreach ($facilityTypes as $ft) {
+    $facilityTypesById[$ft['id']] = $ft;
+}
+?>
+
+<style>
+    .field-actions-wrapper {
+        position: relative;
+        gap: 0.25rem;
+    }
+    .field-category-wrapper {
+        position: relative;
+        display: inline-block;
+    }
+    .field-category-panel {
+        position: absolute;
+        top: 110%;
+        right: 0;
+        width: 260px;
+        background: #ffffff;
+        border-radius: 0.5rem;
+        border: 1px solid rgba(15, 23, 42, 0.08);
+        box-shadow: 0 0.75rem 1.5rem rgba(15, 23, 42, 0.18);
+        padding: 0.75rem;
+        opacity: 0;
+        pointer-events: none;
+        transform: translateY(4px);
+        transition: opacity 0.15s ease, transform 0.15s ease;
+        z-index: 50;
+    }
+    .field-category-wrapper:hover .field-category-panel {
+        opacity: 1;
+        pointer-events: auto;
+        transform: translateY(0);
+    }
+    .field-category-panel .small-scroll {
+        max-height: 220px;
+        overflow-y: auto;
+    }
+</style>
 
 <div class="container-fluid p-0">
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -86,20 +129,30 @@ $emptyText = 'ยังไม่มีข้อมูลสนามย่อย
                                             <span class="badge bg-danger rounded-pill">ปิดปรับปรุง</span>
                                         <?php endif; ?>
                                     </td>
-                                    <td class="text-end pe-4">
-                                        <button class="btn btn-warning btn-sm btn-edit shadow-sm text-dark me-1"
-                                            data-bs-toggle="modal" data-bs-target="#editFieldModal"
-                                            data-id="<?= $field['id'] ?>" data-name="<?= esc($field['name']) ?>"
-                                            data-price="<?= esc($field['price']) ?>"
-                                            data-pricedaily="<?= esc($field['price_daily']) ?>"
-                                            data-desc="<?= esc($field['description']) ?>"
-                                            data-status="<?= esc($field['status']) ?>">
-                                            <i class="fas fa-pen"></i>
-                                        </button>
-                                        <a href="<?= base_url('admin/stadiums/fields/delete/' . $field['id']) ?>"
-                                            class="btn btn-outline-danger btn-sm shadow-sm btn-delete">
-                                            <i class="fas fa-trash-alt"></i>
-                                        </a>
+                                                                        <td class="text-end pe-4">
+                                        <div class="d-inline-flex align-items-center">
+                                            <button type="button"
+                                                class="btn btn-outline-info btn-sm shadow-sm me-1 field-facility-manage-btn"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#fieldFacilitiesModal_<?= $field['id'] ?>"
+                                                title="จัดการหมวดหมู่และสินค้า">
+                                                <i class="fas fa-box"></i>
+                                            </button>
+
+                                            <button class="btn btn-warning btn-sm btn-edit shadow-sm text-dark me-1"
+                                                data-bs-toggle="modal" data-bs-target="#editFieldModal"
+                                                data-id="<?= $field['id'] ?>" data-name="<?= esc($field['name']) ?>"
+                                                data-price="<?= esc($field['price']) ?>"
+                                                data-pricedaily="<?= esc($field['price_daily']) ?>"
+                                                data-desc="<?= esc($field['description']) ?>"
+                                                data-status="<?= esc($field['status']) ?>">
+                                                <i class="fas fa-pen"></i>
+                                            </button>
+                                            <a href="<?= base_url('admin/stadiums/fields/delete/' . $field['id']) ?>"
+                                                class="btn btn-outline-danger btn-sm shadow-sm btn-delete">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </a>
+                                        </div>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -114,6 +167,147 @@ $emptyText = 'ยังไม่มีข้อมูลสนามย่อย
         </div>
     </div>
 </div>
+
+
+<?php if (!empty($fields)): ?>
+    <?php foreach ($fields as $field): ?>
+        <?php
+            $fieldId = $field['id'];
+            $facilitiesForField = $fieldFacilities[$fieldId] ?? [];
+            $activeFacilitiesByType = [];
+            if (!empty($facilitiesForField)) {
+                foreach ($facilitiesForField as $sfRow) {
+                    $activeFacilitiesByType[$sfRow['facility_type_id']] = $sfRow;
+                }
+            }
+        ?>
+        <div class="modal fade" id="fieldFacilitiesModal_<?= $fieldId ?>" tabindex="-1"
+            aria-labelledby="fieldFacilitiesModalLabel_<?= $fieldId ?>" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header bg-info text-white">
+                        <h5 class="modal-title" id="fieldFacilitiesModalLabel_<?= $fieldId ?>">
+                            จัดการหมวดหมู่และสินค้า — <?= esc($field['name']) ?>
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <h6 class="fw-bold mb-2">เลือกหมวดหมู่สำหรับสนามย่อยนี้</h6>
+                            <div class="border rounded p-2 bg-light">
+                                <?php if (!empty($facilityTypes)): ?>
+                                    <?php foreach ($facilityTypes as $ft): ?>
+                                        <?php
+                                            $typeId   = $ft['id'];
+                                            $sfRow    = $activeFacilitiesByType[$typeId] ?? null;
+                                            $hasFac   = $sfRow !== null;
+                                            $sfId     = $sfRow['id'] ?? null;
+                                            $productList = (!empty($fieldProducts[$fieldId][$typeId]))
+                                                ? $fieldProducts[$fieldId][$typeId]
+                                                : [];
+                                            $productCount = count($productList);
+                                        ?>
+                                        <div class="d-flex align-items-center justify-content-between mb-1">
+                                            <div class="form-check form-check-sm">
+                                                <input class="form-check-input field-facility-checkbox"
+                                                    type="checkbox"
+                                                    data-field-id="<?= $fieldId ?>"
+                                                    data-facility-type-id="<?= $typeId ?>"
+                                                    data-stadium-facility-id="<?= $sfId ?>"
+                                                    <?= $hasFac ? 'checked' : '' ?>>
+                                                <label class="form-check-label small">
+                                                    <?= esc($ft['emoji'] ?? '') ?> <?= esc($ft['name']) ?>
+                                                </label>
+                                            </div>
+                                            <?php if ($productCount > 0): ?>
+                                                <span class="badge bg-light text-muted border small">
+                                                    <?= $productCount ?> สินค้า
+                                                </span>
+                                            <?php endif; ?>
+                                        </div>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <div class="small text-muted">
+                                        ยังไม่มีการตั้งค่าหมวดหมู่ (facility types) ในระบบ
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                            <div class="mt-1 text-muted small">
+                                <i class="fas fa-info-circle"></i>
+                                การติ๊กจะผูกหมวดหมู่กับสนามย่อยนี้ผ่านตาราง stadium_facilities
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <div>
+                            <h6 class="fw-bold mb-2">สินค้า/บริการในหมวดที่ใช้งาน</h6>
+                            <?php
+                                $hasAnyActive = !empty($activeFacilitiesByType);
+                            ?>
+                            <?php if (!$hasAnyActive): ?>
+                                <div class="alert alert-light border small mb-0">
+                                    ยังไม่มีการเลือกหมวดหมู่สำหรับสนามย่อยนี้<br>
+                                    กรุณาเลือกหมวดหมู่ด้านบนก่อนจึงจะสามารถเพิ่มสินค้าได้
+                                </div>
+                            <?php else: ?>
+                                <?php foreach ($facilityTypes as $ft): ?>
+                                    <?php
+                                        $typeId   = $ft['id'];
+                                        $sfRow    = $activeFacilitiesByType[$typeId] ?? null;
+                                        if (!$sfRow) {
+                                            continue;
+                                        }
+                                        $sfId        = $sfRow['id'] ?? null;
+                                        $productList = (!empty($fieldProducts[$fieldId][$typeId]))
+                                            ? $fieldProducts[$fieldId][$typeId]
+                                            : [];
+                                    ?>
+                                    <div class="mb-3">
+                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                            <div class="fw-semibold small">
+                                                หมวด: <?= esc($ft['emoji'] ?? '') ?> <?= esc($ft['name']) ?>
+                                            </div>
+                                            <button type="button"
+                                                class="btn btn-outline-primary btn-xs disabled"
+                                                title="TODO: เชื่อมหน้าจัดการไอเทม">
+                                                <i class="fas fa-plus-circle"></i> เพิ่มไอเทมในหมวดนี้
+                                            </button>
+                                        </div>
+                                        <?php if (!empty($productList)): ?>
+                                            <ul class="list-unstyled small mb-0">
+                                                <?php foreach ($productList as $prod): ?>
+                                                    <li class="d-flex justify-content-between align-items-center py-1 border-bottom">
+                                                        <span>
+                                                            <?= esc($prod['name'] ?? $prod['product_name'] ?? 'ไม่ระบุชื่อ') ?>
+                                                        </span>
+                                                        <span class="text-muted">
+                                                            <?php if (!empty($prod['price'])): ?>
+                                                                ฿<?= number_format($prod['price']) ?>
+                                                            <?php endif; ?>
+                                                        </span>
+                                                    </li>
+                                                <?php endforeach; ?>
+                                            </ul>
+                                        <?php else: ?>
+                                            <div class="small text-muted fst-italic">
+                                                ยังไม่มีสินค้าในหมวดนี้
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">ปิดหน้าต่าง</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <?php endforeach; ?>
+<?php endif; ?>
 
 <div class="modal fade" id="addFieldModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
@@ -240,6 +434,48 @@ $emptyText = 'ยังไม่มีข้อมูลสนามย่อย
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // จัดการ checkbox หมวดหมู่ของสนามย่อย (stadium_facilities)
+        document.querySelectorAll('.field-facility-checkbox').forEach(cb => {
+            cb.addEventListener('change', function() {
+                const fieldId = this.dataset.fieldId;
+                const typeId  = this.dataset.facilityTypeId;
+                const checked = this.checked ? '1' : '0';
+
+                fetch('<?= base_url('admin/stadiums/fields/toggle-facility') ?>', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: new URLSearchParams({
+                        'field_id': fieldId,
+                        'facility_type_id': typeId,
+                        'checked': checked,
+                        '<?= csrf_token() ?>': '<?= csrf_hash() ?>'
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.success) {
+                        Swal.fire('เกิดข้อผิดพลาด', data.message || 'ไม่สามารถบันทึกข้อมูลได้', 'error');
+                        this.checked = !this.checked;
+                        return;
+                    }
+                    if (data.stadium_facility_id) {
+                        this.dataset.stadiumFacilityId = data.stadium_facility_id;
+                    } else if (!this.checked) {
+                        this.dataset.stadiumFacilityId = '';
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    Swal.fire('เกิดข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้', 'error');
+                    this.checked = !this.checked;
+                });
+            });
+        });
+
+
         const stadiumId = <?= $stadium['id'] ?>;
 
         // ... (ส่วนจัดการ Edit Modal: Fill Data) ...

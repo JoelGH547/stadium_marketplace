@@ -63,6 +63,7 @@ $routes->group('admin', ['filter' => ['auth', 'admin']], static function ($route
     $routes->get('stadiums/fields/(:num)', 'Admin\StadiumController::fields/$1');
     $routes->post('stadiums/fields/create', 'Admin\StadiumController::createField');
     $routes->post('stadiums/fields/update', 'Admin\StadiumController::updateField');
+    $routes->post('stadiums/fields/toggle-facility', 'Admin\StadiumController::toggleFieldFacility');
     $routes->get('stadiums/fields/delete/(:num)', 'Admin\StadiumController::deleteField/$1');
 
     // ==========================================================

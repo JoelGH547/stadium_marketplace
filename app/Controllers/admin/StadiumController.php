@@ -357,6 +357,7 @@ class StadiumController extends BaseController
     {
         $stadiumModel = new StadiumModel();
         $fieldModel   = new StadiumFieldModel();
+
         // หา stadium ถ้าไม่เจอให้เด้งกลับ
         $stadium = $stadiumModel->find($stadium_id);
         if (!$stadium) {
@@ -364,12 +365,58 @@ class StadiumController extends BaseController
                 ->with('error', 'ไม่พบข้อมูลสนาม');
         }
 
+        // สนามย่อยทั้งหมดของสนามนี้
+        $fields = $fieldModel->where('stadium_id', $stadium_id)->findAll();
+
+        // ประเภทสิ่งอำนวยความสะดวกทั้งหมด
+        $facilityTypes = $this->facilityTypeModel->orderBy('id', 'ASC')->findAll();
+
+        $fieldFacilities = [];
+        $fieldProducts   = [];
+
+        if (!empty($fields)) {
+            $fieldIds = array_column($fields, 'id');
+
+            // ดึง stadium_facilities ของ field เหล่านี้
+            $sfModel = $this->stadiumFacilityModel;
+            $sfRows  = $sfModel->whereIn('field_id', $fieldIds)->findAll();
+
+            $facilityIdMap = [];
+            foreach ($sfRows as $row) {
+                $fieldFacilities[$row['field_id']][] = $row;
+                $facilityIdMap[$row['id']] = $row;
+            }
+
+            // ดึงสินค้าใน vendor_products ที่ผูกกับ stadium_facilities เหล่านี้
+            if (!empty($facilityIdMap)) {
+                $productModel = new VendorProductModel();
+                $products     = $productModel->withRelations()
+                    ->whereIn('stadium_facility_id', array_keys($facilityIdMap))
+                    ->findAll();
+
+                foreach ($products as $prod) {
+                    $sfId = $prod['stadium_facility_id'];
+                    if (!isset($facilityIdMap[$sfId])) {
+                        continue;
+                    }
+                    $fieldId = $facilityIdMap[$sfId]['field_id'];
+                    $typeId  = $facilityIdMap[$sfId]['facility_type_id'];
+
+                    if (!isset($fieldProducts[$fieldId][$typeId])) {
+                        $fieldProducts[$fieldId][$typeId] = [];
+                    }
+                    $fieldProducts[$fieldId][$typeId][] = $prod;
+                }
+            }
+        }
+
         $data = [
-            'title'         => 'Manage Fields',
-            'stadium'       => $stadium,
-            'fields'        => $fieldModel->where('stadium_id', $stadium_id)->findAll(),
-            // ใช้ facility type ทั้งหมดไปก่อน (เลือกได้ทุกประเภท)
-            'facilityTypes' => $this->facilityTypeModel->orderBy('id', 'ASC')->findAll(),
+            'title'           => 'Manage Fields',
+            'stadium'         => $stadium,
+            'fields'          => $fields,
+            'facilityTypes'   => $facilityTypes,
+            'fieldFacilities' => $fieldFacilities,
+            'fieldProducts'   => $fieldProducts,
         ];
 
         return view('admin/stadiums/fields', $data);
@@ -377,7 +424,72 @@ class StadiumController extends BaseController
 
 
 
-    public function createField()
+    
+
+    /**
+     * AJAX: เปิด/ปิดหมวดหมู่ (facility type) สำหรับสนามย่อย
+     * - checked = 1  -> สร้าง row ใน stadium_facilities
+     * - checked = 0  -> ลบ row ที่เกี่ยวข้อง (FK จะลบสินค้าใน vendor_products ให้ถ้าตั้ง CASCADE)
+     */
+    public function toggleFieldFacility()
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setStatusCode(400)->setJSON([
+                'success' => false,
+                'message' => 'Invalid request type',
+            ]);
+        }
+
+        $fieldId = (int) $this->request->getPost('field_id');
+        $typeId  = (int) $this->request->getPost('facility_type_id');
+        $checked = $this->request->getPost('checked') === '1';
+
+        if ($fieldId <= 0 || $typeId <= 0) {
+            return $this->response->setStatusCode(400)->setJSON([
+                'success' => false,
+                'message' => 'Missing field_id or facility_type_id',
+            ]);
+        }
+
+        $sfModel = $this->stadiumFacilityModel;
+
+        // เช็คว่ามี row นี้อยู่แล้วหรือยัง
+        $existing = $sfModel
+            ->where('field_id', $fieldId)
+            ->where('facility_type_id', $typeId)
+            ->first();
+
+        if ($checked) {
+            if ($existing) {
+                return $this->response->setJSON([
+                    'success'             => true,
+                    'stadium_facility_id' => $existing['id'] ?? null,
+                ]);
+            }
+
+            $id = $sfModel->insert([
+                'field_id'         => $fieldId,
+                'facility_type_id' => $typeId,
+            ], true);
+
+            return $this->response->setJSON([
+                'success'             => true,
+                'stadium_facility_id' => $id,
+            ]);
+        }
+
+        // unchecked -> ลบ row
+        if ($existing) {
+            $sfModel->delete($existing['id']);
+        }
+
+        return $this->response->setJSON([
+            'success' => true,
+        ]);
+    }
+
+
+public function createField()
     {
         $fieldModel = new StadiumFieldModel();
         $facModel = new StadiumFacilityModel();
