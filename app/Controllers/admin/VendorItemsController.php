@@ -27,11 +27,10 @@ class VendorItemsController extends BaseController
     }
 
     /**
-     * แสดงรายการสินค้า
+     * หน้า list สินค้า
      */
     public function index()
     {
-        // ดึงข้อมูลด้วย schema ใหม่ แต่ป้อนให้ view เดิมผ่านตัวแปร $items
         $items = $this->productModel
             ->withRelations()
             ->orderBy('vendor_products.id', 'DESC')
@@ -40,14 +39,13 @@ class VendorItemsController extends BaseController
         $data = [
             'title'    => 'จัดการสินค้า/และบริการเสริม',
             'items'    => $items,
-            'stadiums' => $this->stadiumModel->findAll(),
         ];
 
         return view('admin/vendor_items/index', $data);
     }
 
     /**
-     * หน้าเพิ่มสินค้าใหม่
+     * (ถ้ามีหน้า create แยก ก็ปล่อย logic แบบเดิมไว้ได้)
      */
     public function create()
     {
@@ -70,28 +68,69 @@ class VendorItemsController extends BaseController
     public function store()
     {
         $rules = [
-            'name'                => 'required',
-            'stadium_facility_id' => 'required|integer',
-            'price'               => 'required|numeric',
+            'name'             => 'required',
+            'stadium_id'       => 'required|integer',
+            'facility_type_id' => 'required|integer',
+            'price'            => 'required|numeric',
+            'unit'             => 'required',
         ];
 
-        if (!$this->validate($rules)) {
-            return redirect()->back()->withInput()->with('error', 'กรุณากรอกข้อมูลให้ครบถ้วน');
+        if (! $this->validate($rules)) {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'กรุณากรอกข้อมูลให้ครบถ้วน');
+        }
+
+        $stadiumId = (int) $this->request->getPost('stadium_id');
+        $typeId    = (int) $this->request->getPost('facility_type_id');
+
+        // หา stadium_facilities.id จาก stadium_id + facility_type_id
+        $facilityRow = $this->facilityModel
+            ->select('stadium_facilities.id')
+            ->join('stadium_fields', 'stadium_fields.id = stadium_facilities.field_id')
+            ->where('stadium_fields.stadium_id', $stadiumId)
+            ->where('stadium_facilities.facility_type_id', $typeId)
+            ->first();
+
+        if (! $facilityRow) {
+            return redirect()->back()
+                ->withInput()
+                ->with(
+                    'error',
+                    'ไม่พบการเชื่อมต่อระหว่างสนามและหมวดหมู่ (stadium_facilities) ' .
+                        'กรุณาตรวจสอบการตั้งค่าหมวดหมู่ของสนามย่อยก่อน'
+                );
+        }
+
+        $stadiumFacilityId = $facilityRow['id'];
+
+        // จัดการอัปโหลดรูป
+        $imageName = null;
+        $imageFile = $this->request->getFile('image');
+        if ($imageFile && $imageFile->isValid() && ! $imageFile->hasMoved()) {
+            $uploadPath = FCPATH . 'assets/uploads/items/';
+            if (! is_dir($uploadPath)) {
+                mkdir($uploadPath, 0775, true);
+            }
+
+            $imageName = $imageFile->getRandomName();
+            $imageFile->move($uploadPath, $imageName);
         }
 
         $data = [
-            'stadium_facility_id' => $this->request->getPost('stadium_facility_id'),
+            'stadium_facility_id' => $stadiumFacilityId,
             'name'                => $this->request->getPost('name'),
             'description'         => $this->request->getPost('description'),
             'price'               => $this->request->getPost('price'),
             'unit'                => $this->request->getPost('unit'),
+            'image'               => $imageName,
             'status'              => $this->request->getPost('status') ?? 'active',
         ];
 
-        // TODO: ระบบอัปโหลดรูปภาพค่อยเพิ่มในรอบหน้า
         $this->productModel->insert($data);
 
-        return redirect()->to('/admin/vendor-items')->with('success', 'เพิ่มสินค้าสำเร็จ');
+        return redirect()->to('/admin/vendor-items')
+            ->with('success', 'เพิ่มสินค้าสำเร็จ');
     }
 
     /**
@@ -101,19 +140,15 @@ class VendorItemsController extends BaseController
     {
         $product = $this->productModel->find($id);
 
-        if (!$product) {
-            return redirect()->to('/admin/vendor-items')->with('error', 'ไม่พบข้อมูลสินค้า');
+        if (! $product) {
+            return redirect()->to('/admin/vendor-items')
+                ->with('error', 'ไม่พบข้อมูลสินค้า');
         }
 
         $data = [
             'title'      => 'แก้ไขสินค้า',
             'product'    => $product,
-            'facilities' => $this->facilityModel
-                ->select('stadium_facilities.*, stadium_fields.name AS field_name, facility_types.name AS facility_name')
-                ->join('stadium_fields', 'stadium_fields.id = stadium_facilities.field_id')
-                ->join('facility_types', 'facility_types.id = stadium_facilities.facility_type_id')
-                ->orderBy('field_name')
-                ->findAll(),
+            'stadiums'   => $this->stadiumModel->findAll(),
         ];
 
         return view('admin/vendor_items/edit', $data);
@@ -126,22 +161,50 @@ class VendorItemsController extends BaseController
     {
         $product = $this->productModel->find($id);
 
-        if (!$product) {
-            return redirect()->to('/admin/vendor-items')->with('error', 'ไม่พบข้อมูลสินค้า');
+        if (! $product) {
+            return redirect()->to('/admin/vendor-items')
+                ->with('error', 'ไม่พบข้อมูลสินค้า');
         }
 
         $rules = [
-            'name'                => 'required',
-            'stadium_facility_id' => 'required|integer',
-            'price'               => 'required|numeric',
+            'name'             => 'required',
+            'stadium_id'       => 'required|integer',
+            'facility_type_id' => 'required|integer',
+            'price'            => 'required|numeric',
+            'unit'             => 'required',
         ];
 
-        if (!$this->validate($rules)) {
-            return redirect()->back()->withInput()->with('error', 'ข้อมูลไม่ถูกต้อง');
+        if (! $this->validate($rules)) {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'ข้อมูลไม่ถูกต้อง');
         }
 
+        $stadiumId = (int) $this->request->getPost('stadium_id');
+        $typeId    = (int) $this->request->getPost('facility_type_id');
+
+        // หา stadium_facilities.id เหมือนตอนสร้าง
+        $facilityRow = $this->facilityModel
+            ->select('stadium_facilities.id')
+            ->join('stadium_fields', 'stadium_fields.id = stadium_facilities.field_id')
+            ->where('stadium_fields.stadium_id', $stadiumId)
+            ->where('stadium_facilities.facility_type_id', $typeId)
+            ->first();
+
+        if (! $facilityRow) {
+            return redirect()->back()
+                ->withInput()
+                ->with(
+                    'error',
+                    'ไม่พบการเชื่อมต่อระหว่างสนามและหมวดหมู่ (stadium_facilities) ' .
+                        'กรุณาตรวจสอบการตั้งค่าหมวดหมู่ของสนามย่อยก่อน'
+                );
+        }
+
+        $stadiumFacilityId = $facilityRow['id'];
+
         $data = [
-            'stadium_facility_id' => $this->request->getPost('stadium_facility_id'),
+            'stadium_facility_id' => $stadiumFacilityId,
             'name'                => $this->request->getPost('name'),
             'description'         => $this->request->getPost('description'),
             'price'               => $this->request->getPost('price'),
@@ -149,9 +212,30 @@ class VendorItemsController extends BaseController
             'status'              => $this->request->getPost('status') ?? 'active',
         ];
 
+        // ถ้ามีอัปโหลดรูปใหม่ → ย้ายไฟล์ + ลบไฟล์เก่า
+        $imageFile = $this->request->getFile('image');
+        if ($imageFile && $imageFile->isValid() && ! $imageFile->hasMoved()) {
+            $uploadPath = FCPATH . 'assets/uploads/items/';
+            if (! is_dir($uploadPath)) {
+                mkdir($uploadPath, 0775, true);
+            }
+
+            $newName = $imageFile->getRandomName();
+            $imageFile->move($uploadPath, $newName);
+            $data['image'] = $newName;
+
+            if (! empty($product['image'])) {
+                $oldPath = $uploadPath . $product['image'];
+                if (is_file($oldPath)) {
+                    @unlink($oldPath);
+                }
+            }
+        }
+
         $this->productModel->update($id, $data);
 
-        return redirect()->to('/admin/vendor-items')->with('success', 'แก้ไขสินค้าเรียบร้อย');
+        return redirect()->to('/admin/vendor-items')
+            ->with('success', 'แก้ไขสินค้าเรียบร้อย');
     }
 
     /**
@@ -161,12 +245,24 @@ class VendorItemsController extends BaseController
     {
         $product = $this->productModel->find($id);
 
-        if (!$product) {
-            return redirect()->to('/admin/vendor-items')->with('error', 'ไม่พบข้อมูลสินค้า');
+        if (! $product) {
+            return redirect()->to('/admin/vendor-items')
+                ->with('error', 'ไม่พบข้อมูลสินค้า');
+        }
+
+        // ลบไฟล์รูปถ้ามี
+        if (! empty($product['image'])) {
+            $uploadPath = FCPATH . 'assets/uploads/items/';
+            $filePath   = $uploadPath . $product['image'];
+
+            if (is_file($filePath)) {
+                @unlink($filePath);
+            }
         }
 
         $this->productModel->delete($id);
 
-        return redirect()->to('/admin/vendor-items')->with('success', 'ลบสินค้าเรียบร้อย');
+        return redirect()->to('/admin/vendor-items')
+            ->with('success', 'ลบสินค้าเรียบร้อย');
     }
 }

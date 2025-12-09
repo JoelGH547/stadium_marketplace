@@ -424,7 +424,7 @@ class StadiumController extends BaseController
 
 
 
-    
+
 
     /**
      * AJAX: เปิด/ปิดหมวดหมู่ (facility type) สำหรับสนามย่อย
@@ -433,7 +433,7 @@ class StadiumController extends BaseController
      */
     public function toggleFieldFacility()
     {
-        if (!$this->request->isAJAX()) {
+        if (! $this->request->isAJAX()) {
             return $this->response->setStatusCode(400)->setJSON([
                 'success' => false,
                 'message' => 'Invalid request type',
@@ -451,7 +451,8 @@ class StadiumController extends BaseController
             ]);
         }
 
-        $sfModel = $this->stadiumFacilityModel;
+        $sfModel      = $this->stadiumFacilityModel;
+        $productModel = new \App\Models\VendorProductModel();
 
         // เช็คว่ามี row นี้อยู่แล้วหรือยัง
         $existing = $sfModel
@@ -460,6 +461,7 @@ class StadiumController extends BaseController
             ->first();
 
         if ($checked) {
+            // ติ๊กเปิดหมวดหมู่
             if ($existing) {
                 return $this->response->setJSON([
                     'success'             => true,
@@ -478,18 +480,45 @@ class StadiumController extends BaseController
             ]);
         }
 
-        // unchecked -> ลบ row
+        // unchecked -> ลบ row + ลบสินค้าใน vendor_products ที่ผูกกับ stadium_facility นี้
+        $deletedProducts = 0;
+
         if ($existing) {
-            $sfModel->delete($existing['id']);
+            $sfId = $existing['id'];
+
+            // ดึงสินค้าเพื่อจะลบรูปออกจากดิสก์ด้วย
+            $products = $productModel
+                ->where('stadium_facility_id', $sfId)
+                ->findAll();
+
+            $uploadPath = FCPATH . 'assets/uploads/items/';
+
+            foreach ($products as $prod) {
+                if (! empty($prod['image'])) {
+                    $filePath = $uploadPath . $prod['image'];
+                    if (is_file($filePath)) {
+                        @unlink($filePath);
+                    }
+                }
+            }
+
+            $deletedProducts = count($products);
+
+            // ลบสินค้าใน DB
+            $productModel->where('stadium_facility_id', $sfId)->delete();
+
+            // แล้วค่อยลบ row ใน stadium_facilities
+            $sfModel->delete($sfId);
         }
 
         return $this->response->setJSON([
-            'success' => true,
+            'success'          => true,
+            'deleted_products' => $deletedProducts,
         ]);
     }
 
 
-public function createField()
+    public function createField()
     {
         $fieldModel = new StadiumFieldModel();
         $facModel = new StadiumFacilityModel();
@@ -589,7 +618,7 @@ public function createField()
         $fieldModel->update($id, [
             'name'           => $this->request->getPost('name'),
             'description'    => $this->request->getPost('description'),
-            'price'          => $this->request->getPost('price'),
+            'price'          => $this->request->getPost('price') ?: null,
             'price_daily'    => $this->request->getPost('price_daily') ?: null,
             'status'         => $this->request->getPost('status'),
             'outside_images' => json_encode($outsideResult),
@@ -640,5 +669,95 @@ public function createField()
             return redirect()->to('admin/stadiums/fields/' . $field['stadium_id'])->with('success', 'ลบข้อมูลเรียบร้อย');
         }
         return redirect()->back()->with('error', 'ไม่พบข้อมูล');
+    }
+
+    // =================================================================================
+    // 🛍️ [PART 3] จัดการสินค้า (Items) แบบ AJAX
+    // =================================================================================
+
+    public function saveProduct()
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setStatusCode(400)->setJSON(['success' => false, 'message' => 'Invalid request']);
+        }
+
+        $productModel = new VendorProductModel();
+        $id = $this->request->getPost('id'); // ถ้ามี ID คือการแก้ไข
+        $sfId = $this->request->getPost('stadium_facility_id');
+
+        // Validation
+        if (empty($sfId)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Missing stadium_facility_id']);
+        }
+
+        $uploadPath = FCPATH . 'assets/uploads/items/';
+        if (!is_dir($uploadPath)) mkdir($uploadPath, 0777, true);
+
+        $imageName = null;
+        
+        // ถ้าเป็นการแก้ไข ให้ดึงรูปเดิมมาตั้งต้นก่อน
+        if ($id) {
+            $existing = $productModel->find($id);
+            if ($existing) {
+                $imageName = $existing['image'];
+            }
+        }
+
+        // จัดการไฟล์รูปภาพ
+        $file = $this->request->getFile('image');
+        if ($file && $file->isValid() && !$file->hasMoved()) {
+            // ลบรูปเก่าทิ้งถ้ามี
+            if ($imageName && file_exists($uploadPath . $imageName)) {
+                @unlink($uploadPath . $imageName);
+            }
+            $newName = 'item_' . time() . '_' . $file->getRandomName();
+            $file->move($uploadPath, $newName);
+            $imageName = $newName;
+        }
+
+        $data = [
+            'stadium_facility_id' => $sfId,
+            'name'                => $this->request->getPost('name'),
+            'description'         => $this->request->getPost('description'),
+            'price'               => $this->request->getPost('price'),
+            'unit'                => $this->request->getPost('unit'),
+            'status'              => $this->request->getPost('status'),
+            'image'               => $imageName
+        ];
+
+        if ($id) {
+            $productModel->update($id, $data);
+            $newId = $id;
+        } else {
+            $newId = $productModel->insert($data);
+        }
+
+        return $this->response->setJSON([
+            'success' => true, 
+            'id' => $newId,
+            'image_url' => $imageName ? base_url('assets/uploads/items/' . $imageName) : null
+        ]);
+    }
+
+    public function deleteProduct($id)
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setStatusCode(400);
+        }
+
+        $productModel = new VendorProductModel();
+        $item = $productModel->find($id);
+
+        if ($item) {
+            // ลบรูป
+            if (!empty($item['image'])) {
+                $path = FCPATH . 'assets/uploads/items/' . $item['image'];
+                if (file_exists($path)) @unlink($path);
+            }
+            $productModel->delete($id);
+            return $this->response->setJSON(['success' => true]);
+        }
+
+        return $this->response->setJSON(['success' => false, 'message' => 'Item not found']);
     }
 }

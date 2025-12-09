@@ -23,10 +23,12 @@ foreach ($facilityTypes as $ft) {
         position: relative;
         gap: 0.25rem;
     }
+
     .field-category-wrapper {
         position: relative;
         display: inline-block;
     }
+
     .field-category-panel {
         position: absolute;
         top: 110%;
@@ -43,11 +45,13 @@ foreach ($facilityTypes as $ft) {
         transition: opacity 0.15s ease, transform 0.15s ease;
         z-index: 50;
     }
+
     .field-category-wrapper:hover .field-category-panel {
         opacity: 1;
         pointer-events: auto;
         transform: translateY(0);
     }
+
     .field-category-panel .small-scroll {
         max-height: 220px;
         overflow-y: auto;
@@ -129,7 +133,7 @@ foreach ($facilityTypes as $ft) {
                                             <span class="badge bg-danger rounded-pill">ปิดปรับปรุง</span>
                                         <?php endif; ?>
                                     </td>
-                                                                        <td class="text-end pe-4">
+                                    <td class="text-end pe-4">
                                         <div class="d-inline-flex align-items-center">
                                             <button type="button"
                                                 class="btn btn-outline-info btn-sm shadow-sm me-1 field-facility-manage-btn"
@@ -172,14 +176,14 @@ foreach ($facilityTypes as $ft) {
 <?php if (!empty($fields)): ?>
     <?php foreach ($fields as $field): ?>
         <?php
-            $fieldId = $field['id'];
-            $facilitiesForField = $fieldFacilities[$fieldId] ?? [];
-            $activeFacilitiesByType = [];
-            if (!empty($facilitiesForField)) {
-                foreach ($facilitiesForField as $sfRow) {
-                    $activeFacilitiesByType[$sfRow['facility_type_id']] = $sfRow;
-                }
+        $fieldId = $field['id'];
+        $facilitiesForField = $fieldFacilities[$fieldId] ?? [];
+        $activeFacilitiesByType = [];
+        if (!empty($facilitiesForField)) {
+            foreach ($facilitiesForField as $sfRow) {
+                $activeFacilitiesByType[$sfRow['facility_type_id']] = $sfRow;
             }
+        }
         ?>
         <div class="modal fade" id="fieldFacilitiesModal_<?= $fieldId ?>" tabindex="-1"
             aria-labelledby="fieldFacilitiesModalLabel_<?= $fieldId ?>" aria-hidden="true">
@@ -192,6 +196,7 @@ foreach ($facilityTypes as $ft) {
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
                             aria-label="Close"></button>
                     </div>
+
                     <div class="modal-body">
                         <div class="mb-3">
                             <h6 class="fw-bold mb-2">เลือกหมวดหมู่สำหรับสนามย่อยนี้</h6>
@@ -199,32 +204,75 @@ foreach ($facilityTypes as $ft) {
                                 <?php if (!empty($facilityTypes)): ?>
                                     <?php foreach ($facilityTypes as $ft): ?>
                                         <?php
-                                            $typeId   = $ft['id'];
-                                            $sfRow    = $activeFacilitiesByType[$typeId] ?? null;
-                                            $hasFac   = $sfRow !== null;
-                                            $sfId     = $sfRow['id'] ?? null;
-                                            $productList = (!empty($fieldProducts[$fieldId][$typeId]))
-                                                ? $fieldProducts[$fieldId][$typeId]
-                                                : [];
-                                            $productCount = count($productList);
+                                        $typeId   = $ft['id'];
+                                        $sfRow    = $activeFacilitiesByType[$typeId] ?? null;
+                                        $hasFac   = $sfRow !== null;
+                                        $sfId     = $sfRow['id'] ?? null;
+                                        $productList = (!empty($fieldProducts[$fieldId][$typeId]))
+                                            ? $fieldProducts[$fieldId][$typeId]
+                                            : [];
                                         ?>
-                                        <div class="d-flex align-items-center justify-content-between mb-1">
-                                            <div class="form-check form-check-sm">
-                                                <input class="form-check-input field-facility-checkbox"
-                                                    type="checkbox"
-                                                    data-field-id="<?= $fieldId ?>"
-                                                    data-facility-type-id="<?= $typeId ?>"
-                                                    data-stadium-facility-id="<?= $sfId ?>"
-                                                    <?= $hasFac ? 'checked' : '' ?>>
-                                                <label class="form-check-label small">
-                                                    <?= esc($ft['emoji'] ?? '') ?> <?= esc($ft['name']) ?>
-                                                </label>
+                                        <div class="mb-2 facility-type-block" data-field-id="<?= $fieldId ?>"
+                                            data-type-id="<?= $typeId ?>">
+                                            <div class="d-flex align-items-center justify-content-between">
+                                                <div class="form-check form-check-sm">
+                                                    <input class="form-check-input field-facility-checkbox" type="checkbox"
+                                                        data-field-id="<?= $fieldId ?>" data-facility-type-id="<?= $typeId ?>"
+                                                        data-stadium-facility-id="<?= $sfId ?>" <?= $hasFac ? 'checked' : '' ?>>
+                                                    <label class="form-check-label small">
+                                                        <?= esc($ft['emoji'] ?? '') ?> <?= esc($ft['name']) ?>
+                                                    </label>
+                                                </div>
                                             </div>
-                                            <?php if ($productCount > 0): ?>
-                                                <span class="badge bg-light text-muted border small">
-                                                    <?= $productCount ?> สินค้า
-                                                </span>
-                                            <?php endif; ?>
+
+                                            <div class="facility-items-container mt-2 ms-4 border-start border-3 border-info ps-3"
+                                                data-field-id="<?= $fieldId ?>"
+                                                data-type-id="<?= $typeId ?>"
+                                                <?= $hasFac ? '' : 'style="display:none;"' ?>>
+                                                
+                                                <div class="products-list-wrapper">
+                                                    <?php if (!empty($productList)): ?>
+                                                        <?php foreach ($productList as $prod): ?>
+                                                            <div class="card mb-2 shadow-sm border product-item-card" data-id="<?= $prod['id'] ?>">
+                                                                <div class="card-body p-2">
+                                                                    <div class="row g-2 align-items-center">
+                                                                        <div class="col-8">
+                                                                            <input type="text" class="form-control form-control-sm mb-1 item-name" placeholder="ชื่อสินค้า/บริการ" value="<?= esc($prod['name']) ?>">
+                                                                            <textarea class="form-control form-control-sm mb-1 item-desc" rows="1" placeholder="รายละเอียด"><?= esc($prod['description']) ?></textarea>
+                                                                            <div class="d-flex gap-1">
+                                                                                <input type="number" class="form-control form-control-sm item-price" placeholder="ราคา" value="<?= esc($prod['price']) ?>">
+                                                                                <input type="text" class="form-control form-control-sm item-unit" placeholder="หน่วย (เช่น ขวด, ชิ้น)" value="<?= esc($prod['unit']) ?>">
+                                                                                <select class="form-select form-select-sm item-status">
+                                                                                    <option value="active" <?= $prod['status'] == 'active' ? 'selected' : '' ?>>Active</option>
+                                                                                    <option value="inactive" <?= $prod['status'] == 'inactive' ? 'selected' : '' ?>>Inactive</option>
+                                                                                </select>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="col-4 text-center">
+                                                                            <?php if (!empty($prod['image'])): ?>
+                                                                                <img src="<?= base_url('assets/uploads/items/' . $prod['image']) ?>" class="item-img-preview rounded mb-1" style="width:50px; height:50px; object-fit:cover;">
+                                                                            <?php else: ?>
+                                                                                <div class="item-img-preview border rounded d-flex align-items-center justify-content-center bg-light text-muted small mb-1" style="width:50px; height:50px;">No Pic</div>
+                                                                            <?php endif; ?>
+                                                                            <input type="file" class="form-control form-control-sm item-image" accept="image/*" style="display:none;">
+                                                                            <button type="button" class="btn btn-outline-secondary btn-sm btn-trigger-upload text-xs w-100 mb-1">Upload</button>
+                                                                            
+                                                                            <div class="d-flex gap-1 justify-content-center">
+                                                                                <button type="button" class="btn btn-success btn-sm btn-save-item"><i class="fas fa-save"></i></button>
+                                                                                <button type="button" class="btn btn-danger btn-sm btn-delete-item"><i class="fas fa-trash"></i></button>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        <?php endforeach; ?>
+                                                    <?php endif; ?>
+                                                </div>
+
+                                                <button type="button" class="btn btn-outline-primary btn-sm w-100 facility-add-item-btn">
+                                                    <i class="fas fa-plus"></i> เพิ่มไอเทมใหม่
+                                                </button>
+                                            </div>
                                         </div>
                                     <?php endforeach; ?>
                                 <?php else: ?>
@@ -238,68 +286,8 @@ foreach ($facilityTypes as $ft) {
                                 การติ๊กจะผูกหมวดหมู่กับสนามย่อยนี้ผ่านตาราง stadium_facilities
                             </div>
                         </div>
-
-                        <hr>
-
-                        <div>
-                            <h6 class="fw-bold mb-2">สินค้า/บริการในหมวดที่ใช้งาน</h6>
-                            <?php
-                                $hasAnyActive = !empty($activeFacilitiesByType);
-                            ?>
-                            <?php if (!$hasAnyActive): ?>
-                                <div class="alert alert-light border small mb-0">
-                                    ยังไม่มีการเลือกหมวดหมู่สำหรับสนามย่อยนี้<br>
-                                    กรุณาเลือกหมวดหมู่ด้านบนก่อนจึงจะสามารถเพิ่มสินค้าได้
-                                </div>
-                            <?php else: ?>
-                                <?php foreach ($facilityTypes as $ft): ?>
-                                    <?php
-                                        $typeId   = $ft['id'];
-                                        $sfRow    = $activeFacilitiesByType[$typeId] ?? null;
-                                        if (!$sfRow) {
-                                            continue;
-                                        }
-                                        $sfId        = $sfRow['id'] ?? null;
-                                        $productList = (!empty($fieldProducts[$fieldId][$typeId]))
-                                            ? $fieldProducts[$fieldId][$typeId]
-                                            : [];
-                                    ?>
-                                    <div class="mb-3">
-                                        <div class="d-flex justify-content-between align-items-center mb-1">
-                                            <div class="fw-semibold small">
-                                                หมวด: <?= esc($ft['emoji'] ?? '') ?> <?= esc($ft['name']) ?>
-                                            </div>
-                                            <button type="button"
-                                                class="btn btn-outline-primary btn-xs disabled"
-                                                title="TODO: เชื่อมหน้าจัดการไอเทม">
-                                                <i class="fas fa-plus-circle"></i> เพิ่มไอเทมในหมวดนี้
-                                            </button>
-                                        </div>
-                                        <?php if (!empty($productList)): ?>
-                                            <ul class="list-unstyled small mb-0">
-                                                <?php foreach ($productList as $prod): ?>
-                                                    <li class="d-flex justify-content-between align-items-center py-1 border-bottom">
-                                                        <span>
-                                                            <?= esc($prod['name'] ?? $prod['product_name'] ?? 'ไม่ระบุชื่อ') ?>
-                                                        </span>
-                                                        <span class="text-muted">
-                                                            <?php if (!empty($prod['price'])): ?>
-                                                                ฿<?= number_format($prod['price']) ?>
-                                                            <?php endif; ?>
-                                                        </span>
-                                                    </li>
-                                                <?php endforeach; ?>
-                                            </ul>
-                                        <?php else: ?>
-                                            <div class="small text-muted fst-italic">
-                                                ยังไม่มีสินค้าในหมวดนี้
-                                            </div>
-                                        <?php endif; ?>
-                                    </div>
-                                <?php endforeach; ?>
-                            <?php endif; ?>
-                        </div>
                     </div>
+
                     <div class="modal-footer">
                         <button type="button" class="btn btn-light" data-bs-dismiss="modal">ปิดหน้าต่าง</button>
                     </div>
@@ -388,7 +376,7 @@ foreach ($facilityTypes as $ft) {
                         </div>
                         <div class="col-md-3">
                             <label class="fw-bold">ราคา/ชม.</label>
-                            <input type="number" name="price" id="edit_price" class="form-control" required>
+                            <input type="number" name="price" id="edit_price" class="form-control">
                         </div>
                         <div class="col-md-3">
                             <label class="fw-bold">ราคา/วัน</label>
@@ -434,46 +422,256 @@ foreach ($facilityTypes as $ft) {
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // จัดการ checkbox หมวดหมู่ของสนามย่อย (stadium_facilities)
+        
+        // 1. Logic Checkbox Facilities (Toggle + Warning)
         document.querySelectorAll('.field-facility-checkbox').forEach(cb => {
             cb.addEventListener('change', function() {
-                const fieldId = this.dataset.fieldId;
-                const typeId  = this.dataset.facilityTypeId;
-                const checked = this.checked ? '1' : '0';
+                const self = this;
+                const wasChecked = !self.checked; // state before click (if clicked to uncheck, wasChecked=true)
+                
+                // ถ้ากำลังจะ "เอาออก" ให้เตือนก่อน
+                if (wasChecked) { 
+                    Swal.fire({
+                        title: 'ยืนยันปิดหมวดหมู่นี้?',
+                        text: "หากปิด รายการสินค้า/บริการในหมวดนี้จะหายไปทั้งหมด!",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonText: 'ยืนยันปิด',
+                        cancelButtonText: 'ยกเลิก',
+                        confirmButtonColor: '#d33'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            processToggle(self); // ยืนยัน -> ยิง AJAX
+                        } else {
+                            self.checked = true; // ยกเลิก -> ติ๊กกลับเหมือนเดิม
+                        }
+                    });
+                } else {
+                    // ถ้ากำลังจะ "เอาเข้า" (เปิด) -> ทำเลยไม่ต้องเตือน
+                    processToggle(self);
+                }
+            });
+        });
 
-                fetch('<?= base_url('admin/stadiums/fields/toggle-facility') ?>', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-                        'X-Requested-With': 'XMLHttpRequest'
-                    },
-                    body: new URLSearchParams({
-                        'field_id': fieldId,
-                        'facility_type_id': typeId,
-                        'checked': checked,
-                        '<?= csrf_token() ?>': '<?= csrf_hash() ?>'
-                    })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (!data.success) {
-                        Swal.fire('เกิดข้อผิดพลาด', data.message || 'ไม่สามารถบันทึกข้อมูลได้', 'error');
-                        this.checked = !this.checked;
-                        return;
+        function processToggle(checkbox) {
+            const fieldId = checkbox.dataset.fieldId;
+            const typeId = checkbox.dataset.facilityTypeId;
+            const checked = checkbox.checked ? '1' : '0';
+            const itemsBox = checkbox.closest('.facility-type-block')?.querySelector('.facility-items-container');
+
+            fetch('<?= base_url('admin/stadiums/fields/toggle-facility') ?>', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8', 'X-Requested-With': 'XMLHttpRequest'},
+                body: new URLSearchParams({'field_id': fieldId, 'facility_type_id': typeId, 'checked': checked, '<?= csrf_token() ?>': '<?= csrf_hash() ?>'})
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    if (data.stadium_facility_id) checkbox.dataset.stadiumFacilityId = data.stadium_facility_id;
+                    if (itemsBox) {
+                        itemsBox.style.display = checked === '1' ? '' : 'none';
+                        if(checked === '0') itemsBox.querySelector('.products-list-wrapper').innerHTML = ''; // Clear items visual
                     }
-                    if (data.stadium_facility_id) {
-                        this.dataset.stadiumFacilityId = data.stadium_facility_id;
-                    } else if (!this.checked) {
-                        this.dataset.stadiumFacilityId = '';
+                } else {
+                    checkbox.checked = !checkbox.checked; // Revert
+                    Swal.fire('Error', data.message, 'error');
+                }
+            });
+        }
+
+        // 2. Add New Item UI
+        document.body.addEventListener('click', function(e) {
+            if (e.target.closest('.facility-add-item-btn')) {
+                const btn = e.target.closest('.facility-add-item-btn');
+                const container = btn.previousElementSibling; // .products-list-wrapper
+                
+                const card = document.createElement('div');
+                card.className = 'card mb-2 shadow-sm border product-item-card bg-light';
+                card.innerHTML = `
+                   <div class="card-body p-2">
+                        <div class="row g-2 align-items-center">
+                            <div class="col-8">
+                                <input type="text" class="form-control form-control-sm mb-1 item-name" placeholder="ชื่อสินค้า/บริการ">
+                                <textarea class="form-control form-control-sm mb-1 item-desc" rows="1" placeholder="รายละเอียด"></textarea>
+                                <div class="d-flex gap-1">
+                                    <input type="number" class="form-control form-control-sm item-price" placeholder="ราคา" oninput="this.value = this.value.replace(/[^0-9]/g, '');">
+                                    <input type="text" class="form-control form-control-sm item-unit" placeholder="หน่วย">
+                                    <select class="form-select form-select-sm item-status">
+                                        <option value="active">Active</option>
+                                        <option value="inactive">Inactive</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-4 text-center">
+                                <div class="item-img-preview border rounded d-flex align-items-center justify-content-center bg-white text-muted small mb-1" style="width:50px; height:50px;">No Pic</div>
+                                <input type="file" class="form-control form-control-sm item-image" accept="image/*" style="display:none;">
+                                <button type="button" class="btn btn-outline-secondary btn-sm btn-trigger-upload text-xs w-100 mb-1">Upload</button>
+                                
+                                <div class="d-flex gap-1 justify-content-center">
+                                    <button type="button" class="btn btn-success btn-sm btn-save-item"><i class="fas fa-save"></i> Save</button>
+                                    <button type="button" class="btn btn-outline-danger btn-remove-unsaved"><i class="fas fa-times"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                   </div>
+                `;
+                container.appendChild(card);
+            }
+            
+            
+            // Trigger File Upload (Fixed listener placement)
+            if (e.target.closest('.btn-trigger-upload')) {
+                const card = e.target.closest('.product-item-card');
+                if(card) card.querySelector('.item-image').click();
+            }
+        });
+
+        // 2.1 Separate Listener for Unsaved Item Removal (Safety)
+        document.body.addEventListener('click', function(e) {
+            const btn = e.target.closest('.btn-remove-unsaved');
+            if (btn) {
+                const card = btn.closest('.product-item-card');
+                if(card) card.remove();
+            }
+        });
+
+        // Preview Image on Select
+        document.body.addEventListener('change', function(e) {
+            if (e.target.classList.contains('item-image')) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    const card = e.target.closest('.product-item-card');
+                    reader.onload = function(evt) {
+                        card.querySelector('.item-img-preview').innerHTML = `<img src="${evt.target.result}" style="width:100%; height:100%; object-fit:cover;">`;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            }
+        });
+
+        // 3. Save Item Logic
+        document.body.addEventListener('click', function(e) {
+            if (e.target.closest('.btn-save-item')) {
+                const btn = e.target.closest('.btn-save-item');
+                const card = btn.closest('.product-item-card');
+                const block = card.closest('.facility-type-block');
+                const checkbox = block.querySelector('.field-facility-checkbox');
+                
+                // ต้องมี stadium_facility_id ก่อน (ถ้ายังไม่ติ๊ก checkbox ต้องติ๊กก่อน แต่ตาม UI มันซ่อนอยู่ถ้าไม่ติ๊ก)
+                const sfId = checkbox.dataset.stadiumFacilityId;
+                if(!sfId) {
+                    Swal.fire('Error', 'กรุณากดเปิดใช้งานหมวดหมู่นี้ก่อน', 'error');
+                    return;
+                }
+
+                const formData = new FormData();
+                formData.append('stadium_facility_id', sfId);
+                if(card.dataset.id) formData.append('id', card.dataset.id);
+
+                const name = card.querySelector('.item-name').value.trim();
+                const desc = card.querySelector('.item-desc').value.trim();
+                const price = card.querySelector('.item-price').value.trim();
+                const unit = card.querySelector('.item-unit').value.trim();
+
+                // Validation: Check empty fields
+                if (!name || !price || !unit) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'กรุณากรอกข้อมูลให้ครบถ้วน',
+                        text: 'ชื่อสินค้า, ราคา, และหน่วยนับ ห้ามเว้นว่าง',
+                        confirmButtonText: 'ตกลง'
+                    });
+                    return;
+                }
+
+                // Append Data
+                formData.append('name', name);
+                formData.append('description', desc);
+                formData.append('price', price);
+                formData.append('unit', unit);
+                formData.append('status', card.querySelector('.item-status').value);
+                
+                const fileInput = card.querySelector('.item-image');
+                if(fileInput.files[0]) {
+                    formData.append('image', fileInput.files[0]);
+                }
+                formData.append('<?= csrf_token() ?>', '<?= csrf_hash() ?>');
+
+                // Loading state
+                const originalHtml = btn.innerHTML;
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+                fetch('<?= base_url('admin/stadiums/fields/product/save') ?>', {
+                    method: 'POST',
+                    headers: {'X-Requested-With': 'XMLHttpRequest'},
+                    body: formData
+                })
+                .then(res => res.json())
+                .then(data => {
+                    btn.disabled = false;
+                    btn.innerHTML = originalHtml;
+
+                    if(data.success) {
+                        card.dataset.id = data.id; // Assign ID
+                        // Update buttons to "Delete Mode" if it was new
+                        const delBtn = card.querySelector('.btn-remove-unsaved');
+                        if(delBtn) {
+                            delBtn.className = 'btn btn-danger btn-sm btn-delete-item';
+                            delBtn.innerHTML = '<i class="fas fa-trash"></i>';
+                        }
+                        
+                        Swal.fire({
+                            title: 'Saved!',
+                            icon: 'success',
+                            toast: true,
+                            position: 'top-end',
+                            showConfirmButton: false,
+                            timer: 1500
+                        });
+                    } else {
+                        Swal.fire('Error', data.message || 'Save failed', 'error');
                     }
                 })
                 .catch(err => {
+                    btn.disabled = false;
+                    btn.innerHTML = originalHtml;
                     console.error(err);
-                    Swal.fire('เกิดข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้', 'error');
-                    this.checked = !this.checked;
                 });
-            });
+            }
         });
+
+        // 4. Delete Item Logic
+        document.body.addEventListener('click', function(e) {
+             if (e.target.closest('.btn-delete-item')) {
+                const btn = e.target.closest('.btn-delete-item');
+                const card = btn.closest('.product-item-card');
+                const id = card.dataset.id;
+                
+                Swal.fire({
+                    title: 'ลบรายการนี้?',
+                    text: 'ไม่สามารถกู้คืนได้',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'ลบ',
+                    confirmButtonColor: '#d33'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        fetch('<?= base_url('admin/stadiums/fields/product/delete/') ?>' + id)
+                        .then(res => res.json())
+                        .then(data => {
+                            if(data.success) {
+                                card.remove();
+                            } else {
+                                Swal.fire('Error', 'Delete failed', 'error');
+                            }
+                        });
+                    }
+                });
+             }
+        });
+
 
 
         const stadiumId = <?= $stadium['id'] ?>;

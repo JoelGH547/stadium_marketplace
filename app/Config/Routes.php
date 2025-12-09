@@ -29,7 +29,7 @@ $routes->get('admin/login', 'Admin\AdminAuthController::login');
 $routes->post('admin/login', 'Admin\AdminAuthController::processLogin');
 $routes->get('admin/logout', 'Admin\AdminAuthController::logout');
 
-$routes->group('admin', ['filter' => ['auth', 'admin']], static function ($routes) {
+$routes->group('admin', ['filter' => ['admin']], static function ($routes) {
     
     // --- Dashboard ---
     $routes->get('dashboard', 'Admin\DashboardController::index');
@@ -65,6 +65,10 @@ $routes->group('admin', ['filter' => ['auth', 'admin']], static function ($route
     $routes->post('stadiums/fields/update', 'Admin\StadiumController::updateField');
     $routes->post('stadiums/fields/toggle-facility', 'Admin\StadiumController::toggleFieldFacility');
     $routes->get('stadiums/fields/delete/(:num)', 'Admin\StadiumController::deleteField/$1');
+
+    // --- Vendor Products (สินค้าในสนามย่อย) ---
+    $routes->post('stadiums/fields/product/save', 'Admin\StadiumController::saveProduct');
+    $routes->get('stadiums/fields/product/delete/(:num)', 'Admin\StadiumController::deleteProduct/$1');
 
     // ==========================================================
     // +++ [ระบบใหม่] Vendor Items (จัดการสินค้า/บริการเสริม) +++
@@ -119,7 +123,7 @@ $routes->group('admin', ['filter' => ['auth', 'admin']], static function ($route
 // ==========================================================
 // --- 3. CUSTOMER SECTION 
 // ==========================================================
-$routes->group('customer', ['filter' => ['auth', 'customer']], static function ($routes) {
+$routes->group('customer', ['filter' => ['customer']], static function ($routes) {
     $routes->get('dashboard', 'CustomerController::index');
     $routes->get('booking/stadium/(:num)', 'BookingController::viewStadium/$1');
     $routes->post('booking/process', 'BookingController::processBooking');

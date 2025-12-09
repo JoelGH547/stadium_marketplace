@@ -15,7 +15,6 @@ use CodeIgniter\Filters\PageCache;
 use CodeIgniter\Filters\PerformanceMetrics;
 
 // 2. ⬇️ (เพิ่ม) Import "ยาม" 3 คนของเรา (เหมือนเดิม) ⬇️
-use App\Filters\AuthFilter;
 use App\Filters\AdminFilter;
 use App\Filters\CustomerFilter;
 // (ในอนาคต: use App\Filters\VendorFilter;)
@@ -39,7 +38,6 @@ class Filters extends BaseFilters
         'performance' => PerformanceMetrics::class,
 
         // 4. ⬇️ (เพิ่ม) Alias ของเรา (เหมือนเดิม) ⬇️
-        'auth'       => AuthFilter::class,
         'admin'      => AdminFilter::class,
         'customer'   => CustomerFilter::class,
         // (ในอนาคต: 'vendor' => \App\Filters\VendorFilter::class,)
