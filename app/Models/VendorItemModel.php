@@ -10,6 +10,7 @@ class VendorItemModel extends Model
 
     protected $allowedFields = [
         'vendor_id',
+        'stadium_id',
         'facility_type_id',
         'name',
         'description',

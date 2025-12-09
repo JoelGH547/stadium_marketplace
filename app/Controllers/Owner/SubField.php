@@ -32,9 +32,19 @@ class Subfield extends BaseController
 
         $subfields = $this->subfieldModel->where('stadium_id', $stadium_id)->findAll();
 
+        // Fetch available items for this stadium to show in create form
+        $vendorItemModel = new \App\Models\VendorItemModel();
+        $items = $vendorItemModel
+            ->select('vendor_items.*, facility_types.name as type_name')
+            ->join('facility_types', 'facility_types.id = vendor_items.facility_type_id')
+            ->where('stadium_id', $stadium_id)
+            ->where('vendor_items.status', 'active')
+            ->findAll();
+
         return view('owner/fields/subfields', [
             'stadium'   => $stadium,
-            'subfields' => $subfields
+            'subfields' => $subfields,
+            'items'     => $items
         ]);
     }
 
@@ -69,6 +79,27 @@ class Subfield extends BaseController
         'outside_images' => json_encode($images),
         'status'     => $status
     ]);
+
+    $subfield_id = $this->subfieldModel->getInsertID();
+
+    // Save selected facilities
+    $facilities = $this->request->getPost('facilities');
+    if (!empty($facilities) && is_array($facilities)) {
+        $stadiumFacilityModel = new \App\Models\StadiumFacilityModel();
+        $vendorItemModel = new \App\Models\VendorItemModel();
+
+        foreach ($facilities as $itemId) {
+            $item = $vendorItemModel->find($itemId);
+            if ($item) {
+                $stadiumFacilityModel->insert([
+                    'stadium_id' => $stadium_id,
+                    'field_id'   => $subfield_id,
+                    'type_id'    => $item['facility_type_id'],
+                    'name'       => $item['name']
+                ]);
+            }
+        }
+    }
 
     return redirect()->back()->with('success', 'เพิ่มสนามย่อยสำเร็จ');
 }
@@ -218,10 +249,15 @@ class Subfield extends BaseController
             $vendor_id = $stadium['vendor_id'];
 
             // 1. Fetch all available facilities (Catalog from VendorItems)
+            // Now filtering by stadium_id instead of vendor_id
+            // 1. Fetch all available facilities (Catalog from VendorItems)
+            // Now filtering by stadium_id instead of vendor_id
             $vendorItemModel = new \App\Models\VendorItemModel();
             $availableFacilities = $vendorItemModel
-                ->where('vendor_id', $vendor_id)
-                ->where('status', 'active')
+                ->select('vendor_items.*, facility_types.name as type_name')
+                ->join('facility_types', 'facility_types.id = vendor_items.facility_type_id')
+                ->where('stadium_id', $sub['stadium_id'])
+                ->where('vendor_items.status', 'active')
                 ->findAll();
 
             // 2. Fetch currently assigned facilities for this subfield

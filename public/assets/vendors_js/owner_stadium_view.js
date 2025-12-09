@@ -88,13 +88,33 @@ function openSubfieldModal(id) {
             } else {
                 data.facilities.forEach(item => {
                     const isChecked = data.checked.includes(item.id) ? 'checked' : '';
+
+                    // Image handling
+                    let imgHtml = '';
+                    if (item.image) {
+                        imgHtml = `<img src="${SITE_URL}uploads/items/${item.image}" class="rounded me-2" style="width: 50px; height: 50px; object-fit: cover;">`;
+                    } else {
+                        imgHtml = `<div class="rounded me-2 bg-light d-flex align-items-center justify-content-center text-muted" style="width: 50px; height: 50px; font-size: 10px;">No Pic</div>`;
+                    }
+
                     html += `
-                    <label class="list-group-item d-flex gap-2">
-                        <input class="form-check-input flex-shrink-0" type="checkbox" name="facilities[]" value="${item.id}" ${isChecked}>
-                        <span>
-                            ${item.name} 
-                            <small class="text-muted">(${item.price} บ.)</small>
-                        </span>
+                    <label class="list-group-item d-flex align-items-start gap-2 p-2" style="cursor: pointer;">
+                        <div class="mt-2">
+                            <input class="form-check-input" type="checkbox" name="facilities[]" value="${item.id}" ${isChecked}>
+                        </div>
+                        
+                        ${imgHtml}
+
+                        <div class="flex-grow-1">
+                            <div class="d-flex justify-content-between">
+                                <span class="fw-bold">${item.name}</span>
+                                <span class="badge bg-success bg-opacity-10 text-success">${item.price} บ.</span>
+                            </div>
+                            <div class="small text-muted">
+                                <span class="badge bg-secondary bg-opacity-10 text-secondary me-1">${item.type_name}</span>
+                                ${item.description || ''}
+                            </div>
+                        </div>
                     </label>
                 `;
                 });

@@ -388,7 +388,7 @@ public function view($id)
     $items = $vendorItemModel
         ->select('vendor_items.*, facility_types.name as type_name')
         ->join('facility_types', 'facility_types.id = vendor_items.facility_type_id')
-        ->where('vendor_items.vendor_id', $stadium['vendor_id'])
+        ->where('vendor_items.stadium_id', $id)
         ->where('vendor_items.status', 'active')
         ->findAll();
 

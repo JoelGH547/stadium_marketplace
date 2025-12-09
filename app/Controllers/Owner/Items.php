@@ -43,9 +43,9 @@ class Items extends BaseController
         }
 
         // Insert into vendor_items
-        // Insert into vendor_items
         $itemData = [
             'vendor_id'       => session()->get('owner_id'),
+            'stadium_id'      => $stadium_id,
             'facility_type_id'=> $this->request->getPost('type_id'),
             'name'            => $this->request->getPost('name'),
             'description'     => $this->request->getPost('description'),
@@ -58,14 +58,8 @@ class Items extends BaseController
         $itemId = $itemModel->insert($itemData);
 
         if ($itemId) {
-            // Save relationship to stadium_facilities
-            // stadium_facilities table: id, stadium_id, field_id, type_id, name
-            $stadiumFacilityModel->insert([
-                'stadium_id' => $stadium_id,
-                'field_id'   => null, // Stadium level
-                'type_id'    => $this->request->getPost('type_id'),
-                'name'       => $this->request->getPost('name')
-            ]);
+            // Removed automatic insert to stadium_facilities as per user request
+            // Items are now just added to the catalog (vendor_items) first
 
             return redirect()->to('owner/fields/view/' . $stadium_id)->with('success', 'เพิ่มสินค้าสำเร็จ!');
         }
@@ -170,8 +164,20 @@ class Items extends BaseController
             return redirect()->back()->with('error', 'ไม่พบสินค้า');
 
         // Check ownership
-        if ($item['vendor_id'] != session()->get('owner_id'))
-            return redirect()->back()->with('error', 'ไม่ได้รับอนุญาต');
+        // Since we now use stadium_id, we should check if the item belongs to a stadium owned by the user
+        // But for backward compatibility or if vendor_id is still set, we can check vendor_id first
+        if ($item['vendor_id'] != session()->get('owner_id')) {
+             // If vendor_id doesn't match, check via stadium (if item has stadium_id)
+             if (!empty($item['stadium_id'])) {
+                 $stadiumModel = new \App\Models\OwnerStadiumModel();
+                 $stadium = $stadiumModel->find($item['stadium_id']);
+                 if (!$stadium || $stadium['vendor_id'] != session()->get('owner_id')) {
+                     return redirect()->back()->with('error', 'ไม่ได้รับอนุญาต');
+                 }
+             } else {
+                 return redirect()->back()->with('error', 'ไม่ได้รับอนุญาต');
+             }
+        }
 
         // Delete image
         if (!empty($item['image'])) {

@@ -97,7 +97,54 @@ body {
             <input type="file" name="images[]" multiple class="form-control" accept="image/*">
         </div>
 
-        <button type="submit" class="btn btn-mint w-100">บันทึกสนามย่อย</button>
+        <!-- FACILITIES -->
+        <div class="mb-4">
+            <label class="form-label fw-bold">เลือกสิ่งอำนวยความสะดวก / บริการเสริม</label>
+            <div class="card p-3 bg-light border-0">
+                <?php if(empty($items)): ?>
+                    <p class="text-muted small mb-0">ยังไม่มีสินค้า/บริการในระบบ (เพิ่มได้ที่เมนูสินค้า)</p>
+                <?php else: ?>
+                    <div class="list-group">
+                        <?php foreach($items as $item): ?>
+                            <?php 
+                                $imgSrc = !empty($item['image']) 
+                                    ? base_url('uploads/items/'.$item['image']) 
+                                    : null;
+                            ?>
+                            <label class="list-group-item d-flex align-items-start gap-3 p-3 border rounded mb-2 shadow-sm" style="cursor: pointer; transition: all 0.2s;">
+                                <div class="mt-1">
+                                    <input class="form-check-input fs-5" type="checkbox" name="facilities[]" value="<?= $item['id'] ?>">
+                                </div>
+                                
+                                <?php if($imgSrc): ?>
+                                    <img src="<?= $imgSrc ?>" class="rounded" style="width: 60px; height: 60px; object-fit: cover;">
+                                <?php else: ?>
+                                    <div class="rounded bg-light d-flex align-items-center justify-content-center text-muted" style="width: 60px; height: 60px; font-size: 10px;">
+                                        No Pic
+                                    </div>
+                                <?php endif; ?>
+
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <h6 class="fw-bold mb-0 text-dark"><?= esc($item['name']) ?></h6>
+                                        <span class="badge bg-success bg-opacity-10 text-success px-3 py-2 rounded-pill"><?= number_format($item['price']) ?> บ.</span>
+                                    </div>
+                                    <div class="small text-muted">
+                                        <span class="badge bg-secondary bg-opacity-10 text-secondary me-1"><?= esc($item['type_name']) ?></span>
+                                        <?= esc($item['description']) ?>
+                                    </div>
+                                </div>
+                            </label>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-between">
+            <a href="<?= base_url('owner/fields/view/'.$stadium['id']) ?>" class="btn btn-secondary">⬅ ย้อนกลับ</a>
+            <button type="submit" class="btn btn-mint px-5">บันทึกสนามย่อย</button>
+        </div>
     </form>
 
 </div>
