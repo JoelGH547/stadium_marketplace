@@ -78,37 +78,7 @@
 
                 <hr>
 
-                <div class="mb-4 p-3 border rounded bg-light">
-                    <label class="fw-bold text-primary mb-2">
-                        <i class="fas fa-concierge-bell me-1"></i> สิ่งอำนวยความสะดวกและบริการที่มี
-                    </label>
-                    <div class="row">
-                        <?php if(!empty($facilityTypes)): ?>
-                            <?php foreach($facilityTypes as $type): ?>
-                                <div class="col-md-3 col-sm-6 mb-2">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" 
-                                               name="stadium_facilities[]" 
-                                               value="<?= $type['id'] ?>" 
-                                               id="fac_<?= $type['id'] ?>"
-                                               <?= (isset($selectedTypeIds) && in_array($type['id'], $selectedTypeIds)) ? 'checked' : '' ?> >
-                                        
-                                        <label class="form-check-label" for="fac_<?= $type['id'] ?>">
-                                            <?= esc($type['name']) ?>
-                                        </label>
-                                    </div>
-                                </div>
-                            <?php endforeach; ?>
-                        <?php else: ?>
-                            <div class="col-12 text-muted small">ยังไม่มีข้อมูลประเภทสิ่งอำนวยความสะดวก</div>
-                        <?php endif; ?>
-                    </div>
-                    <small class="text-muted d-block mt-2">
-                        <i class="fas fa-info-circle"></i> เลือกหมวดหมู่ที่สนามนี้มีให้บริการ เพื่อให้ระบบแสดงตัวเลือกตอนเพิ่มสินค้า/บริการเสริมได้ถูกต้อง
-                    </small>
-                </div>
-                <div class="form-group mb-3">
-                    <label for="description" class="fw-bold">Description (Stadium Condition)</label>
+                
                     <textarea id="description"
                               name="description"
                               class="form-control"
