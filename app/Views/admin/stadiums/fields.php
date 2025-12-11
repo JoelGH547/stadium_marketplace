@@ -65,8 +65,14 @@ foreach ($facilityTypes as $ft) {
                 class="text-muted text-decoration-none small">
                 <i class="fas fa-arrow-left"></i> กลับไปหน้ารายละเอียด
             </a>
+            <a href="<?= base_url('admin/stadiums') ?>" class="text-muted ms-4" style="text-decoration: none;">
+            <i class="fas fa-home"></i> กลับไปหน้าหลัก
+        </a>
+    </div>
+
+
             <h3 class="h3 mt-2 text-gray-800 font-weight-bold">
-                จัดการสนามย่อย <span class="text-primary">(<?= esc($stadium['name']) ?>)</span>
+                จัดการสนาม <span class="text-primary">(<?= esc($stadium['name']) ?>)</span>
             </h3>
         </div>
         <button class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#addFieldModal">

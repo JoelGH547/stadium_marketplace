@@ -594,7 +594,12 @@ class StadiumController extends BaseController
         $id = $this->request->getPost('id');
         $stadium_id = $this->request->getPost('stadium_id');
 
+        // ---------------------------------------------------------------------
+        // ส่วนที่ 1: จัดการรูปภาพ (คงเดิม ไม่ได้แก้ไข)
+        // ---------------------------------------------------------------------
         $oldData = $fieldModel->find($id);
+        
+        // รูป Outside
         $outsideResult = json_decode($oldData['outside_images'] ?? '[]', true);
         $outsideFile = $this->request->getFile('outside_image');
         if ($outsideFile && $outsideFile->isValid() && !$outsideFile->hasMoved()) {
@@ -603,6 +608,8 @@ class StadiumController extends BaseController
             $outsideFile->move($uploadPath, $newName);
             $outsideResult = [$newName];
         }
+
+        // รูป Inside
         $insideResult = json_decode($oldData['inside_images'] ?? '[]', true);
         $insideFiles = $this->request->getFileMultiple('inside_images');
         if ($insideFiles) {
@@ -615,6 +622,9 @@ class StadiumController extends BaseController
             }
         }
 
+        // ---------------------------------------------------------------------
+        // ส่วนที่ 2: อัปเดตข้อมูลสนาม (คงเดิม ไม่ได้แก้ไข)
+        // ---------------------------------------------------------------------
         $fieldModel->update($id, [
             'name'           => $this->request->getPost('name'),
             'description'    => $this->request->getPost('description'),
@@ -625,46 +635,105 @@ class StadiumController extends BaseController
             'inside_images'  => json_encode($insideResult)
         ]);
 
+        // ---------------------------------------------------------------------
+        // ส่วนที่ 3: [แก้ไขใหม่] Logic จัดการ Facilities (Sync Items)
+        // ---------------------------------------------------------------------
+        
+        // รับค่า facilities จาก Form
+        $submittedFacilities = $this->request->getPost('facilities');
 
-        $facilities = $this->request->getPost('facilities');
+        // [จุดสำคัญ] เช็คก่อนว่า "ไม่ใช่ NULL" 
+        // ถ้าเป็น NULL แปลว่าฟอร์มนี้ (เช่น Modal แก้ไข) ไม่ได้ส่ง Checkbox มา
+        // เราจะ "ข้าม" การลบ/เพิ่ม ไปเลย เพื่อรักษาข้อมูลเก่าไว้
+        if ($submittedFacilities !== null) {
 
-        // ลบของเก่าออกก่อนตาม field_id
-        $facModel->where('field_id', $id)->delete();
-
-        if (!empty($facilities) && is_array($facilities)) {
-            $facData = [];
-            foreach ($facilities as $type_id => $items) {
-                // ไม่เก็บ name แล้ว เหลือแค่ field_id + facility_type_id
-                if (!empty($items) && is_array($items)) {
-                    $facData[] = [
-                        'field_id'         => $id,
-                        'facility_type_id' => $type_id,
-                    ];
-                }
+            if (!is_array($submittedFacilities)) {
+                $submittedFacilities = [];
             }
-            if (!empty($facData)) {
-                $facModel->insertBatch($facData);
+            $submittedTypeIds = array_keys($submittedFacilities); // เอาเฉพาะ ID ของ Type ที่ส่งมา
+
+            // ดึงค่าที่มีอยู่จริงใน Database ตอนนี้
+            $existingRecords = $facModel->where('field_id', $id)->findAll();
+            $existingTypeIds = array_column($existingRecords, 'facility_type_id');
+
+            // 1. หาตัวที่ต้อง "ลบ" (มีใน DB แต่ User ไม่ได้ติ๊กส่งมา)
+            $toDelete = array_diff($existingTypeIds, $submittedTypeIds);
+            if (!empty($toDelete)) {
+                $facModel->where('field_id', $id)
+                        ->whereIn('facility_type_id', $toDelete)
+                        ->delete();
+            }
+
+            // 2. หาตัวที่ต้อง "เพิ่ม" (User ติ๊กส่งมาใหม่)
+            $toAdd = array_diff($submittedTypeIds, $existingTypeIds);
+            if (!empty($toAdd)) {
+                $insertData = [];
+                foreach ($toAdd as $typeId) {
+                    if (!empty($submittedFacilities[$typeId])) {
+                        $insertData[] = [
+                            'field_id'         => $id,
+                            'facility_type_id' => $typeId,
+                        ];
+                    }
+                }
+                if (!empty($insertData)) {
+                    $facModel->insertBatch($insertData);
+                }
             }
         }
 
+        
+
+        
+        // else: ถ้าเป็น null ก็ปล่อยผ่านไปเลย ไม่ต้องทำอะไรกับ facilities
+
         return redirect()->to('admin/stadiums/fields/' . $stadium_id)->with('success', 'แก้ไขข้อมูลเรียบร้อย');
     }
-
     public function deleteField($id)
     {
         $fieldModel = new StadiumFieldModel();
         $field = $fieldModel->find($id);
 
         if ($field) {
+            // 1. ลบรูปของตัวสนามย่อย (โค้ดเดิม)
             $uploadPath = FCPATH . 'assets/uploads/fields/';
             $outsideImages = json_decode($field['outside_images'] ?? '[]', true);
             foreach ($outsideImages as $img) if (file_exists($uploadPath . $img)) @unlink($uploadPath . $img);
             $insideImages = json_decode($field['inside_images'] ?? '[]', true);
             foreach ($insideImages as $img) if (file_exists($uploadPath . $img)) @unlink($uploadPath . $img);
 
+            // =========================================================
+            // [ADDED] ส่วนที่เพิ่มใหม่: ลบสินค้า (Items) และรูปสินค้าทิ้งด้วย
+            // =========================================================
             $facModel = new StadiumFacilityModel();
-            $facModel->where('field_id', $id)->delete();
+            $productModel = new VendorProductModel();
 
+            // 2. หา facility ทั้งหมดที่ผูกกับสนามย่อยนี้
+            $facilities = $facModel->where('field_id', $id)->findAll();
+
+            if (!empty($facilities)) {
+                $facilityIds = array_column($facilities, 'id');
+
+                // 3. หาสินค้าทั้งหมดที่อยู่ใน facility เหล่านี้
+                $products = $productModel->whereIn('stadium_facility_id', $facilityIds)->findAll();
+
+                // 4. วนลูปเพื่อลบ "ไฟล์รูปภาพสินค้า" ออกจาก Server
+                $itemUploadPath = FCPATH . 'assets/uploads/items/';
+                foreach ($products as $prod) {
+                    if (!empty($prod['image']) && file_exists($itemUploadPath . $prod['image'])) {
+                        @unlink($itemUploadPath . $prod['image']);
+                    }
+                }
+
+                // 5. ลบข้อมูลสินค้าออกจาก Database
+                $productModel->whereIn('stadium_facility_id', $facilityIds)->delete();
+            }
+
+            // 6. ลบ facility (Link เชื่อม)
+            $facModel->where('field_id', $id)->delete();
+            // =========================================================
+
+            // 7. สุดท้าย ลบสนามย่อย
             $fieldModel->delete($id);
             return redirect()->to('admin/stadiums/fields/' . $field['stadium_id'])->with('success', 'ลบข้อมูลเรียบร้อย');
         }

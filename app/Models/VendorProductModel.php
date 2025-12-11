@@ -40,9 +40,9 @@ class VendorProductModel extends Model
                 'stadiums.name         AS stadium_name,' .
                 'facility_types.name   AS facility_type_name'
             )
-            ->join('stadium_facilities', 'stadium_facilities.id = vendor_products.stadium_facility_id')
-            ->join('stadium_fields',    'stadium_fields.id = stadium_facilities.field_id')
-            ->join('stadiums',          'stadiums.id = stadium_fields.stadium_id')
-            ->join('facility_types',    'facility_types.id = stadium_facilities.facility_type_id');
+            ->join('stadium_facilities', 'stadium_facilities.id = vendor_products.stadium_facility_id', 'left')
+            ->join('stadium_fields',    'stadium_fields.id = stadium_facilities.field_id', 'left')
+            ->join('stadiums',          'stadiums.id = stadium_fields.stadium_id', 'left')
+            ->join('facility_types',    'facility_types.id = stadium_facilities.facility_type_id', 'left');
     }
 }

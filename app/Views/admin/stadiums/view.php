@@ -8,8 +8,12 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <a href="<?= base_url('admin/stadiums') ?>" class="text-muted text-decoration-none">
-                <i class="fas fa-arrow-left"></i> กลับไปหน้ารวม
+                <i class="fas fa-home"></i> กลับไปหน้าหลัก
             </a>
+            <a href="<?= base_url('admin/stadiums/fields/' . $stadium['id']) ?>" class="text-muted text-decoration-none ms-3">
+         ไปหน้าจัดการสนามย่อย <i class="fas fa-arrow-right"></i>
+    </a>
+</div>
             <h3 class="h3 mt-2 text-gray-800 font-weight-bold">รายละเอียดสนาม</h3>
         </div>
         <div>
