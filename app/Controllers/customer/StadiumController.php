@@ -176,7 +176,15 @@ class StadiumController extends BaseController
         $coverUrl      = null;
         $galleryImages = [];
 
-        // 8) ส่งให้ View
+        // 8) Retrieve Cart Session for Restore State
+        $cart = cart_get(); // Helper function
+        $cartData = null;
+        // Only restore if 'restore=1' is passed in URL AND stadium_id matches
+        if ($this->request->getGet('restore') && $cart && isset($cart['stadium_id']) && (int) $cart['stadium_id'] === (int) $stadium['id']) {
+            $cartData = $cart;
+        }
+
+        // 9) ส่งให้ View
         return view('public/show', [
             'stadium'       => $stadium,
             'fields'        => $fields,
@@ -185,6 +193,7 @@ class StadiumController extends BaseController
             'galleryImages' => $galleryImages,
             'addressFull'   => $addressFull,
             'timeLabel'     => $timeLabel,
+            'cartData'      => $cartData, // Pass cart data to frontend
         ]);
     }
 

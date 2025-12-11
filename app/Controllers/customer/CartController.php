@@ -11,47 +11,78 @@ class CartController extends BaseController
         // ดึงข้อมูลจาก session cart (มาจาก cart_helper.php)
         $cart = cart_get();
 
-        // ถ้ายังไม่มีข้อมูลการจอง ให้ส่งค่าเปล่าไปให้ view แสดง state ว่าง
-        if (!is_array($cart) || empty($cart['items'])) {
-            return view('public/cart', [
+        $stadiumName       = (string) ($cart['stadium_name'] ?? '');
+        $stadiumImage      = (string) ($cart['stadium_image'] ?? ''); 
+        $stadiumId         = (int) ($cart['stadium_id'] ?? 0);
+        $fieldId           = (int) ($cart['field_id'] ?? 0); // New
+        $fieldBasePrice    = (float) ($cart['field_base_price'] ?? 0.0);
+        
+        // ถ้าไม่มีทั้งค่าเช่าสนามและไม่มีไอเทม แสดงว่าไม่มีสินค้า
+        if ($fieldBasePrice <= 0 && empty($cart['items'])) {
+             return view('public/cart', [
                 'cartItems'  => [],
                 'subtotal'   => 0.0,
                 'serviceFee' => 0.0,
                 'total'      => 0.0,
+                'stadiumId'  => 0,
             ]);
         }
 
-        $stadiumName       = (string) ($cart['stadium_name'] ?? '');
-        $hours             = (float) ($cart['hours'] ?? 0);
-        $fieldBasePrice    = (float) ($cart['field_base_price'] ?? 0.0);
-        $fieldPricePerHour = (float) ($cart['field_price_per_hour'] ?? 0.0);
-
         $items = [];
+        $bookingType = $cart['booking_type'] ?? 'hourly';
 
-        // แทรกแถว "ค่าจองสนาม" เป็น item ตัวแรก ถ้ามีข้อมูล
-        if ($fieldBasePrice > 0 && $hours > 0 && $fieldPricePerHour > 0) {
-            $items[] = [
+        // แทรกแถว "ค่าจองสนาม" เป็น item ตัวแรก
+        if ($fieldBasePrice > 0) {
+            // Field image is outside_image of stadium
+            $fieldItem = [
                 'stadium_name' => $stadiumName,
                 'item_name'    => 'ค่าจองสนาม',
-                'unit'         => 'ชม.',
-                'qty'          => $hours,
-                'price'        => $fieldPricePerHour,
+                'unit'         => '',
+                'qty'          => 0,
+                'price'        => 0.0,
+                'image'        => $stadiumImage ? base_url('assets/uploads/stadiums/' . $stadiumImage) : null,
             ];
+
+            if ($bookingType === 'daily') {
+                $days = (int) ($cart['days'] ?? 1);
+                $pricePerDay = (float) ($cart['field_price_per_day'] ?? 0.0);
+                
+                $fieldItem['item_name'] = 'ค่าจองสนาม (รายวัน)';
+                $fieldItem['unit'] = 'วัน';
+                $fieldItem['qty'] = $days;
+                $fieldItem['price'] = $pricePerDay;
+            } else {
+                 $hours = (float) ($cart['hours'] ?? 0);
+                 $pricePerHour = (float) ($cart['field_price_per_hour'] ?? 0.0);
+
+                 $fieldItem['item_name'] = 'ค่าจองสนาม (รายชั่วโมง)';
+                 $fieldItem['unit'] = 'ชม.';
+                 $fieldItem['qty'] = $hours;
+                 $fieldItem['price'] = $pricePerHour;
+            }
+            $items[] = $fieldItem;
         }
 
         // ตามด้วยไอเทมเสริม
-        foreach ($cart['items'] as $row) {
-            if (!is_array($row)) {
-                continue;
-            }
+        if (!empty($cart['items']) && is_array($cart['items'])) {
+            foreach ($cart['items'] as $row) {
+                if (!is_array($row)) {
+                    continue;
+                }
+                
+                // Item image
+                $itemImgPath = $row['image'] ?? $row['item_image'] ?? '';
+                $itemImgUrl = $itemImgPath ? base_url('assets/uploads/items/' . $itemImgPath) : null;
 
-            $items[] = [
-                'stadium_name' => $stadiumName,
-                'item_name'    => (string) ($row['item_name'] ?? ''),
-                'unit'         => (string) ($row['unit'] ?? ''),
-                'qty'          => (int) ($row['qty'] ?? 0),
-                'price'        => (float) ($row['price'] ?? 0),
-            ];
+                $items[] = [
+                    'stadium_name' => $stadiumName,
+                    'item_name'    => (string) ($row['name'] ?? $row['item_name'] ?? ''), 
+                    'unit'         => (string) ($row['unit'] ?? 'ชิ้น'),
+                    'qty'          => (int) ($row['qty'] ?? 0),
+                    'price'        => (float) ($row['price'] ?? 0),
+                    'image'        => $itemImgUrl,
+                ];
+            }
         }
 
         $subtotal   = (float) ($cart['subtotal'] ?? 0.0);
@@ -63,6 +94,82 @@ class CartController extends BaseController
             'subtotal'   => $subtotal,
             'serviceFee' => $serviceFee,
             'total'      => $total,
+            'subtotal'   => $subtotal,
+            'serviceFee' => $serviceFee,
+            'total'      => $total,
+            'stadiumId'  => $stadiumId,
+            'fieldId'    => $fieldId, // Pass fieldId
         ]);
+    }
+    public function add()
+    {
+        // รับค่าจากฟอร์ม (หน้า show)
+        $stadiumId   = $this->request->getPost('stadium_id');
+        $fieldId     = $this->request->getPost('field_id'); // New
+        $stadiumName = $this->request->getPost('stadium_name');
+        $stadiumImage = $this->request->getPost('stadium_image');
+
+        $bookingType = $this->request->getPost('booking_type') ?: 'hourly';
+
+        // Hourly
+        $bookingDate = $this->request->getPost('booking_date');
+        $timeStart   = $this->request->getPost('time_start');
+        $timeEnd     = $this->request->getPost('time_end');
+        $hours       = (float) $this->request->getPost('hours');
+        $fieldPricePerHour = (float) $this->request->getPost('field_price_per_hour');
+        
+        // Daily
+        $startDate = $this->request->getPost('start_date');
+        $endDate   = $this->request->getPost('end_date');
+        $days      = (int) $this->request->getPost('days');
+        $fieldPricePerDay = (float) $this->request->getPost('field_price_per_day');
+
+        // ค่าจองสนาม (จากฝั่งหน้าเว็บคำนวณ hours * pricePerHour OR days * pricePerDay ส่งมา)
+        $fieldBasePrice   = (float) $this->request->getPost('field_base_price');
+
+        // ไอเทมเสริม (JSON)
+        $itemsJson = $this->request->getPost('items');
+        $itemsArr  = json_decode((string) $itemsJson, true) ?? [];
+
+        // ยอดรวมเฉพาะไอเทม
+        $itemsSubtotal = array_reduce($itemsArr, static function ($carry, $row) {
+            $price = isset($row['price']) ? (float) $row['price'] : 0.0;
+            $qty   = isset($row['qty'])   ? (int) $row['qty']   : 0;
+            return $carry + ($price * $qty);
+        }, 0.0);
+
+        // subtotal = ค่าจองสนาม + ไอเทม
+        $subtotal = $fieldBasePrice + $itemsSubtotal;
+        $fee      = $subtotal * 0.05;
+        $total    = $subtotal + $fee;
+
+        cart_set_booking([
+            'stadium_id'          => $stadiumId,
+            'field_id'            => $fieldId, // New
+            'stadium_name'        => $stadiumName,
+            'stadium_image'       => $stadiumImage,
+            'booking_type'        => $bookingType,
+
+            'booking_date'        => $bookingDate,
+            'time_start'          => $timeStart,
+            'time_end'            => $timeEnd,
+            'hours'               => $hours,
+            'field_price_per_hour' => $fieldPricePerHour,
+            
+            'start_date'          => $startDate,
+            'end_date'            => $endDate,
+            'days'                => $days,
+            'field_price_per_day' => $fieldPricePerDay,
+
+            'field_base_price'     => $fieldBasePrice,
+            'items_subtotal'       => $itemsSubtotal,
+
+            'items'    => $itemsArr,
+            'subtotal' => $subtotal,
+            'fee'      => $fee,
+            'total'    => $total,
+        ]);
+
+        return redirect()->to(site_url('sport/cart'));
     }
 }

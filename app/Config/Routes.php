@@ -30,8 +30,8 @@ $routes->group('sport', ['filter' => 'customer'], static function ($routes) {
     $routes->get('show/(:num)', 'customer\StadiumController::show/$1');
     $routes->get('fields/(:num)', 'customer\StadiumController::fields/$1');
     $routes->get('cart', 'customer\CartController::index');
+    $routes->post('cart/add', 'customer\CartController::add');
     $routes->get('checkout', 'customer\CheckoutController::index');
-    $routes->post('customer/booking/add', 'Customer\\BookingController::add');
     $routes->get('profile', 'customer\ProfileController::show');
     $routes->get('profile/edit', 'customer\ProfileController::edit');
     $routes->post('profile/update', 'customer\ProfileController::update');

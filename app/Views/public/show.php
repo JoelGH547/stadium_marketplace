@@ -349,7 +349,7 @@ $isMaintenance = ($stadiumStatus === 'maintenance');
                                     </button>
 
                                     <!-- Booking form -->
-                                    <form id="bookingSubmitForm" action="<?= site_url('sport/customer/booking/add') ?>"
+                                    <form id="bookingSubmitForm" action="<?= site_url('sport/cart/add') ?>"
                                         method="post" class="mt-0">
                                         <?= csrf_field() ?>
 
@@ -358,13 +358,28 @@ $isMaintenance = ($stadiumStatus === 'maintenance');
                                             value="<?= isset($stadium['id']) ? (int) $stadium['id'] : 0 ?>">
                                         <input type="hidden" name="stadium_name"
                                             value="<?= esc($stadium['name'] ?? $name) ?>">
+                                        <input type="hidden" name="field_id" 
+                                            value="<?= isset($fields[0]['id']) ? (int) $fields[0]['id'] : 0 ?>">
+                                        <input type="hidden" name="stadium_image" 
+                                            value="<?= esc($stadium['outside_images'] ? (json_decode($stadium['outside_images'])[0] ?? '') : ($stadium['cover_image'] ?? '')) ?>">
 
+                                        <input type="hidden" name="booking_type" id="bookingTypeField">
+                                        
+                                        <!-- Hourly Fields -->
                                         <input type="hidden" name="booking_date" id="bookingDateField">
                                         <input type="hidden" name="time_start" id="bookingTimeStartField">
                                         <input type="hidden" name="time_end" id="bookingTimeEndField">
                                         <input type="hidden" name="hours" id="bookingHoursField">
+                                        
+                                        <!-- Daily Fields -->
+                                        <input type="hidden" name="start_date" id="bookingStartDateField">
+                                        <input type="hidden" name="end_date" id="bookingEndDateField">
+                                        <input type="hidden" name="days" id="bookingDaysField">
+
+                                        <!-- Prices & Items -->
                                         <input type="hidden" name="items" id="bookingItemsField">
                                         <input type="hidden" name="field_price_per_hour" id="bookingPricePerHourField">
+                                        <input type="hidden" name="field_price_per_day" id="bookingPricePerDayField">
                                         <input type="hidden" name="field_base_price" id="bookingBasePriceField">
 
                                         <!-- Price summary card -->
@@ -492,7 +507,8 @@ $isMaintenance = ($stadiumStatus === 'maintenance');
                                                                 class="add-item-btn inline-flex items-center gap-1.5 rounded-xl bg-[var(--primary)] px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-teal-700 transition-colors"
                                                                 data-item-id="<?= (int) $item['id'] ?>"
                                                                 data-item-name="<?= esc($item['name']) ?>"
-                                                                data-item-price="<?= (float) $item['price'] ?>">
+                                                                data-item-price="<?= (float) $item['price'] ?>"
+                                                                data-item-image="<?= esc($item['image'] ?? '') ?>">
                                                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
                                                                 <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
                                                             </svg>
@@ -633,6 +649,13 @@ $isMaintenance = ($stadiumStatus === 'maintenance');
         </article>
     </section>
 </main>
+
+
+
+<script>
+    // Pass PHP data to JS
+    window.cartData = <?= json_encode($cartData ?? null) ?>;
+</script>
 
 
 <?= $this->endSection() ?>
