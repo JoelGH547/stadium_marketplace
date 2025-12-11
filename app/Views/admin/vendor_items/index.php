@@ -11,9 +11,6 @@
 
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h3 class="h3 mb-0 text-gray-800">จัดการสินค้า/บริการเสริม (Vendor Items)</h3>
-        <a href="<?= base_url('admin/vendor_items/create') ?>" class="btn btn-primary shadow-sm">
-            <i class="fas fa-plus fa-sm text-white-50 me-1"></i> เพิ่มสินค้าใหม่
-        </a>
     </div>
 
     <?php if (session()->getFlashdata('success')) : ?>
