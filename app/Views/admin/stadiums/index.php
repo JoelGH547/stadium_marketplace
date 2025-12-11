@@ -2,6 +2,7 @@
 <?= $this->section('content') ?>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
 
 <div class="container-fluid p-0">
 
@@ -30,10 +31,8 @@
     <div class="card shadow mb-4 border-0">
         <div class="card-body py-3">
             <form action="<?= base_url('admin/stadiums') ?>" method="get">
-                <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center">
                     
-                    
-
                     <div class="input-group" style="width: 300px;">
                         <input type="text" name="search" class="form-control form-control-sm bg-light border-0 small" 
                                placeholder="ค้นหาชื่อสนาม..." aria-label="Search" 
@@ -60,7 +59,7 @@
         </div>
         <div class="card-body">
             <div class="table-responsive">
-                <table class="table table-bordered table-hover align-middle" id="dataTable" width="100%" cellspacing="0">
+                <table class="table table-bordered table-hover align-middle" id="stadiumTable" width="100%" cellspacing="0">
                     <thead class="table-light">
                         <tr>
                             <th width="5%" class="text-center">#</th>
@@ -77,7 +76,6 @@
                             <?php foreach($stadiums as $stadium): ?>
                             
                             <tr data-type="complex">
-                                
                                 <td class="text-center fw-bold"><?= $stadium['id'] ?></td>
                                 
                                 <td class="text-center">
@@ -129,24 +127,24 @@
                                 <td class="text-center">
                                     <div class="btn-group" role="group">
                                         <a href="<?= base_url('admin/stadiums/fields/' . $stadium['id']) ?>" 
-                                        class="btn btn-success btn-sm text-white shadow-sm" 
-                                        title="ตั้งค่าราคาและข้อมูล">
+                                           class="btn btn-success btn-sm text-white shadow-sm" 
+                                           title="ตั้งค่าราคาและข้อมูล">
                                             <i class="fas fa-tag"></i> ตั้งค่าสนาม
                                         </a>
 
                                         <a href="<?= base_url('admin/stadiums/view/' . $stadium['id']) ?>" 
-                                        class="btn btn-secondary btn-sm shadow-sm" title="ดูรายละเอียด">
+                                           class="btn btn-secondary btn-sm shadow-sm" title="ดูรายละเอียด">
                                             <i class="fas fa-eye"></i>
                                         </a>
                                         
                                         <a href="<?= base_url('admin/stadiums/edit/' . $stadium['id']) ?>" 
-                                        class="btn btn-warning btn-sm text-dark shadow-sm" title="แก้ไข">
+                                           class="btn btn-warning btn-sm text-dark shadow-sm" title="แก้ไข">
                                             <i class="fas fa-pen"></i>
                                         </a>
                                         
                                         <a href="<?= base_url('admin/stadiums/delete/' . $stadium['id']) ?>" 
-                                        class="btn btn-danger btn-sm shadow-sm btn-delete" 
-                                        title="ลบ">
+                                           class="btn btn-danger btn-sm shadow-sm btn-delete" 
+                                           title="ลบ">
                                             <i class="fas fa-trash"></i>
                                         </a>
                                     </div>
@@ -185,30 +183,47 @@
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
 
 <script>
+    $(document).ready(function() {
+        $('#stadiumTable').DataTable({
+            // [แก้ไข] เพิ่มคำสั่ง searching: false เพื่อซ่อนช่องค้นหาของ DataTables
+            "searching": false, 
+            "lengthMenu": [ [10, 50, 100, -1], [10, 50, 100, "ทั้งหมด"] ],
+            "language": {
+                "lengthMenu": "แสดง _MENU_ รายการ",
+                "zeroRecords": "ไม่พบข้อมูล",
+                "info": "หน้า _PAGE_ จาก _PAGES_",
+                "infoEmpty": "ไม่มีข้อมูล",
+                "infoFiltered": "(กรองจาก _MAX_ รายการ)",
+                "paginate": {
+                    "first": "หน้าแรก",
+                    "last": "สุดท้าย",
+                    "next": "ถัดไป",
+                    "previous": "ก่อนหน้า"
+                }
+            }
+        });
+    });
+
     document.addEventListener('DOMContentLoaded', function() {
-        
-        // --- ส่วนจัดการแผนที่ (Map) ---
+        // --- ส่วน Map และ Delete เหมือนเดิมทุกอย่าง ---
         let map = null;
         let marker = null;
         const mapModal = document.getElementById('mapModal');
 
-        // เมื่อกดปุ่ม Map ให้เปิด Modal
         document.querySelectorAll('.btn-view-map').forEach(btn => {
             btn.addEventListener('click', function() {
                 const lat = parseFloat(this.getAttribute('data-lat'));
                 const lng = parseFloat(this.getAttribute('data-lng'));
                 const name = this.getAttribute('data-name');
-
-                // ตั้งชื่อหัวข้อ Modal
                 document.getElementById('mapModalTitle').textContent = name;
-
-                // เปิด Modal (ใช้ Bootstrap 5)
                 var myModal = new bootstrap.Modal(mapModal);
                 myModal.show();
 
-                // รอ Modal เปิดเสร็จค่อยวาดแผนที่ (กันแผนที่เพี้ยน)
                 mapModal.addEventListener('shown.bs.modal', function () {
                     if (!map) {
                         map = L.map('leafletMap');
@@ -216,30 +231,19 @@
                             attribution: '© OpenStreetMap contributors'
                         }).addTo(map);
                     }
-                    
-                    // set view ไปที่พิกัด
                     map.setView([lat, lng], 15);
-
-                    // ปักหมุด
                     if (marker) map.removeLayer(marker);
-                    marker = L.marker([lat, lng]).addTo(map)
-                        .bindPopup(`<b>${name}</b><br>Lat: ${lat}, Lng: ${lng}`)
-                        .openPopup();
-                    
-                    // บังคับคำนวณขนาดใหม่
+                    marker = L.marker([lat, lng]).addTo(map).bindPopup(`<b>${name}</b><br>Lat: ${lat}, Lng: ${lng}`).openPopup();
                     map.invalidateSize();
-                }, { once: true }); // event นี้รันแค่ครั้งเดียวต่อการเปิด
+                }, { once: true });
             });
         });
 
-
-        // --- ส่วน Delete (คงเดิมตามที่คุณมี) ---
         const deleteButtons = document.querySelectorAll('.btn-delete');
         deleteButtons.forEach(button => {
             button.addEventListener('click', function(e) {
                 e.preventDefault(); 
                 const href = this.getAttribute('href'); 
-
                 Swal.fire({
                     title: 'ยืนยันการลบ?',
                     text: "หากลบสนามนี้ ข้อมูลทั้งหมดจะหายไป!",

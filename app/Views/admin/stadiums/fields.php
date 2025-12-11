@@ -3,11 +3,11 @@
 
 <?php
 $colName   = 'ชื่อสนาม';
-$emptyText = 'ยังไม่มีข้อมูลสนามย่อย';
+$emptyText = 'ยังไม่มีข้อมูลพื้นที่สนาม';
 ?>
 
 <?php
-// เตรียมข้อมูล mapping สำหรับสิ่งอำนวยความสะดวกและสินค้าในสนามย่อย
+// เตรียมข้อมูล mapping สำหรับสิ่งอำนวยความสะดวกและสินค้าในพื้นที่สนาม
 $fieldFacilities = $fieldFacilities ?? [];
 $fieldProducts   = $fieldProducts ?? [];
 $facilityTypes   = $facilityTypes ?? [];
@@ -72,11 +72,11 @@ foreach ($facilityTypes as $ft) {
 
 
             <h3 class="h3 mt-2 text-gray-800 font-weight-bold">
-                จัดการสนาม <span class="text-primary">(<?= esc($stadium['name']) ?>)</span>
+                จัดการพื้นที่สนาม <span class="text-primary">(<?= esc($stadium['name']) ?>)</span>
             </h3>
         </div>
         <button class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#addFieldModal">
-            <i class="fas fa-plus-circle me-1"></i> เพิ่มสนามย่อยใหม่
+            <i class="fas fa-plus-circle me-1"></i> เพิ่มพื้นที่สนามใหม่
         </button>
     </div>
 
@@ -205,7 +205,7 @@ foreach ($facilityTypes as $ft) {
 
                     <div class="modal-body">
                         <div class="mb-3">
-                            <h6 class="fw-bold mb-2">เลือกหมวดหมู่สำหรับสนามย่อยนี้</h6>
+                            <h6 class="fw-bold mb-2">เลือกหมวดหมู่สำหรับพื้นที่สนามนี้</h6>
                             <div class="border rounded p-2 bg-light">
                                 <?php if (!empty($facilityTypes)): ?>
                                     <?php foreach ($facilityTypes as $ft): ?>
@@ -289,7 +289,7 @@ foreach ($facilityTypes as $ft) {
                             </div>
                             <div class="mt-1 text-muted small">
                                 <i class="fas fa-info-circle"></i>
-                                การติ๊กจะผูกหมวดหมู่กับสนามย่อยนี้ผ่านตาราง stadium_facilities
+                                การติ๊กจะผูกหมวดหมู่กับพื้นที่สนามนี้ผ่านตาราง stadium_facilities
                             </div>
                         </div>
                     </div>
@@ -307,7 +307,7 @@ foreach ($facilityTypes as $ft) {
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title">เพิ่มสนามย่อยใหม่</h5>
+                <h5 class="modal-title">เพิ่มพื้นที่สนามใหม่</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <form action="<?= base_url('admin/stadiums/fields/create') ?>" method="post" enctype="multipart/form-data">

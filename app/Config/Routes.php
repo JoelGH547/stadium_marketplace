@@ -59,14 +59,14 @@ $routes->group('admin', ['filter' => ['admin']], static function ($routes) {
     $routes->get('stadiums/delete/(:num)', 'Admin\StadiumController::delete/$1');
     $routes->get('stadiums/view/(:num)', 'Admin\StadiumController::view/$1');
 
-    // --- Stadium Fields (จัดการสนามย่อย & ราคา) ---
+    // --- Stadium Fields (จัดการพื้นที่สนาม & ราคา) ---
     $routes->get('stadiums/fields/(:num)', 'Admin\StadiumController::fields/$1');
     $routes->post('stadiums/fields/create', 'Admin\StadiumController::createField');
     $routes->post('stadiums/fields/update', 'Admin\StadiumController::updateField');
     $routes->post('stadiums/fields/toggle-facility', 'Admin\StadiumController::toggleFieldFacility');
     $routes->get('stadiums/fields/delete/(:num)', 'Admin\StadiumController::deleteField/$1');
 
-    // --- Vendor Products (สินค้าในสนามย่อย) ---
+    // --- Vendor Products (สินค้าในพื้นที่สนาม) ---
     $routes->post('stadiums/fields/product/save', 'Admin\StadiumController::saveProduct');
     $routes->get('stadiums/fields/product/delete/(:num)', 'Admin\StadiumController::deleteProduct/$1');
 

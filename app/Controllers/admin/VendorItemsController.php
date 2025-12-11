@@ -98,7 +98,7 @@ class VendorItemsController extends BaseController
                 ->with(
                     'error',
                     'ไม่พบการเชื่อมต่อระหว่างสนามและหมวดหมู่ (stadium_facilities) ' .
-                        'กรุณาตรวจสอบการตั้งค่าหมวดหมู่ของสนามย่อยก่อน'
+                        'กรุณาตรวจสอบการตั้งค่าหมวดหมู่ของพื้นที่สนามก่อน'
                 );
         }
 
@@ -197,7 +197,7 @@ class VendorItemsController extends BaseController
                 ->with(
                     'error',
                     'ไม่พบการเชื่อมต่อระหว่างสนามและหมวดหมู่ (stadium_facilities) ' .
-                        'กรุณาตรวจสอบการตั้งค่าหมวดหมู่ของสนามย่อยก่อน'
+                        'กรุณาตรวจสอบการตั้งค่าหมวดหมู่ของพื้นที่สนามก่อน'
                 );
         }
 

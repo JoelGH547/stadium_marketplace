@@ -156,7 +156,7 @@ class StadiumController extends BaseController
         }
 
 
-        // ดึง facility type ที่ใช้อยู่ในสนามนี้ (จากสนามย่อยทั้งหมด)
+        // ดึง facility type ที่ใช้อยู่ในสนามนี้ (จากพื้นที่สนามทั้งหมด)
         $db = \Config\Database::connect();
 
         $currentFacilities = $db->table('stadium_facilities')
@@ -349,7 +349,7 @@ class StadiumController extends BaseController
     }
 
     // =================================================================================
-    // 🥅 [PART 2] จัดการสนามย่อย (Fields) + สินค้า (Items)
+    // 🥅 [PART 2] จัดการพื้นที่สนาม (Fields) + สินค้า (Items)
     // =================================================================================
 
 
@@ -365,7 +365,7 @@ class StadiumController extends BaseController
                 ->with('error', 'ไม่พบข้อมูลสนาม');
         }
 
-        // สนามย่อยทั้งหมดของสนามนี้
+        // พื้นที่สนามทั้งหมดของสนามนี้
         $fields = $fieldModel->where('stadium_id', $stadium_id)->findAll();
 
         // ประเภทสิ่งอำนวยความสะดวกทั้งหมด
@@ -427,7 +427,7 @@ class StadiumController extends BaseController
 
 
     /**
-     * AJAX: เปิด/ปิดหมวดหมู่ (facility type) สำหรับสนามย่อย
+     * AJAX: เปิด/ปิดหมวดหมู่ (facility type) สำหรับพื้นที่สนาม
      * - checked = 1  -> สร้าง row ใน stadium_facilities
      * - checked = 0  -> ลบ row ที่เกี่ยวข้อง (FK จะลบสินค้าใน vendor_products ให้ถ้าตั้ง CASCADE)
      */
@@ -695,7 +695,7 @@ class StadiumController extends BaseController
         $field = $fieldModel->find($id);
 
         if ($field) {
-            // 1. ลบรูปของตัวสนามย่อย (โค้ดเดิม)
+            // 1. ลบรูปของตัวพื้นที่สนาม (โค้ดเดิม)
             $uploadPath = FCPATH . 'assets/uploads/fields/';
             $outsideImages = json_decode($field['outside_images'] ?? '[]', true);
             foreach ($outsideImages as $img) if (file_exists($uploadPath . $img)) @unlink($uploadPath . $img);
@@ -708,7 +708,7 @@ class StadiumController extends BaseController
             $facModel = new StadiumFacilityModel();
             $productModel = new VendorProductModel();
 
-            // 2. หา facility ทั้งหมดที่ผูกกับสนามย่อยนี้
+            // 2. หา facility ทั้งหมดที่ผูกกับพื้นที่สนามนี้
             $facilities = $facModel->where('field_id', $id)->findAll();
 
             if (!empty($facilities)) {
@@ -733,7 +733,7 @@ class StadiumController extends BaseController
             $facModel->where('field_id', $id)->delete();
             // =========================================================
 
-            // 7. สุดท้าย ลบสนามย่อย
+            // 7. สุดท้าย ลบพื้นที่สนาม
             $fieldModel->delete($id);
             return redirect()->to('admin/stadiums/fields/' . $field['stadium_id'])->with('success', 'ลบข้อมูลเรียบร้อย');
         }

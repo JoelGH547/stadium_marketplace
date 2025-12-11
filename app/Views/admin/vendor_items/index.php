@@ -27,7 +27,7 @@
                             <th width="25%">รายละเอียด</th>
                             <th width="10%">ราคา</th>
                             <th width="10%">หน่วย</th>
-                            <th width="15%"><i class="fas fa-map-marker-alt me-1"></i> สนามย่อย (หมวดหมู่)</th> 
+                            <th width="15%"><i class="fas fa-map-marker-alt me-1"></i> พื้นที่สนาม (หมวดหมู่)</th> 
                             <th width="10%" class="text-center">สถานะ</th>
                             <th class="text-end pe-4">จัดการ</th>
                         </tr>

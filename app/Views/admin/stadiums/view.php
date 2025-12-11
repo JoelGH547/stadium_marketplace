@@ -11,7 +11,7 @@
                 <i class="fas fa-home"></i> กลับไปหน้าหลัก
             </a>
             <a href="<?= base_url('admin/stadiums/fields/' . $stadium['id']) ?>" class="text-muted text-decoration-none ms-3">
-         ไปหน้าจัดการสนามย่อย <i class="fas fa-arrow-right"></i>
+         ไปหน้าจัดการพื้นที่สนาม <i class="fas fa-arrow-right"></i>
     </a>
 </div>
             <h3 class="h3 mt-2 text-gray-800 font-weight-bold">รายละเอียดสนาม</h3>
@@ -19,7 +19,7 @@
         <div>
             <?php if(($stadium['booking_type'] ?? 'complex') == 'complex'): ?>
                 <a href="<?= base_url('admin/stadiums/fields/' . $stadium['id']) ?>" class="btn btn-info text-white shadow-sm me-1">
-                    <i class="fas fa-list-ul"></i> จัดการสนามย่อย
+                    <i class="fas fa-list-ul"></i> จัดการพื้นที่สนาม
                 </a>
             <?php else: ?>
                 <a href="<?= base_url('admin/stadiums/fields/' . $stadium['id']) ?>" class="btn btn-success text-white shadow-sm me-1">
@@ -79,7 +79,7 @@
             <div class="card shadow mb-4 border-0">
                 <div class="card-header bg-white py-3">
                     <h6 class="m-0 font-weight-bold text-primary">
-                        <i class="fas fa-futbol me-2"></i>สนามย่อยภายใน
+                        <i class="fas fa-futbol me-2"></i>พื้นที่สนามภายใน
                     </h6>
                 </div>
                 <div class="card-body p-0">
@@ -136,7 +136,7 @@
                         </div>
                     <?php else: ?>
                         <div class="text-center py-4 text-muted">
-                            ยังไม่มีสนามย่อย
+                            ยังไม่มีพื้นที่สนาม
                         </div>
                     <?php endif; ?>
                 </div>
@@ -158,7 +158,7 @@
                         </span>
                         <div class="mt-2">
                             <?php if(($stadium['booking_type'] ?? 'complex') == 'complex'): ?>
-                                <span class="badge bg-light text-dark border">🏢 มีสนามย่อย (Complex)</span>
+                                <span class="badge bg-light text-dark border">🏢 มีพื้นที่สนาม (Complex)</span>
                             <?php else: ?>
                                 <span class="badge bg-light text-dark border">🏟️ จองเหมา (Single)</span>
                             <?php endif; ?>

@@ -29,7 +29,7 @@ class VendorProductModel extends Model
     protected $updatedField  = 'updated_at';
 
     /**
-     * ดึงสินค้า + ข้อมูลสัมพันธ์สนาม/สนามย่อย/หมวดหมู่
+     * ดึงสินค้า + ข้อมูลสัมพันธ์สนาม/พื้นที่สนาม/หมวดหมู่
      */
     public function withRelations()
     {
