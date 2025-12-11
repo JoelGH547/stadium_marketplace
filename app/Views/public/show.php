@@ -429,53 +429,81 @@ $isMaintenance = ($stadiumStatus === 'maintenance');
                 <hr class="my-8 border-t border-gray-200">
 
                 <!-- รายการไอเทม / บริการของสนาม -->
-                <?php if (!empty($items)): ?>
-                    <section>
-                        <div class="flex items-center justify-between gap-3 mb-4">
-                            <h2 class="text-lg font-semibold text-gray-900">
-                                บริการและไอเทมของสนาม
-                            </h2>
-                            <p class="text-xs sm:text-sm text-gray-500">
-                                เลือกไอเทมที่ต้องการใช้งานร่วมกับการจองสนาม เช่น ไม้แบด, ห้องพัก, นวด ฯลฯ
-                            </p>
+                <?php if (!empty($groupedItems)): ?>
+                    <section class="mt-8">
+                        <div class="flex items-center justify-between gap-3 mb-6 pb-4">
+                            <div>
+                                <h2 class="text-xl font-bold text-gray-900">
+                                    บริการและไอเทมเสริม
+                                </h2>
+                                <p class="text-sm text-gray-500 mt-1">
+                                    เลือกอุปกรณ์หรือบริการเพิ่มเติมเพื่อความสะดวกสบายของคุณ
+                                </p>
+                            </div>
                         </div>
 
-                        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                            <?php foreach ($items as $item): ?>
-                                <article
-                                    class="flex flex-col justify-between rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
-                                    <div class="space-y-1">
-                                        <h3 class="text-sm font-semibold text-gray-900">
-                                            <?= esc($item['name']) ?>
-                                        </h3>
-                                        <?php if (!empty($item['category'])): ?>
-                                            <p class="text-xs text-gray-500">
-                                                <?= esc($item['category']) ?>
-                                            </p>
-                                        <?php endif; ?>
-                                        <?php if (!empty($item['desc'])): ?>
-                                            <p class="mt-1 text-xs text-gray-600 line-clamp-2">
-                                                <?= esc($item['desc']) ?>
-                                            </p>
-                                        <?php endif; ?>
-                                    </div>
+                        <div class="space-y-8">
+                            <?php foreach ($groupedItems as $category => $items): ?>
+                                <div>
+                                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                                        <span class="w-1 h-6 bg-[var(--primary)] rounded-full"></span>
+                                        <?= esc($category) ?>
+                                    </h3>
+                                    
+                                    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                                        <?php foreach ($items as $item): ?>
+                                            <article class="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm hover:shadow-md transition-all duration-300">
+                                                
+                                                <!-- Image -->
+                                                <div class="relative h-32 w-full bg-gray-100 overflow-hidden">
+                                                    <?php if (!empty($item['image'])): ?>
+                                                        <img src="<?= base_url('assets/uploads/items/' . $item['image']) ?>" 
+                                                             alt="<?= esc($item['name']) ?>" 
+                                                             class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110">
+                                                    <?php else: ?>
+                                                        <div class="flex h-full items-center justify-center text-gray-400">
+                                                            <i class="fas fa-image text-3xl opacity-50"></i>
+                                                        </div>
+                                                    <?php endif; ?>
+                                                    
+                                                    <!-- Price Tag Removed as per request -->
+                                                </div>
 
-                                    <div class="mt-3 flex items-center justify-between">
-                                        <div class="text-sm font-semibold text-gray-900">
-                                            <?= number_format((float) $item['price'], 2) ?>฿
-                                            <span class="text-xs font-normal text-gray-500">
-                                                / <?= esc($item['unit'] ?? 'ครั้ง') ?>
-                                            </span>
-                                        </div>
+                                                <!-- Content -->
+                                                <div class="p-4 flex flex-col flex-1">
+                                                    <div class="flex-1 space-y-1">
+                                                        <h4 class="font-bold text-gray-900 line-clamp-1" title="<?= esc($item['name']) ?>">
+                                                            <?= esc($item['name']) ?>
+                                                        </h4>
+                                                        <?php if (!empty($item['description'])): ?>
+                                                            <p class="text-xs text-gray-500 line-clamp-2 min-h-[2.5em]">
+                                                                <?= esc($item['description']) ?>
+                                                            </p>
+                                                        <?php else: ?>
+                                                            <p class="text-xs text-gray-400 italic">ไม่มีรายละเอียด</p>
+                                                        <?php endif; ?>
+                                                    </div>
 
-                                        <button type="button" class="inline-flex items-center rounded-xl bg-[var(--primary)] px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-teal-600 transition
-                                           add-item-btn" data-item-id="<?= (int) $item['id'] ?>"
-                                            data-item-name="<?= esc($item['name']) ?>"
-                                            data-item-price="<?= (float) $item['price'] ?>">
-                                            + เพิ่มลงตะกร้า
-                                        </button>
+                                                    <div class="mt-4 flex items-center justify-between gap-2">
+                                                        <span class="text-sm font-semibold text-[var(--primary)]">
+                                                            ฿<?= number_format((float) $item['price']) ?> <span class="text-xs text-gray-500 font-normal">/ <?= esc($item['unit'] ?? 'ชิ้น') ?></span>
+                                                        </span>
+                                                        <button type="button" 
+                                                                class="add-item-btn inline-flex items-center gap-1.5 rounded-xl bg-[var(--primary)] px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-teal-700 transition-colors"
+                                                                data-item-id="<?= (int) $item['id'] ?>"
+                                                                data-item-name="<?= esc($item['name']) ?>"
+                                                                data-item-price="<?= (float) $item['price'] ?>">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
+                                                                <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
+                                                            </svg>
+                                                            เพิ่ม
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </article>
+                                        <?php endforeach; ?>
                                     </div>
-                                </article>
+                                </div>
                             <?php endforeach; ?>
                         </div>
                     </section>

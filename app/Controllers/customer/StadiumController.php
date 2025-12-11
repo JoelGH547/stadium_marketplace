@@ -6,7 +6,7 @@ use App\Controllers\BaseController;
 use App\Models\StadiumModel;
 use App\Models\CategoryModel;
 use App\Models\StadiumFieldModel;
-use App\Models\VendorItemModel;
+// use App\Models\VendorItemModel; // Unused
 
 class StadiumController extends BaseController
 {
@@ -64,7 +64,7 @@ class StadiumController extends BaseController
 
         $fieldModel    = new StadiumFieldModel();
         $stadiumModel  = new StadiumModel();
-        $itemModel     = new VendorItemModel();
+        // $itemModel     = new VendorItemModel(); // Removed
 
         // 1) ดึงข้อมูลสนามย่อย
         $field = $fieldModel->find($id);
@@ -140,10 +140,25 @@ class StadiumController extends BaseController
             ],
         ];
 
-        // 6) ดึง items ตาม vendor ของสนามหลัก (ถ้ามี)
-        $items = [];
-        if (!empty($row['vendor_id'])) {
-            $items = $itemModel->getItemsByVendor((int) $row['vendor_id']);
+        // 6) ดึง items (products) ที่ผูกกับสนามนี้
+        // join stadium_facilities -> stadium_fields -> stadiums
+        $productModel = new \App\Models\VendorProductModel();
+        
+        $rawProducts = $productModel->withRelations()
+            ->where('stadiums.id', $stadium['id'])
+            ->where('vendor_products.status', 'active')
+            ->orderBy('facility_types.id', 'ASC')
+            ->orderBy('vendor_products.id', 'DESC')
+            ->findAll();
+
+        // Group by Category (Facility Type)
+        $groupedItems = [];
+        foreach ($rawProducts as $p) {
+            $catName = $p['facility_type_name'] ?? 'อื่นๆ';
+            if (!isset($groupedItems[$catName])) {
+                $groupedItems[$catName] = [];
+            }
+            $groupedItems[$catName][] = $p;
         }
 
         // 7) ตัวช่วยเสริม (ไม่บังคับ แต่ให้ค่าไว้เหมือน mock เดิม)
@@ -165,7 +180,7 @@ class StadiumController extends BaseController
         return view('public/show', [
             'stadium'       => $stadium,
             'fields'        => $fields,
-            'items'         => $items,
+            'groupedItems'  => $groupedItems, // ส่งแบบ Group แล้ว
             'coverUrl'      => $coverUrl,
             'galleryImages' => $galleryImages,
             'addressFull'   => $addressFull,
