@@ -145,8 +145,7 @@ class StadiumController extends BaseController
         $productModel = new \App\Models\VendorProductModel();
         
         $rawProducts = $productModel->withRelations()
-            ->where('stadiums.id', $stadium['id'])
-            ->where('vendor_products.status', 'active')
+            ->where('stadium_fields.id', $id)
             ->orderBy('facility_types.id', 'ASC')
             ->orderBy('vendor_products.id', 'DESC')
             ->findAll();

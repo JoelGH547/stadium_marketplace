@@ -503,17 +503,29 @@ $isMaintenance = ($stadiumStatus === 'maintenance');
                                                         <span class="text-sm font-semibold text-[var(--primary)]">
                                                             ฿<?= number_format((float) $item['price']) ?> <span class="text-xs text-gray-500 font-normal">/ <?= esc($item['unit'] ?? 'ชิ้น') ?></span>
                                                         </span>
-                                                        <button type="button" 
-                                                                class="add-item-btn inline-flex items-center gap-1.5 rounded-xl bg-[var(--primary)] px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-teal-700 transition-colors"
-                                                                data-item-id="<?= (int) $item['id'] ?>"
-                                                                data-item-name="<?= esc($item['name']) ?>"
-                                                                data-item-price="<?= (float) $item['price'] ?>"
-                                                                data-item-image="<?= esc($item['image'] ?? '') ?>">
-                                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
-                                                                <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
-                                                            </svg>
-                                                            เพิ่ม
-                                                        </button>
+                                                        
+                                                        <?php if (($item['status'] ?? 'active') === 'active'): ?>
+                                                            <button type="button" 
+                                                                    class="add-item-btn inline-flex items-center gap-1.5 rounded-xl bg-[var(--primary)] px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-teal-700 transition-colors"
+                                                                    data-item-id="<?= (int) $item['id'] ?>"
+                                                                    data-item-name="<?= esc($item['name']) ?>"
+                                                                    data-item-price="<?= (float) $item['price'] ?>"
+                                                                    data-item-image="<?= esc($item['image'] ?? '') ?>">
+                                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
+                                                                    <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
+                                                                </svg>
+                                                                เพิ่ม
+                                                            </button>
+                                                        <?php else: ?>
+                                                            <button type="button" 
+                                                                    class="inline-flex items-center gap-1.5 rounded-xl bg-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-500 cursor-not-allowed"
+                                                                    disabled>
+                                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
+                                                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM6.75 9.25a.75.75 0 000 1.5h6.5a.75.75 0 000-1.5h-6.5z" clip-rule="evenodd" />
+                                                                </svg>
+                                                                ไม่พร้อมบริการ
+                                                            </button>
+                                                        <?php endif; ?>
                                                     </div>
                                                 </div>
                                             </article>
