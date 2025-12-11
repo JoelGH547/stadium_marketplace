@@ -207,12 +207,12 @@ document.addEventListener('DOMContentLoaded', function () {
         if (bookingType === 'daily') {
             hourlyBookingFields.classList.add('hidden');
             dailyBookingFields.classList.remove('hidden');
-            if(timeHelpText) timeHelpText.textContent = 'กรุณาเลือกช่วงวันที่ที่ต้องการจอง';
+            if (timeHelpText) timeHelpText.textContent = 'กรุณาเลือกช่วงวันที่ที่ต้องการจอง';
             updateDailyPrice();
         } else { // hourly
             hourlyBookingFields.classList.remove('hidden');
             dailyBookingFields.classList.add('hidden');
-            if(timeHelpText) timeHelpText.textContent = 'สามารถจองได้เป็นช่วงชั่วโมงเต็ม และไม่สามารถเลือกเวลาที่ผ่านมาแล้วในวันนี้ได้';
+            if (timeHelpText) timeHelpText.textContent = 'สามารถจองได้เป็นช่วงชั่วโมงเต็ม และไม่สามารถเลือกเวลาที่ผ่านมาแล้วในวันนี้ได้';
             updateHourlyPrice();
         }
     }
@@ -243,7 +243,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (bookingTypeSelect.options.length === 0) {
         const bookingSection = document.getElementById('bookingTypeSelect').closest('.space-y-3');
-        if(bookingSection) {
+        if (bookingSection) {
             bookingSection.innerHTML = '<p class="text-sm text-gray-500">ไม่มีประเภทการจองที่ว่างสำหรับสนามนี้</p>';
         }
     } else {
@@ -270,6 +270,88 @@ document.addEventListener('DOMContentLoaded', function () {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     startDateInput.min = tomorrow.toISOString().split('T')[0];
-    
+
     buildTimeOptionsForDate(dateInput.value);
 });
+
+document.addEventListener('DOMContentLoaded', function () {
+    const card = document.getElementById('bookingSummaryCard');
+    if (!card) return;
+
+    const originalParent = card.parentNode;
+    const placeholder = document.createElement('div');
+
+    let isFixed = false;
+    let cardTop = 0;
+    const offsetTop = 16; // ระยะห่างจากขอบบนตอนลอย
+
+    function setup() {
+        // วัดตำแหน่งการ์ดตอนอยู่ปกติ (placeholder ยังสูง 0)
+        const rect = card.getBoundingClientRect();
+
+        placeholder.style.width = rect.width + 'px';
+        placeholder.style.height = '0px';
+        placeholder.style.visibility = 'hidden';
+        placeholder.style.pointerEvents = 'none';
+
+        if (!placeholder.parentNode) {
+            originalParent.insertBefore(placeholder, card);
+        }
+
+        cardTop = rect.top + window.scrollY;
+    }
+
+    function makeFixed() {
+        if (isFixed) return;
+
+        // ตอนจะลอย ค่อยให้ placeholder สูงเท่าการ์ด
+        const rect = card.getBoundingClientRect();
+        placeholder.style.height = rect.height + 'px';
+
+        card.style.position = 'fixed';
+        card.style.top = offsetTop + 'px';
+        card.style.left = rect.left + 'px';
+        card.style.width = rect.width + 'px';
+        card.style.zIndex = 60;
+
+        document.body.appendChild(card); // หลุดจากกรอบ overflow-hidden
+        isFixed = true;
+    }
+
+    function resetPosition() {
+        if (!isFixed) return;
+
+        card.style.position = '';
+        card.style.top = '';
+        card.style.left = '';
+        card.style.width = '';
+        card.style.zIndex = '';
+
+        // กลับสภาพปกติ: placeholder ไม่ต้องกินที่แล้ว
+        placeholder.style.height = '0px';
+
+        originalParent.insertBefore(card, placeholder);
+        isFixed = false;
+    }
+
+    function onScroll() {
+        const y = window.scrollY || document.documentElement.scrollTop;
+
+        if (y >= cardTop - offsetTop) {
+            makeFixed();      // ชนเพดาน → ลอยตาม
+        } else {
+            resetPosition();  // เลื่อนกลับขึ้น → กลับรังเดิม
+        }
+    }
+
+    setup();
+    window.addEventListener('scroll', onScroll);
+
+    window.addEventListener('resize', function () {
+        if (!isFixed) {
+            setup(); // วัดใหม่เฉพาะตอนที่การ์ดยังไม่ลอย
+        }
+    });
+});
+
+
