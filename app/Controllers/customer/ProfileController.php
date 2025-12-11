@@ -93,7 +93,7 @@ class ProfileController extends BaseController
                     $ext      = $ext === 'jpeg' ? 'jpg' : $ext;
                     $fileName = 'cust_' . $customerId . '_' . time() . '.' . $ext;
 
-                    $relativePath = 'uploads/avatars/' . $fileName;
+                    $relativePath = 'assets/uploads/avatars/' . $fileName;
                     $fullPath     = FCPATH . $relativePath;
 
                     if (!is_dir(dirname($fullPath))) {
