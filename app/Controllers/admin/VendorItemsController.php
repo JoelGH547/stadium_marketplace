@@ -3,7 +3,7 @@
 namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
-use App\Models\VendorProductModel;
+use App\Models\VendorItemModel; // เรียกใช้ Model ใหม่
 use App\Models\StadiumFacilityModel;
 use App\Models\FacilityTypeModel;
 use App\Models\StadiumFieldModel;
@@ -19,7 +19,7 @@ class VendorItemsController extends BaseController
 
     public function __construct()
     {
-        $this->productModel      = new VendorProductModel();
+        $this->productModel      = new VendorItemModel(); // ใช้ Model ใหม่ (vendor_items)
         $this->facilityModel     = new StadiumFacilityModel();
         $this->fieldModel        = new StadiumFieldModel();
         $this->facilityTypeModel = new FacilityTypeModel();
@@ -33,33 +33,33 @@ class VendorItemsController extends BaseController
     {
         $db = \Config\Database::connect();
         
-        // [แก้ 1] ใช้ชื่อตารางให้ถูกต้อง
-        $builder = $db->table('vendor_products');
+        // [แก้ไข 1] เปลี่ยนชื่อตารางเป็น vendor_items
+        $builder = $db->table('vendor_items');
 
         $builder->select('
-            vendor_products.*, 
+            vendor_items.*, 
             stadiums.name as stadium_name, 
             facility_types.name as facility_type_name,
             categories.name as sport_name
         ');
 
-        // [แก้ 2] JOIN แบบลูกโซ่ เพื่อไต่ไปหาชื่อสนามและกีฬา
-        // 1. จากสินค้า ไปหา facility (สิ่งอำนวยความสะดวก)
-        $builder->join('stadium_facilities', 'stadium_facilities.id = vendor_products.stadium_facility_id', 'left');
+        // [แก้ไข 2] JOIN ตารางให้สัมพันธ์กับ vendor_items
+        // 1. จาก vendor_items ไปหา stadium_facilities
+        $builder->join('stadium_facilities', 'stadium_facilities.id = vendor_items.stadium_facility_id', 'left');
 
-        // 2. จาก facility ไปหา types (เพื่อเอาชื่อหมวดหมู่ เช่น เครื่องดื่ม)
+        // 2. จาก stadium_facilities ไปหา facility_types (หมวดหมู่)
         $builder->join('facility_types', 'facility_types.id = stadium_facilities.facility_type_id', 'left');
 
-        // 3. จาก facility ไปหา fields (สนามย่อย)
+        // 3. จาก stadium_facilities ไปหา stadium_fields (สนามย่อย)
         $builder->join('stadium_fields', 'stadium_fields.id = stadium_facilities.field_id', 'left');
 
-        // 4. จาก fields ไปหา stadiums (เพื่อเอาชื่อสนามหลัก)
+        // 4. จาก stadium_fields ไปหา stadiums (สนามหลัก)
         $builder->join('stadiums', 'stadiums.id = stadium_fields.stadium_id', 'left');
 
-        // 5. จาก stadiums ไปหา categories (เพื่อเอาชื่อกีฬา)
+        // 5. จาก stadiums ไปหา categories (ประเภทกีฬา)
         $builder->join('categories', 'categories.id = stadiums.category_id', 'left');
 
-        $builder->orderBy('vendor_products.id', 'DESC');
+        $builder->orderBy('vendor_items.id', 'DESC');
 
         $items = $builder->get()->getResultArray();
 
@@ -71,8 +71,6 @@ class VendorItemsController extends BaseController
         return view('admin/vendor_items/index', $data);
     }
 
-    // --- ฟังก์ชันด้านล่างนี้ (create, store, edit, update, delete) คงเดิมตามโค้ดของคุณ ---
-    
     public function create()
     {
         $data = [
@@ -145,8 +143,8 @@ class VendorItemsController extends BaseController
             'price'               => $this->request->getPost('price'),
             'unit'                => $this->request->getPost('unit'),
             'image'               => $imageName,
-            'stadium_id'          => $stadiumId,       // [เพิ่ม] บันทึก stadium_id โดยตรงเพื่อให้ง่ายต่อการ join ทีหลัง
-            'facility_type_id'    => $typeId,          // [เพิ่ม] บันทึก facility_type_id โดยตรง
+            // 'stadium_id' และ 'facility_type_id' ไม่ต้องใส่ก็ได้ เพราะอยู่ในตาราง stadium_facilities แล้ว
+            // แต่ถ้าตาราง vendor_items มีฟิลด์นี้จริงๆ ก็ใส่ได้ครับ (แต่ปกติ Normalize แล้วไม่ควรมี)
             'status'              => $this->request->getPost('status') ?? 'active',
         ];
 
@@ -225,8 +223,6 @@ class VendorItemsController extends BaseController
             'description'         => $this->request->getPost('description'),
             'price'               => $this->request->getPost('price'),
             'unit'                => $this->request->getPost('unit'),
-            'stadium_id'          => $stadiumId,    // [เพิ่ม] update stadium_id
-            'facility_type_id'    => $typeId,       // [เพิ่ม] update facility_type_id
             'status'              => $this->request->getPost('status') ?? 'active',
         ];
 
