@@ -22,27 +22,22 @@ class Dashboard extends BaseController
         // รับค่า search จาก GET
         $categoryFilter = $this->request->getGet('category');
         $provinceFilter = $this->request->getGet('province');
-        $priceMin      = $this->request->getGet('price_min');
-        $priceMax      = $this->request->getGet('price_max');
+        $keyword       = $this->request->getGet('keyword');
 
         // query เริ่มต้น
         $builder = $stadiumModel->where('vendor_id', session()->get('owner_id'));
 
         // ======= เงื่อนไขกรอง =======
+        if (!empty($keyword)) {
+            $builder->like('name', $keyword);
+        }
+
         if (!empty($categoryFilter)) {
             $builder->where('category_id', $categoryFilter);
         }
 
         if (!empty($provinceFilter)) {
             $builder->where('province', $provinceFilter);
-        }
-
-        if (!empty($priceMin)) {
-            $builder->where('price >=', $priceMin);
-        }
-
-        if (!empty($priceMax)) {
-            $builder->where('price <=', $priceMax);
         }
 
         // ผลลัพธ์ทั้งหมดหลังกรอง

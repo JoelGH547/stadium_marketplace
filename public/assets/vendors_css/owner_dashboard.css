@@ -1,0 +1,111 @@
+body {
+    background: #f3fdfa;
+    /* พื้นหลังมิ้นอ่อน */
+}
+
+/* Navbar Override (if needed, though usually in header) */
+.navbar {
+    background: #00c389 !important;
+    padding: 12px 25px;
+    color: white;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
+}
+
+.navbar h4 {
+    font-weight: bold;
+}
+
+/* Buttons */
+.btn-mint {
+    background: #00c389;
+    border-color: #00c389;
+    color: white;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-mint:hover {
+    background: #00af77;
+    border-color: #00af77;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 195, 137, 0.3);
+}
+
+.btn-outline-mint {
+    border: 2px solid #00c389;
+    color: #00c389;
+    background: transparent;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-outline-mint:hover {
+    background: #00c389;
+    color: white;
+    transform: translateY(-2px);
+}
+
+/* Facility Card */
+.facility-card {
+    border: none;
+    border-left: 6px solid #00c389;
+    border-radius: 15px;
+    background: white;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+}
+
+.facility-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 195, 137, 0.15);
+}
+
+.facility-card img {
+    width: 200px;
+    height: 140px;
+    object-fit: cover;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Search Box */
+.search-box {
+    background: white;
+    padding: 25px;
+    border-radius: 15px;
+    border: none;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    margin-bottom: 30px;
+}
+
+.search-box .form-label {
+    font-weight: 600;
+    color: #555;
+}
+
+.search-box .form-control,
+.search-box .form-select {
+    border-radius: 10px;
+    border: 1px solid #e0e0e0;
+    padding: 10px 15px;
+}
+
+.search-box .form-control:focus,
+.search-box .form-select:focus {
+    border-color: #00c389;
+    box-shadow: 0 0 0 0.2rem rgba(0, 195, 137, 0.25);
+}
+
+/* Typography */
+.text-mint {
+    color: #00c389 !important;
+}
+
+.page-header {
+    margin-bottom: 30px;
+}

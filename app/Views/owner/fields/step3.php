@@ -3,9 +3,49 @@
 <head>
   <meta charset="UTF-8">
   <title>ขั้นตอนที่ 3: อัปโหลดรูปภาพสนาม</title>
+
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
   <style>
+
+    body {
+      background: #f1faf8;
+    }
+
+    h3 {
+      color: #2a8f7a;
+      font-weight: 700;
+    }
+
+    .upload-box {
+      background: white;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      border-top: 5px solid #4cb7a5;
+    }
+
+    /* ปุ่มย้อนกลับ */
+    .btn-back {
+      background: #d8f7ef;
+      color: #2a8f7a;
+      border: 1px solid #bfeee4;
+    }
+    .btn-back:hover {
+      background: #c2f0e5;
+      color: #1f6f5f;
+    }
+
+    /* ปุ่มถัดไป */
+    .btn-primary {
+      background: #4cb7a5;
+      border: none;
+    }
+    .btn-primary:hover {
+      background: #3aa18e;
+    }
+
+    /* กล่อง preview */
     .image-box {
       position: relative;
       display: inline-block;
@@ -16,61 +56,70 @@
       height: 140px;
       object-fit: cover;
       border-radius: 10px;
-      border: 2px solid #ddd;
+      border: 2px solid #c7ebe4;
     }
+
     .remove-btn {
       position: absolute;
       top: -10px;
       right: -10px;
       padding: 2px 7px;
-      background: red;
+      background: #ff4b4b;
       color: white;
       font-size: 18px;
       border: none;
       border-radius: 50%;
       cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
     }
+
   </style>
 </head>
 
-<body class="bg-light">
-
+<body>
+<?= $this->include('owner/layout/header') ?>
 <div class="container mt-5" style="max-width: 800px;">
-  <a href="<?= base_url('owner/fields/step2') ?>" class="btn btn-secondary mb-3">
+
+  <!-- ปุ่มย้อนกลับ -->
+  <a href="<?= base_url('owner/fields/step2') ?>" class="btn btn-back mb-3">
     ⬅ ย้อนกลับ
-</a>
+  </a>
 
+  <div class="upload-box">
 
-  <h3 class="fw-bold mb-3">ขั้นตอนที่ 3: อัปโหลดรูปภาพสนาม</h3>
-  <p class="text-muted">เลือกหลายรูป / ลบรูปได้</p>
+    <h3 class="fw-bold mb-3">ขั้นตอนที่ 3: อัปโหลดรูปภาพสนาม</h3>
+    <p class="text-muted">เลือกรูปหลายใบ / ลบรูปที่ไม่ต้องการได้</p>
 
-  <?php if(session()->getFlashdata('error')): ?>
-    <div class="alert alert-danger"><?= session()->getFlashdata('error') ?></div>
-  <?php endif; ?>
+    <?php if(session()->getFlashdata('error')): ?>
+      <div class="alert alert-danger"><?= session()->getFlashdata('error') ?></div>
+    <?php endif; ?>
 
-  <form method="post" action="<?= base_url('owner/fields/step3') ?>" 
-      enctype="multipart/form-data" 
-      onsubmit="return validateImages()">
+    <form 
+        method="post" 
+        action="<?= base_url('owner/fields/step3') ?>" 
+        enctype="multipart/form-data" 
+        onsubmit="return validateImages()">
 
+      <!-- ภายนอก -->
+      <h5 class="mt-4 text-success fw-bold">รูปภายนอก *</h5>
+      <input type="file" id="outsideInput" name="outside_images[]" class="form-control" multiple accept="image/*">
+      <div id="outsidePreview" class="d-flex flex-wrap mt-3"></div>
 
-    <!-- ภายนอก -->
-    <h5>รูปภายนอก *</h5>
-    <input type="file" id="outsideInput" name="outside_images[]" class="form-control" multiple accept="image/*">
-    <div id="outsidePreview" class="d-flex flex-wrap mt-3"></div>
+      <!-- ภายใน -->
+      <h5 class="mt-4 text-success fw-bold">รูปภายใน *</h5>
+      <input type="file" id="insideInput" name="inside_images[]" class="form-control" multiple accept="image/*">
+      <div id="insidePreview" class="d-flex flex-wrap mt-3"></div>
 
-    <!-- ภายใน -->
-    <h5 class="mt-4">รูปภายใน *</h5>
-    <input type="file" id="insideInput" name="inside_images[]" class="form-control" multiple accept="image/*">
-    <div id="insidePreview" class="d-flex flex-wrap mt-3"></div>
+      <button type="submit" class="btn btn-primary w-100 mt-4">ถัดไป</button>
 
-    <button type="submit" class="btn btn-primary w-100 mt-4">ถัดไป</button>
+    </form>
 
-  </form>
+  </div>
 </div>
 
 
 <script>
-// ========== ใช้ DataTransfer เพื่อจัดการไฟล์ ==========
+// ========== ระบบอัปโหลด + preview + remove ด้วย DataTransfer ==========
 function setupImageUploader(inputId, previewId) {
 
     const input = document.getElementById(inputId);
@@ -79,15 +128,11 @@ function setupImageUploader(inputId, previewId) {
 
     input.addEventListener("change", function() {
 
-        // เพิ่มไฟล์ใหม่ลง DataTransfer
         for (let file of input.files) {
             dataTransfer.items.add(file);
         }
 
-        // sync input.files
         input.files = dataTransfer.files;
-
-        // แสดง preview ใหม่ทั้งหมด
         renderPreview();
     });
 
@@ -124,11 +169,11 @@ function setupImageUploader(inputId, previewId) {
     }
 }
 
-// ติดตั้งให้ 2 ส่วน
 setupImageUploader("outsideInput", "outsidePreview");
 setupImageUploader("insideInput", "insidePreview");
-</script>
-<script>
+
+
+// ========== Validate ก่อนส่งฟอร์ม ==========
 function validateImages() {
     const outside = document.getElementById("outsideInput").files.length;
     const inside = document.getElementById("insideInput").files.length;
@@ -146,7 +191,6 @@ function validateImages() {
     return true;
 }
 </script>
-
 
 </body>
 </html>

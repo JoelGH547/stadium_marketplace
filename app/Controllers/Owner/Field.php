@@ -49,7 +49,6 @@ class Field extends BaseController
     public function step2_save()
     {
         $name        = $this->request->getPost('name');
-        $price       = $this->request->getPost('price');
         $open_time   = $this->request->getPost('open_time');
         $close_time  = $this->request->getPost('close_time');
         $description = $this->request->getPost('description');
@@ -57,12 +56,11 @@ class Field extends BaseController
         $contact_email = $this->request->getPost('contact_email');
         $contact_phone = $this->request->getPost('contact_phone');
 
-        if (!$name || !$price || !$open_time || !$close_time)
+        if (!$name || !$open_time || !$close_time)
             return redirect()->back()->with('error','กรุณากรอกข้อมูลให้ครบ');
 
         session()->set([
             'name'          => $name,
-            'price'         => $price,
             'open_time'     => $open_time,
             'close_time'    => $close_time,
             'description'   => $description,
@@ -186,7 +184,6 @@ class Field extends BaseController
             'vendor_id'      => session()->get('owner_id'),
             'category_id'    => session()->get('category_id'),
             'name'           => session()->get('name'),
-            'price'          => session()->get('price'),
             'open_time'      => session()->get('open_time'),
             'close_time'     => session()->get('close_time'),
             'description'    => session()->get('description'),
@@ -201,7 +198,12 @@ class Field extends BaseController
             'inside_images'  => session()->get('inside_images'),
         ]);
 
-        session()->destroy();
+        session()->remove([
+        'category_id', 'name', 'open_time', 'close_time',
+        'description', 'contact_email', 'contact_phone',
+        'province', 'address', 'lat', 'lng', 'map_link',
+        'outside_images', 'inside_images'
+    ]);
 
         return redirect()->to(base_url('owner/dashboard'))
                          ->with('success','เพิ่มสนามสำเร็จแล้ว!');
@@ -253,7 +255,6 @@ class Field extends BaseController
         $data = [
             'category_id'    => $this->request->getPost('category_id'),
             'name'           => $this->request->getPost('name'),
-            'price'          => $this->request->getPost('price'),
             'open_time'      => $this->request->getPost('open_time'),
             'close_time'     => $this->request->getPost('close_time'),
             'description'    => $this->request->getPost('description'),
@@ -317,5 +318,97 @@ class Field extends BaseController
         return redirect()->to(base_url('owner/dashboard'))
                          ->with('success','แก้ไขสนามสำเร็จแล้ว!');
     }
+
+    public function delete($id)
+{
+    if (!session()->get('owner_login'))
+        return redirect()->to(base_url('owner/login'));
+
+    $model = new OwnerStadiumModel();
+
+    // เช็คว่าสนามเป็นของเจ้าของคนนี้จริงไหม
+    $stadium = $model
+        ->where('vendor_id', session()->get('owner_id'))
+        ->where('id', $id)
+        ->first();
+
+    if (!$stadium)
+        return redirect()->to(base_url('owner/dashboard'))->with('error', 'ไม่พบสนามนี้');
+
+    // ลบรูปภาพเก่า
+    $outside = json_decode($stadium['outside_images'], true) ?? [];
+    $inside  = json_decode($stadium['inside_images'], true) ?? [];
+
+    foreach ($outside as $img) {
+        $file = FCPATH . 'uploads/stadiums/outside/' . $img;
+        if (file_exists($file)) unlink($file);
+    }
+
+    foreach ($inside as $img) {
+        $file = FCPATH . 'uploads/stadiums/inside/' . $img;
+        if (file_exists($file)) unlink($file);
+    }
+
+    // ลบจากฐานข้อมูล
+    $model->delete($id);
+
+    return redirect()->to(base_url('owner/dashboard'))
+                     ->with('success', 'ลบสนามสำเร็จแล้ว!');
+}
+
+public function view($id)
+{
+    if (!session()->get('owner_login')) {
+        return redirect()->to(base_url('owner/login'));
+    }
+
+    $stadiumModel = new \App\Models\OwnerStadiumModel();
+    $subfieldModel = new \App\Models\SubfieldModel();
+    $itemModel     = new \App\Models\VendorItemModel();
+    $stadiumFacilityModel = new \App\Models\StadiumFacilityModel();
+    $facilityTypeModel = new \App\Models\FacilityTypeModel();
+
+    // 1) ข้อมูลสนาม
+    $stadium = $stadiumModel
+        ->select('stadiums.*, categories.name as category_name')
+        ->join('categories', 'categories.id = stadiums.category_id', 'left')
+        ->where('stadiums.id', $id)
+        ->first();
+
+    if (!$stadium) {
+        return redirect()->back()->with('error', 'ไม่พบข้อมูลสนาม');
+    }
+
+    // 2) สนามย่อย
+    $subfields = $subfieldModel->where('stadium_id', $id)
+                               ->where('name !=', '_SYSTEM_CATALOG_')
+                               ->findAll();
+
+    // 3) ดึงสินค้าเสริม (All Items in Stadium)
+    $vendorItemModel = new \App\Models\VendorItemModel();
+    $items = $vendorItemModel
+        ->select('vendor_items.*, facility_types.name as type_name, stadium_fields.name as field_name')
+        ->join('stadium_facilities', 'stadium_facilities.id = vendor_items.stadium_facility_id')
+        ->join('facility_types', 'facility_types.id = stadium_facilities.facility_type_id')
+        ->join('stadium_fields', 'stadium_fields.id = stadium_facilities.field_id')
+        ->where('stadium_fields.stadium_id', $id)
+        // ->where('vendor_items.status', 'active') // Show all statuses? User said "add status", implies showing active/inactive.
+        ->orderBy('stadium_fields.name', 'ASC')
+        ->findAll();
+
+    // 4) Types for Dropdown
+    $facilityTypes = $facilityTypeModel->findAll();
+
+    return view('owner/fields/view', [
+        'stadium'   => $stadium,
+        'subfields' => $subfields,
+        'items'     => $items,
+        'facility_types' => $facilityTypes
+    ]);
+}
+
+
+    
+
 
 }
