@@ -33,6 +33,22 @@
                 <input type="text" name="name" class="form-control" required>
             </div>
 
+            <!-- สนามย่อย (Field) -->
+            <div class="mb-3">
+                <label class="form-label">สนามย่อย *</label>
+                <select name="field_id" class="form-select" required>
+                    <option value="">เลือกสนามย่อย</option>
+                    <?php if(!empty($subfields)): ?>
+                        <?php foreach($subfields as $sf): ?>
+                            <option value="<?= $sf['id'] ?>"><?= esc($sf['name']) ?></option>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <option value="" disabled>ไม่มีสนามย่อย (กรุณาเพิ่มสนามย่อยก่อน)</option>
+                    <?php endif; ?>
+                </select>
+                <div class="form-text text-muted">สินค้า/บริการนี้จะผูกกับสนามย่อยที่เลือกเท่านั้น</div>
+            </div>
+
             <!-- ประเภท -->
             <div class="mb-3">
                 <label class="form-label">ประเภท *</label>

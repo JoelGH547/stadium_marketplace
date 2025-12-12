@@ -8,6 +8,6 @@ class StadiumFacilityModel extends Model
 {
     protected $table = 'stadium_facilities';
     protected $primaryKey = 'id';
-    protected $allowedFields = ['stadium_id', 'field_id', 'type_id', 'name'];
-    protected $useTimestamps = true;
+    protected $allowedFields = ['field_id', 'facility_type_id'];
+    protected $useTimestamps = false;
 }

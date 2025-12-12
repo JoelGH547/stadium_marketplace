@@ -2,60 +2,72 @@
 <div class="card card-mint p-4 mb-4">
     <div class="d-flex justify-content-between align-items-center">
         <h5 class="fw-bold">บริการและสินค้าเพิ่มเติม</h5>
-        <a href="<?= base_url('owner/items/add/'.$stadium['id']) ?>" 
-        class="btn btn-success btn-sm">➕ เพิ่มบริการ/สินค้า</a>
+        <button onclick="openAddItemModal()" class="btn btn-success btn-sm">➕ เพิ่มบริการ/สินค้า</button>
     </div>
 
     <?php if(empty($items)): ?>
         <p class="text-muted mt-3">ยังไม่มีบริการหรือสินค้าเพิ่มเติม</p>
 
     <?php else: ?>
-        <ul class="list-group mt-3">
-
-            <?php foreach($items as $item): ?>
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-
-                    <div class="d-flex align-items-center">
-
+        <div class="table-responsive mt-3">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width: 80px;">รูป</th>
+                        <th>ชื่อบริการ</th>
+                        <th>สนาม</th>
+                        <th>ราคา</th>
+                        <th>สถานะ</th>
+                        <th class="text-end">จัดการ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach($items as $item): ?>
                         <?php 
                             $img = !empty($item['image']) 
                                 ? base_url('uploads/items/'.$item['image'])
                                 : base_url('uploads/no-image.png');
+                                
+                            $fieldName = ($item['field_name'] === '_SYSTEM_CATALOG_') ? 'ส่วนกลาง' : esc($item['field_name']);
+                            
+                            $statusClass = ($item['status'] === 'active') ? 'bg-success' : 'bg-secondary';
+                            $statusLabel = ($item['status'] === 'active') ? 'ใช้งาน' : 'ระงับ';
                         ?>
-
-                        <img src="<?= $img ?>" 
-                            class="rounded me-3"
-                            style="width: 60px; height: 60px; object-fit: cover;">
-
-                        <div>
-                            <strong><?= esc($item['name']) ?></strong>
-                            <br>
-                            <small class="text-muted">
-                                <?= esc($item['price']) ?> บาท / <?= esc($item['unit']) ?>
-                            </small>
-                            <br>
-                            <span class="badge bg-info">
-                                <?= esc($item['type_name']) ?>
-                            </span>
-                        </div>
-
-                    </div>
-
-                    <div>
-                        <a href="javascript:void(0)" onclick="openItemModal(<?= $item['id'] ?>)" 
-                        class="btn btn-warning btn-sm me-2">✏️ แก้ไข</a>
-
-                        <a href="<?= base_url('owner/items/delete/'.$item['id']) ?>" 
-                        class="btn btn-outline-danger btn-sm"
-                        onclick="return confirm('ลบรายการนี้?')">
-                        ลบ
-                        </a>
-                    </div>
-
-                </li>
-            <?php endforeach; ?>
-
-        </ul>
+                        <tr>
+                            <td>
+                                <img src="<?= $img ?>" class="rounded bg-light border" style="width: 50px; height: 50px; object-fit: cover;">
+                            </td>
+                            <td>
+                                <div class="fw-bold text-dark"><?= esc($item['name']) ?></div>
+                                <div class="small text-muted"><?= esc($item['type_name']) ?></div>
+                            </td>
+                            <td>
+                                <span class="badge bg-light text-dark border fw-normal">
+                                    <i class="fas fa-map-marker-alt me-1 text-mint"></i> <?= $fieldName ?>
+                                </span>
+                            </td>
+                            <td>
+                                <span class="fw-bold text-mint"><?= number_format($item['price']) ?></span> 
+                                <span class="small text-muted">/ <?= esc($item['unit']) ?></span>
+                            </td>
+                            <td>
+                                <span class="badge <?= $statusClass ?>"><?= $statusLabel ?></span>
+                            </td>
+                            <td class="text-end">
+                                <a href="javascript:void(0)" onclick="openItemModal(<?= $item['id'] ?>)" class="btn btn-sm btn-warning mb-1">
+                                    <i class="fas fa-pencil-alt"></i>
+                                </a>
+                                <a href="<?= base_url('owner/items/delete/'.$item['id']) ?>" 
+                                   class="btn btn-sm btn-outline-danger mb-1" 
+                                   onclick="return confirm('ยืนยันลบรายการนี้?')">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
     <?php endif; ?>
 </div>
 

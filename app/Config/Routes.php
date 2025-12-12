@@ -96,12 +96,14 @@ $routes->group('owner', ['namespace' => 'App\Controllers\Owner'], function($rout
     $routes->post('subfields/facilities/update/(:num)', 'Subfield::updateFacilities/$1');
     $routes->get('subfields/edit/(:num)', 'Subfield::edit/$1');
     $routes->post('subfields/update/(:num)', 'Subfield::update/$1');
+    $routes->post('subfields/create/(:num)', 'Subfield::create/$1'); // Added missing route
 
     $routes->get('items/add/(:num)', 'Items::add/$1');       
     $routes->post('items/store/(:num)', 'Items::store/$1');  
     $routes->get('items/detail/(:num)', 'Items::getDetail/$1');
     $routes->post('items/update/(:num)', 'Items::update/$1');
-    $routes->get('items/delete/(:num)', 'Items::delete/$1'); // Also adding delete since it was in view.php
+    $routes->get('items/delete/(:num)', 'Items::delete/$1'); 
+    $routes->get('items/toggleStatus/(:num)', 'Items::toggleStatus/$1');
 
 
 

@@ -380,22 +380,30 @@ public function view($id)
     }
 
     // 2) สนามย่อย
-    $subfields = $subfieldModel->where('stadium_id', $id)->findAll();
+    $subfields = $subfieldModel->where('stadium_id', $id)
+                               ->where('name !=', '_SYSTEM_CATALOG_')
+                               ->findAll();
 
-    // 3) ดึงสินค้าเสริม
-    // 3) ดึงสินค้าเสริม
+    // 3) ดึงสินค้าเสริม (All Items in Stadium)
     $vendorItemModel = new \App\Models\VendorItemModel();
     $items = $vendorItemModel
-        ->select('vendor_items.*, facility_types.name as type_name')
-        ->join('facility_types', 'facility_types.id = vendor_items.facility_type_id')
-        ->where('vendor_items.stadium_id', $id)
-        ->where('vendor_items.status', 'active')
+        ->select('vendor_items.*, facility_types.name as type_name, stadium_fields.name as field_name')
+        ->join('stadium_facilities', 'stadium_facilities.id = vendor_items.stadium_facility_id')
+        ->join('facility_types', 'facility_types.id = stadium_facilities.facility_type_id')
+        ->join('stadium_fields', 'stadium_fields.id = stadium_facilities.field_id')
+        ->where('stadium_fields.stadium_id', $id)
+        // ->where('vendor_items.status', 'active') // Show all statuses? User said "add status", implies showing active/inactive.
+        ->orderBy('stadium_fields.name', 'ASC')
         ->findAll();
+
+    // 4) Types for Dropdown
+    $facilityTypes = $facilityTypeModel->findAll();
 
     return view('owner/fields/view', [
         'stadium'   => $stadium,
         'subfields' => $subfields,
-        'items'     => $items
+        'items'     => $items,
+        'facility_types' => $facilityTypes
     ]);
 }
 

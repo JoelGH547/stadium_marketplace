@@ -32,77 +32,92 @@ class Subfield extends BaseController
 
         $subfields = $this->subfieldModel->where('stadium_id', $stadium_id)->findAll();
 
-        // Fetch available items for this stadium to show in create form
-        $vendorItemModel = new \App\Models\VendorItemModel();
-        $items = $vendorItemModel
-            ->select('vendor_items.*, facility_types.name as type_name')
-            ->join('facility_types', 'facility_types.id = vendor_items.facility_type_id')
-            ->where('stadium_id', $stadium_id)
-            ->where('vendor_items.status', 'active')
-            ->findAll();
-
         return view('owner/fields/subfields', [
             'stadium'   => $stadium,
-            'subfields' => $subfields,
-            'items'     => $items
+            'subfields' => $subfields
         ]);
     }
 
     public function create($stadium_id)
-{
-    $name  = $this->request->getPost('name');
-    $price = $this->request->getPost('price');
+    {
+        $name  = $this->request->getPost('name');
+        $price = $this->request->getPost('price');
+        $price_daily = $this->request->getPost('price_daily'); // New
 
-    $desc  = $this->request->getPost('description');
-    $status = $this->request->getPost('status') ?? 'active';
+        $desc  = $this->request->getPost('description');
+        $status = $this->request->getPost('status') ?? 'active';
 
-    // จัดการรูป
-    $images = [];
-    $files = $this->request->getFiles();
+        if (!$name || !$price) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON(['success' => false, 'message' => 'กรุณากรอกชื่อและราคา']);
+            }
+            return redirect()->back()->with('error', 'กรุณากรอกชื่อและราคา');
+        }
 
-    if (!empty($files['images'])) {
-        foreach ($files['images'] as $img) {
-            if ($img->isValid() && !$img->hasMoved()) {
-                $newName = $img->getRandomName();
-                $img->move('uploads/subfields/', $newName);
-                $images[] = $newName;
+        // Handle Outside Images
+        $outsideImages = [];
+        $files = $this->request->getFiles();
+
+        if (!empty($files['outside_images'])) {
+            foreach ($files['outside_images'] as $img) {
+                if ($img->isValid() && !$img->hasMoved()) {
+                    $newName = $img->getRandomName();
+                    $img->move('uploads/subfields/', $newName);
+                    $outsideImages[] = $newName;
+                }
             }
         }
-    }
 
-    $this->subfieldModel->insert([
-        'stadium_id' => $stadium_id,
-        'name'       => $name,
-        'price'      => $price,
-
-        'description'=> $desc,
-        'outside_images' => json_encode($images),
-        'status'     => $status
-    ]);
-
-    $subfield_id = $this->subfieldModel->getInsertID();
-
-    // Save selected facilities
-    $facilities = $this->request->getPost('facilities');
-    if (!empty($facilities) && is_array($facilities)) {
-        $stadiumFacilityModel = new \App\Models\StadiumFacilityModel();
-        $vendorItemModel = new \App\Models\VendorItemModel();
-
-        foreach ($facilities as $itemId) {
-            $item = $vendorItemModel->find($itemId);
-            if ($item) {
-                $stadiumFacilityModel->insert([
-                    'stadium_id' => $stadium_id,
-                    'field_id'   => $subfield_id,
-                    'type_id'    => $item['facility_type_id'],
-                    'name'       => $item['name']
-                ]);
+        // Handle Inside Images
+        $insideImages = [];
+        if (!empty($files['inside_images'])) {
+            foreach ($files['inside_images'] as $img) {
+                if ($img->isValid() && !$img->hasMoved()) {
+                    $newName = $img->getRandomName();
+                    $img->move('uploads/subfields/', $newName);
+                    $insideImages[] = $newName;
+                }
             }
         }
-    }
 
-    return redirect()->back()->with('success', 'เพิ่มสนามย่อยสำเร็จ');
-}
+        $this->subfieldModel->insert([
+            'stadium_id' => $stadium_id,
+            'name'       => $name,
+            'price'      => $price,
+            'price_daily'=> $price_daily,
+            'description'=> $desc,
+            'outside_images' => json_encode($outsideImages),
+            'inside_images'  => json_encode($insideImages),
+            'status'     => $status
+        ]);
+
+        $subfield_id = $this->subfieldModel->getInsertID();
+
+        // Save selected facilities (Claim items from System Catalog)
+        $selectedItems = $this->request->getPost('items');
+        if (!empty($selectedItems) && is_array($selectedItems)) {
+            $stadiumFacilityModel = new \App\Models\StadiumFacilityModel();
+            $vendorItemModel = new \App\Models\VendorItemModel();
+
+            foreach ($selectedItems as $itemId) {
+                // Find item to get its facility pivot
+                $item = $vendorItemModel->find($itemId);
+                if ($item && !empty($item['stadium_facility_id'])) {
+                    // Update the facility to belong to this new subfield
+                    // This "moves" it from _SYSTEM_CATALOG_ to the real subfield
+                    $stadiumFacilityModel->update($item['stadium_facility_id'], [
+                        'field_id' => $subfield_id
+                    ]);
+                }
+            }
+        }
+
+        if ($this->request->isAJAX()) {
+            return $this->response->setJSON(['success' => true]);
+        }
+
+        return redirect()->back()->with('success', 'เพิ่มสนามย่อยสำเร็จ');
+    }
 
 
     public function toggleStatus($stadium_id, $subfield_id)
@@ -143,7 +158,7 @@ class Subfield extends BaseController
             return redirect()->back()->with('error', 'ไม่พบสนามย่อย');
 
         // Delete images
-        $images = json_decode($sub['images'], true) ?? [];
+        $images = json_decode($sub['outside_images'], true) ?? [];
         foreach ($images as $img) {
             $path = FCPATH . 'uploads/subfields/' . $img;
             if (file_exists($path)) {
@@ -185,41 +200,60 @@ class Subfield extends BaseController
 
         $name  = $this->request->getPost('name');
         $price = $this->request->getPost('price');
+        $price_daily = $this->request->getPost('price_daily');
 
         $desc  = $this->request->getPost('description');
         $status = $this->request->getPost('status');
 
-        // Handle Image Deletion
-        $deleteImages = $this->request->getPost('delete_images') ?? [];
-        $currentImages = json_decode($sub['outside_images'] ?? '[]', true);
-
-        foreach ($deleteImages as $delImg) {
+        // --- Handle Outside Images ---
+        $currentOutside = json_decode($sub['outside_images'] ?? '[]', true);
+        $deleteOutside = $this->request->getPost('delete_outside_images') ?? [];
+        
+        foreach ($deleteOutside as $delImg) {
             $path = FCPATH . 'uploads/subfields/' . $delImg;
-            if (file_exists($path)) {
-                unlink($path);
-            }
-            $currentImages = array_filter($currentImages, fn($i) => $i !== $delImg);
+            if (file_exists($path)) @unlink($path);
+            $currentOutside = array_filter($currentOutside, fn($i) => $i !== $delImg);
         }
 
-        // Handle New Images
         $files = $this->request->getFiles();
-        if (!empty($files['images'])) {
-            foreach ($files['images'] as $img) {
+        if (!empty($files['outside_images'])) {
+            foreach ($files['outside_images'] as $img) {
                 if ($img->isValid() && !$img->hasMoved()) {
                     $newName = $img->getRandomName();
                     $img->move('uploads/subfields/', $newName);
-                    $currentImages[] = $newName;
+                    $currentOutside[] = $newName;
                 }
+            }
+        }
 
+        // --- Handle Inside Images ---
+        $currentInside = json_decode($sub['inside_images'] ?? '[]', true);
+        $deleteInside = $this->request->getPost('delete_inside_images') ?? [];
+
+        foreach ($deleteInside as $delImg) {
+            $path = FCPATH . 'uploads/subfields/' . $delImg;
+            if (file_exists($path)) @unlink($path);
+            $currentInside = array_filter($currentInside, fn($i) => $i !== $delImg);
+        }
+
+        if (!empty($files['inside_images'])) {
+            foreach ($files['inside_images'] as $img) {
+                if ($img->isValid() && !$img->hasMoved()) {
+                    $newName = $img->getRandomName();
+                    $img->move('uploads/subfields/', $newName);
+                    $currentInside[] = $newName;
+                }
             }
         }
 
         $this->subfieldModel->update($subfield_id, [
             'name'           => $name,
             'price'          => $price,
+            'price_daily'    => $price_daily,
             'description'    => $desc,
             'status'         => $status,
-            'outside_images' => json_encode(array_values($currentImages))
+            'outside_images' => json_encode(array_values($currentOutside)),
+            'inside_images'  => json_encode(array_values($currentInside))
         ]);
 
         if ($this->request->isAJAX() || $this->request->getPost('is_ajax')) {
@@ -241,86 +275,29 @@ class Subfield extends BaseController
         }
 
         try {
-            // Get Stadium to find Vendor
-            $stadium = $this->stadiumModel->find($sub['stadium_id']);
-            if (!$stadium) {
-                return $this->response->setJSON(['error' => 'Stadium not found']);
-            }
-            $vendor_id = $stadium['vendor_id'];
-
-            // 1. Fetch all available facilities (Catalog from VendorItems)
-            // Now filtering by stadium_id instead of vendor_id
-            // 1. Fetch all available facilities (Catalog from VendorItems)
-            // Now filtering by stadium_id instead of vendor_id
-            $vendorItemModel = new \App\Models\VendorItemModel();
-            $availableFacilities = $vendorItemModel
-                ->select('vendor_items.*, facility_types.name as type_name')
-                ->join('facility_types', 'facility_types.id = vendor_items.facility_type_id')
-                ->where('stadium_id', $sub['stadium_id'])
-                ->where('vendor_items.status', 'active')
-                ->findAll();
-
-            // 2. Fetch currently assigned facilities for this subfield
+            // 2. Fetch currently assigned facilities/items for this subfield
             $stadiumFacilityModel = new \App\Models\StadiumFacilityModel();
-            $currentFacilities = $stadiumFacilityModel
+            
+            // Join vendor_items (Standard: Item -> Facility)
+            $facilities = $stadiumFacilityModel
+                ->select('stadium_facilities.*, vendor_items.name, vendor_items.price, vendor_items.unit, vendor_items.status, vendor_items.image, vendor_items.description, vendor_items.id as item_id, facility_types.name as type_name')
+                ->join('vendor_items', 'vendor_items.stadium_facility_id = stadium_facilities.id')
+                ->join('facility_types', 'facility_types.id = stadium_facilities.facility_type_id', 'left')
                 ->where('field_id', $subfield_id)
                 ->findAll();
+
+            // For "checked" status, we don't really have a link back to the catalog item ID easily unless we stored it.
+            // But since this is a read-only list of "Assigned Items", we don't need to show them as "Checked Catalog Items".
+            // We just show them as items belonging to this field.
             
-            // Map current facilities by name for easy checking
-            $checkedNames = array_column($currentFacilities, 'name');
-
-            // We need to pass "checked" IDs back to UI. 
-            // But since we don't link by ID, we have to check by Name.
-            // The UI expects "checked" array of IDs. 
-            // We can iterate availableFacilities and see if their name is in $checkedNames.
-            $checkedIds = [];
-            foreach ($availableFacilities as $item) {
-                if (in_array($item['name'], $checkedNames)) {
-                    $checkedIds[] = $item['id'];
-                }
-            }
-
             return $this->response->setJSON([
+                'success' => true,
                 'subfield' => $sub,
-                'facilities' => $availableFacilities,
-                'checked' => $checkedIds
+                'facilities' => $facilities
             ]);
         } catch (\Exception $e) {
             return $this->response->setJSON(['error' => $e->getMessage()]);
         }
     }
-
-    public function updateFacilities($subfield_id)
-    {
-        if (!session()->get('owner_login')) {
-            return $this->response->setJSON(['success' => false, 'message' => 'Unauthorized']);
-        }
-
-        $facilityIds = $this->request->getPost('facilities') ?? [];
-        $stadiumFacilityModel = new \App\Models\StadiumFacilityModel();
-        $vendorItemModel = new \App\Models\VendorItemModel();
-        
-        // Get subfield
-        $sub = $this->subfieldModel->find($subfield_id);
-        if(!$sub) return $this->response->setJSON(['success' => false, 'message' => 'Subfield not found']);
-
-        // Delete existing facilities for this field
-        $stadiumFacilityModel->where('field_id', $subfield_id)->delete();
-
-        // Insert new facilities
-        foreach ($facilityIds as $vid) {
-            $vItem = $vendorItemModel->find($vid);
-            if ($vItem) {
-                $stadiumFacilityModel->insert([
-                    'stadium_id' => $sub['stadium_id'],
-                    'field_id'   => $subfield_id,
-                    'type_id'    => $vItem['facility_type_id'],
-                    'name'       => $vItem['name']
-                ]);
-            }
-        }
-
-        return $this->response->setJSON(['success' => true]);
-    }
-
 }
+

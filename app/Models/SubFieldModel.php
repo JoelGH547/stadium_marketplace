@@ -13,6 +13,7 @@ class SubFieldModel extends Model
         'stadium_id',
         'name',
         'price',
+        'price_daily',
 
         'description',
         'outside_images',

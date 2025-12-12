@@ -9,9 +9,7 @@ class VendorItemModel extends Model
     protected $primaryKey = 'id';
 
     protected $allowedFields = [
-        'vendor_id',
-        'stadium_id',
-        'facility_type_id',
+        'stadium_facility_id',
         'name',
         'description',
         'price',
