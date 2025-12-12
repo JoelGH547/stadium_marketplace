@@ -31,8 +31,20 @@
     <div class="card shadow mb-4 border-0">
         <div class="card-body py-3">
             <form action="<?= base_url('admin/stadiums') ?>" method="get">
-                <div class="d-flex align-items-center">
-                    
+                <div class="d-flex align-items-center gap-2"> 
+                    <div style="width: 200px;">
+                        <select name="category_id" class="form-select form-select-sm bg-light border-0" onchange="this.form.submit()">
+                            <option value="all">-- ทุกประเภทกีฬา --</option>
+                            <?php if (!empty($categories)): ?>
+                                <?php foreach ($categories as $cat): ?>
+                                    <option value="<?= $cat['id'] ?>" <?= (isset($sport_filter) && $sport_filter == $cat['id']) ? 'selected' : '' ?>>
+                                        <?= esc($cat['name']) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </select>
+                    </div>
+
                     <div class="input-group" style="width: 300px;">
                         <input type="text" name="search" class="form-control form-control-sm bg-light border-0 small" 
                                placeholder="ค้นหาชื่อสนาม..." aria-label="Search" 
@@ -40,7 +52,7 @@
                         <button class="btn btn-primary btn-sm" type="submit">
                             <i class="fas fa-search fa-sm"></i>
                         </button>
-                        <?php if(!empty($search)): ?>
+                        <?php if(!empty($search) || (!empty($sport_filter) && $sport_filter != 'all')): ?> 
                             <a href="<?= base_url('admin/stadiums') ?>" class="btn btn-secondary btn-sm" title="ล้างค่า">
                                 <i class="fas fa-times"></i>
                             </a>
@@ -151,13 +163,6 @@
                                 </td>
                             </tr>
                             <?php endforeach; ?>
-                        <?php else: ?>
-                            <tr>
-                                <td colspan="7" class="text-center py-5 text-muted">
-                                    <i class="fas fa-folder-open fa-3x mb-3 d-block text-gray-300"></i>
-                                    ยังไม่มีข้อมูลสนาม
-                                </td>
-                            </tr>
                         <?php endif; ?>
                     </tbody>
                 </table>
@@ -189,13 +194,22 @@
 
 <script>
     $(document).ready(function() {
+
+        // ยังคงบรรทัดนี้ไว้ตามที่ขอ (เผื่อกันเหนียว)
+        $.fn.dataTable.ext.errMode = 'none';
+        
         $('#stadiumTable').DataTable({
-            // [แก้ไข] เพิ่มคำสั่ง searching: false เพื่อซ่อนช่องค้นหาของ DataTables
             "searching": false, 
             "lengthMenu": [ [10, 50, 100, -1], [10, 50, 100, "ทั้งหมด"] ],
             "language": {
                 "lengthMenu": "แสดง _MENU_ รายการ",
-                "zeroRecords": "ไม่พบข้อมูล",
+                
+                // [แก้ไขจุดที่ 2] ใส่ HTML ไอคอนโฟลเดอร์ลงไปตรงนี้ แทนข้อความปกติ
+                "zeroRecords": `<div class="text-center py-5 text-muted">
+                                    <i class="fas fa-folder-open fa-3x mb-3 d-block text-gray-300"></i>
+                                    ไม่พบข้อมูลสนาม
+                                </div>`,
+                
                 "info": "หน้า _PAGE_ จาก _PAGES_",
                 "infoEmpty": "ไม่มีข้อมูล",
                 "infoFiltered": "(กรองจาก _MAX_ รายการ)",
@@ -210,7 +224,6 @@
     });
 
     document.addEventListener('DOMContentLoaded', function() {
-        // --- ส่วน Map และ Delete เหมือนเดิมทุกอย่าง ---
         let map = null;
         let marker = null;
         const mapModal = document.getElementById('mapModal');
