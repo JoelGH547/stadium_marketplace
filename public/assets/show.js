@@ -706,6 +706,11 @@ document.addEventListener('DOMContentLoaded', function () {
     const card = document.getElementById('bookingSummaryCard');
     if (!card) return;
 
+    // If the parent section has pointer-events-none (maintenance mode), disable sticky.
+    if (card.closest('.pointer-events-none')) {
+        return;
+    }
+
     const originalParent = card.parentNode;
     const placeholder = document.createElement('div');
 
