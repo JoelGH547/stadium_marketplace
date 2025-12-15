@@ -414,6 +414,7 @@
     <script src="<?= base_url('assets/show.js') ?>"></script>
     <script src="<?= base_url('assets/field.js') ?>"></script>
 
+    <?= $this->renderSection('scripts') ?>
 </body>
 
 </html>

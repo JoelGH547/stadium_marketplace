@@ -32,6 +32,7 @@ $routes->group('sport', ['filter' => 'customer'], static function ($routes) {
     $routes->get('cart', 'customer\CartController::index');
     $routes->post('cart/add', 'customer\CartController::add');
     $routes->get('checkout', 'customer\CheckoutController::index');
+    $routes->post('checkout/confirm', 'Customer\CheckoutController::confirm');
     $routes->get('profile', 'customer\ProfileController::show');
     $routes->get('profile/edit', 'customer\ProfileController::edit');
     $routes->post('profile/update', 'customer\ProfileController::update');

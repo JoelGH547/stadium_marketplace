@@ -2,9 +2,14 @@
 
 namespace App\Controllers\Customer;
 
+use App\Models\BookingModel;
+use App\Models\StadiumModel;
+use CodeIgniter\I18n\Time;
+
 use App\Controllers\BaseController;
 use App\Models\StadiumFieldModel;
 use App\Models\VendorProductModel;
+use App\Libraries\SlipGenerator;
 
 class CheckoutController extends BaseController
 {
@@ -123,6 +128,187 @@ class CheckoutController extends BaseController
             'subtotal'   => (float) ($cart['subtotal'] ?? 0.0),
             'serviceFee' => (float) ($cart['fee'] ?? 0.0),
             'total'      => (float) ($cart['total'] ?? 0.0),
+        ]);
+    }
+
+    public function confirm()
+    {
+        helper(['url', 'cart']);
+
+        $customerId = session()->get('customer_id');
+        if (! $customerId) {
+            return redirect()->to(site_url('sport/login'));
+        }
+
+        $cart = cart_get();
+        if (! is_array($cart) || empty($cart['stadium_id']) || empty($cart['field_id'])) {
+            return redirect()->to(site_url('sport/checkout'))->with('error', 'ไม่พบข้อมูลการจอง กรุณาลองใหม่อีกครั้ง');
+        }
+
+        $stadiumId = (int) $cart['stadium_id'];
+        $fieldId   = (int) $cart['field_id'];
+
+        // หา vendor_id จาก stadiums
+        $stadiumModel = new StadiumModel();
+        $stadium = $stadiumModel->find($stadiumId);
+        if (! $stadium) {
+            return redirect()->to(site_url('sport/checkout'))->with('error', 'ไม่พบข้อมูลสนาม กรุณาลองใหม่อีกครั้ง');
+        }
+        $vendorId = (int) ($stadium['vendor_id'] ?? 0);
+
+        // รองรับทั้งรายชั่วโมง / รายวัน ตาม booking_type ที่เก็บไว้ใน cart
+        $bookingType = (string) ($cart['booking_type'] ?? 'hourly');
+
+        $startAt = null;
+        $endAt   = null;
+
+        if ($bookingType === 'daily') {
+            $startDate = (string) ($cart['start_date'] ?? '');
+            $endDate   = (string) ($cart['end_date'] ?? '');
+
+            if ($startDate === '' || $endDate === '') {
+                return redirect()->to(site_url('sport/checkout'))->with('error', 'ข้อมูลวันจองไม่ครบ กรุณาลองใหม่อีกครั้ง');
+            }
+
+            $startAt = Time::parse($startDate . ' 00:00:00');
+            $endAt   = Time::parse($endDate . ' 23:59:59');
+        } else {
+            $bookingDate = (string) ($cart['booking_date'] ?? '');
+            $timeStart   = (string) ($cart['time_start'] ?? '');
+            $timeEnd     = (string) ($cart['time_end'] ?? '');
+
+            if ($bookingDate === '' || $timeStart === '' || $timeEnd === '') {
+                return redirect()->to(site_url('sport/checkout'))->with('error', 'ข้อมูลเวลาจองไม่ครบ กรุณาลองใหม่อีกครั้ง');
+            }
+
+            $startAt = Time::parse($bookingDate . ' ' . $timeStart . ':00');
+            $endAt   = Time::parse($bookingDate . ' ' . $timeEnd . ':00');
+        }
+
+        $totalPrice = (float) ($cart['total'] ?? 0);
+
+        // -------------------------
+        // 1) ข้อมูลผู้จอง (จากฟอร์ม checkout)
+        // -------------------------
+        $customerName  = trim((string) $this->request->getPost('customer_name'));
+        $customerPhone = trim((string) $this->request->getPost('customer_phone'));
+        $customerEmail = trim((string) $this->request->getPost('customer_email'));
+        $customerNote  = trim((string) $this->request->getPost('customer_note'));
+
+        if ($customerName === '' || $customerPhone === '') {
+            return redirect()->to(site_url('sport/checkout'))->with('error', 'กรุณากรอกชื่อ-นามสกุล และเบอร์โทรศัพท์');
+        }
+        if ($customerEmail === '') $customerEmail = 'ระบุไม่มี';
+        if ($customerNote === '')  $customerNote  = 'ระบุไม่มี';
+
+        // -------------------------
+        // 2) สร้างสลิปเป็นรูป และบันทึกชื่อไฟล์ลง slip_image
+        // -------------------------
+        $slipFilename = null;
+
+        $lines = [];
+
+        // ส่วนข้อมูลผู้จอง
+        $lines[] = ['type' => 'section', 'text' => 'ข้อมูลผู้จอง'];
+        $lines[] = ['type' => 'kv', 'k' => 'ชื่อ-นามสกุลผู้จอง', 'v' => $customerName];
+        $lines[] = ['type' => 'kv', 'k' => 'เบอร์โทรศัพท์', 'v' => $customerPhone];
+        $lines[] = ['type' => 'kv', 'k' => 'อีเมล', 'v' => $customerEmail];
+        $lines[] = ['type' => 'kv', 'k' => 'หมายเหตุเพิ่มเติม', 'v' => $customerNote];
+        $lines[] = ['type' => 'hr'];
+
+        // ส่วนรายละเอียดการจอง
+        $lines[] = ['type' => 'section', 'text' => 'รายละเอียดการจอง'];
+        $lines[] = ['type' => 'kv', 'k' => 'สนาม', 'v' => (string)($cart['stadium_name'] ?? '-')];
+        $lines[] = ['type' => 'kv', 'k' => 'สนามย่อย', 'v' => (string)($cart['field_name'] ?? '-')];
+
+        if ($bookingType === 'daily') {
+            $startDate = (string) ($cart['start_date'] ?? '');
+            $endDate   = (string) ($cart['end_date'] ?? '');
+            $dateLabel = $startDate !== '' ? date('d/m/Y', strtotime($startDate)) : '-';
+            $endLabel  = $endDate   !== '' ? date('d/m/Y', strtotime($endDate))   : '-';
+            $lines[] = ['type' => 'kv', 'k' => 'วันเวลา', 'v' => 'วันที่ ' . $dateLabel . ' ถึง ' . $endLabel];
+        } else {
+            $bookingDate = (string) ($cart['booking_date'] ?? '');
+            $timeStart   = (string) ($cart['time_start'] ?? '');
+            $timeEnd     = (string) ($cart['time_end'] ?? '');
+            $dateLabel   = $bookingDate !== '' ? date('d/m/Y', strtotime($bookingDate)) : '-';
+            $timeLabel   = ($timeStart && $timeEnd) ? ('เวลา ' . $timeStart . ' - ' . $timeEnd . ' น.') : '-';
+            $lines[] = ['type' => 'kv', 'k' => 'วันเวลา', 'v' => 'วันที่ ' . $dateLabel . '  ' . $timeLabel];
+        }
+
+        $lines[] = ['type' => 'hr'];
+
+        // รายการบริการและไอเทม
+        $lines[] = ['type' => 'section', 'text' => 'รายการบริการและไอเทม'];
+
+        // ค่าจองสนาม (เป็นบรรทัดแรก)
+        $fieldBasePrice = (float) ($cart['field_base_price'] ?? 0.0);
+        if ($bookingType === 'daily') {
+            $days = (int) ($cart['days'] ?? 1);
+            $left = 'ค่าจองสนาม (รายวัน) x' . $days . ' วัน';
+        } else {
+            $hours = (float) ($cart['hours'] ?? 0);
+            // แสดงชั่วโมงเป็นจำนวนเต็มถ้าเป็น .0
+            $hoursLabel = (floor($hours) == $hours) ? (string) ((int)$hours) : (string) $hours;
+            $left = 'ค่าจองสนาม (รายชั่วโมง) x' . $hoursLabel . ' ชม.';
+        }
+        $lines[] = ['type' => 'row', 'left' => $left, 'right' => number_format($fieldBasePrice, 2) . '฿'];
+
+        // ไอเทมเสริม
+        $items = $cart['items'] ?? [];
+        if (is_array($items)) {
+            foreach ($items as $it) {
+                $name = (string)($it['name'] ?? $it['item_name'] ?? 'ไอเทม');
+                $qty  = (int)($it['qty'] ?? 0);
+                $price = (float)($it['price'] ?? 0.0);
+                if ($qty <= 0) continue;
+
+                $unit = (string)($it['unit'] ?? '');
+                $unitLabel = $unit !== '' ? (' ' . $unit) : '';
+                $leftLine  = $name . ' x' . $qty . $unitLabel;
+                $lines[] = ['type' => 'row', 'left' => $leftLine, 'right' => number_format($price * $qty, 2) . '฿'];
+            }
+        }
+
+        $lines[] = ['type' => 'hr'];
+
+        $subtotal = (float) ($cart['subtotal'] ?? 0.0);
+        $fee      = (float) ($cart['fee'] ?? 0.0);
+        $total    = (float) ($cart['total'] ?? 0.0);
+
+        $lines[] = ['type' => 'row', 'left' => 'ยอดรวมบริการและไอเทม', 'right' => number_format($subtotal, 2) . '฿', 'bold' => true];
+        $lines[] = ['type' => 'row', 'left' => 'ค่าบริการแพลตฟอร์ม (5%)', 'right' => number_format($fee, 2) . '฿'];
+        $lines[] = ['type' => 'row', 'left' => 'ยอดชำระทั้งหมด', 'right' => number_format($total, 2) . '฿', 'bold' => true];
+
+        // สร้างสลิป
+        try {
+            $gen = new SlipGenerator();
+            $slipFilename = $gen->generate([
+                'title' => 'สลิปการจองสนาม',
+                'meta'  => 'สร้างเมื่อ ' . date('d/m/Y H:i') . ' น.',
+                'lines' => $lines,
+            ]);
+        } catch (\Throwable $e) {
+            $slipFilename = null;
+        }
+
+        $bookingModel = new BookingModel();
+        $bookingModel->insert([
+            'customer_id'        => (int) $customerId,
+            'stadium_id'         => $stadiumId,
+            'field_id'           => $fieldId,
+            'vendor_id'          => $vendorId ?: null,
+            'booking_start_time' => $startAt ? $startAt->toDateTimeString() : null,
+            'booking_end_time'   => $endAt ? $endAt->toDateTimeString() : null,
+            'total_price'        => $totalPrice,
+            'status'             => 'pending',
+            'slip_image'         => $slipFilename,
+        ]);
+
+        cart_reset();
+
+        return view('public/booking_success', [
+            'redirectUrl' => site_url('sport'),
         ]);
     }
 }

@@ -37,15 +37,16 @@
     <div class="grid gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1.2fr)]">
         <!-- ฟอร์มข้อมูลผู้จอง -->
         <div>
-            <form action="#" method="post"
+            <form action="<?= site_url('sport/checkout/confirm') ?>" method="post" id="checkoutForm"
                 class="space-y-4 rounded-2xl border border-gray-200 bg-white px-4 py-4 shadow-sm">
+                <?= csrf_field() ?>
                 <div>
                     <label for="customerName" class="block text-xs font-medium text-gray-700">
                         ชื่อ-นามสกุล ผู้จอง
                     </label>
                     <input type="text" id="customerName" name="customer_name"
                         class="mt-1 block w-full rounded-xl border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-[var(--primary)] focus:ring-[var(--primary)]"
-                        placeholder="เช่น กิตติภพ ใจดี">
+                        placeholder="เช่น กิตติภพ ใจดี" required>
                 </div>
 
                 <div>
@@ -54,7 +55,7 @@
                     </label>
                     <input type="tel" id="customerPhone" name="customer_phone"
                         class="mt-1 block w-full rounded-xl border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-[var(--primary)] focus:ring-[var(--primary)]"
-                        placeholder="เช่น 08x-xxx-xxxx">
+                        placeholder="เช่น 08x-xxx-xxxx" required maxlength="10">
                 </div>
 
                 <div>
@@ -76,14 +77,10 @@
                 </div>
 
                 <div class="pt-2">
-                    <button type="submit" class="inline-flex w-full items-center justify-center rounded-xl bg-[var(--primary)]
-                         px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-teal-600 transition">
-                        ยืนยันการจอง (ตัวอย่าง)
+                    <button type="submit" id="submitBtn" class="inline-flex w-full items-center justify-center rounded-xl bg-[var(--primary)]
+                         px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-teal-600 transition disabled:opacity-50">
+                        ยืนยันการจอง
                     </button>
-                    <p class="mt-2 text-[11px] text-gray-500">
-                        ปุ่มนี้ยังเป็นตัวอย่างสำหรับหน้า Checkout เท่านั้น
-                        เมื่อเชื่อมระบบจองจริงแล้ว ข้อมูลจะถูกบันทึกและสร้างเลขการจองให้โดยอัตโนมัติ
-                    </p>
                 </div>
             </form>
         </div>
@@ -163,4 +160,43 @@
     </div>
 </section>
 
+<?= $this->endSection() ?>
+
+<?= $this->section('scripts') ?>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const checkoutForm = document.getElementById('checkoutForm');
+        const customerNameInput = document.getElementById('customerName');
+        const customerPhoneInput = document.getElementById('customerPhone');
+        const submitBtn = document.getElementById('submitBtn');
+
+        function validateForm() {
+            const isNameValid = customerNameInput.value.trim() !== '';
+            const isPhoneValid = /^[0-9]{10}$/.test(customerPhoneInput.value);
+            
+            submitBtn.disabled = !isNameValid || !isPhoneValid;
+        }
+
+        function validatePhoneInput(event) {
+            // Allow only numbers
+            event.target.value = event.target.value.replace(/[^0-9]/g, '');
+        }
+
+        customerNameInput.addEventListener('input', validateForm);
+        customerPhoneInput.addEventListener('input', function(e) {
+            validatePhoneInput(e);
+            validateForm();
+        });
+
+        // Initial validation check
+        validateForm();
+
+        checkoutForm.addEventListener('submit', function (event) {
+            if (submitBtn.disabled) {
+                event.preventDefault();
+                alert('กรุณากรอกชื่อและเบอร์โทรศัพท์ให้ถูกต้อง');
+            }
+        });
+    });
+</script>
 <?= $this->endSection() ?>
