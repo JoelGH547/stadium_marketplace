@@ -34,6 +34,13 @@
         </p>
     </header>
 
+    <?php if (session()->getFlashdata('error')): ?>
+        <div class="mb-4 rounded-lg bg-red-100 p-4 text-sm text-red-700" role="alert">
+            <strong class="font-bold">เกิดข้อผิดพลาด!</strong>
+            <span><?= session()->getFlashdata('error') ?></span>
+        </div>
+    <?php endif; ?>
+
     <div class="grid gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1.2fr)]">
         <!-- ฟอร์มข้อมูลผู้จอง -->
         <div>

@@ -12,14 +12,16 @@ class SlipGenerator
     {
         if (! function_exists('imagecreatetruecolor') || ! function_exists('imagettftext')) {
             // ไม่มี GD/FreeType
-            return null;
+            throw new \Exception('The GD extension for PHP is not enabled. Please enable it to generate slip images.');
         }
 
         $publicDir = rtrim(FCPATH, DIRECTORY_SEPARATOR);
         $outDir    = $publicDir . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'slips';
 
         if (! is_dir($outDir)) {
-            @mkdir($outDir, 0775, true);
+            if (! @mkdir($outDir, 0775, true)) {
+                 throw new \Exception('Failed to create slip directory: ' . $outDir);
+            }
         }
 
         // ฟอนต์ไทย (พกไว้ในโปรเจกต์เพื่อให้เครื่องปลายทางใช้ได้แน่นอน)
@@ -29,7 +31,7 @@ class SlipGenerator
             $font = '/usr/share/fonts/truetype/noto/NotoSansThaiUI-Regular.ttf';
         }
         if (! is_file($font)) {
-            return null;
+            throw new \Exception('Font file not found. Please make sure "NotoSansThaiUI-Regular.ttf" exists in "public/assets/fonts/".');
         }
 
         $w = 920;

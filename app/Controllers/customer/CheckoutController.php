@@ -281,6 +281,7 @@ class CheckoutController extends BaseController
         $lines[] = ['type' => 'row', 'left' => 'ยอดชำระทั้งหมด', 'right' => number_format($total, 2) . '฿', 'bold' => true];
 
         // สร้างสลิป
+        $dbSlipPath = null;
         try {
             $gen = new SlipGenerator();
             $slipFilename = $gen->generate([
@@ -288,8 +289,19 @@ class CheckoutController extends BaseController
                 'meta'  => 'สร้างเมื่อ ' . date('d/m/Y H:i') . ' น.',
                 'lines' => $lines,
             ]);
-        } catch (\Throwable $e) {
-            $slipFilename = null;
+
+            if ($slipFilename) {
+                // ถ้าสร้างไฟล์สำเร็จ ให้เตรียม path สำหรับเก็บลง DB
+                $dbSlipPath = 'assets/uploads/slips/' . $slipFilename;
+            } else {
+                // This case should ideally not be reached if SlipGenerator throws exceptions
+                log_message('error', 'SlipGenerator returned null without throwing an exception.');
+                return redirect()->to(site_url('sport/checkout'))->with('error', 'ไม่สามารถสร้างสลิปได้เนื่องจากปัญหาที่ไม่ทราบสาเหตุ');
+            }
+        } catch (\Exception $e) {
+            log_message('error', '[SlipGenerator] ' . $e->getMessage());
+            // ส่ง error กลับไปให้ user เห็นเลย
+            return redirect()->to(site_url('sport/checkout'))->with('error', 'ไม่สามารถสร้างสลิปการจองได้: ' . $e->getMessage());
         }
 
         $bookingModel = new BookingModel();
@@ -302,7 +314,7 @@ class CheckoutController extends BaseController
             'booking_end_time'   => $endAt ? $endAt->toDateTimeString() : null,
             'total_price'        => $totalPrice,
             'status'             => 'pending',
-            'slip_image'         => $slipFilename,
+            'slip_image'         => $dbSlipPath,
         ]);
 
         cart_reset();
