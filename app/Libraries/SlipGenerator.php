@@ -25,13 +25,26 @@ class SlipGenerator
         }
 
         // ฟอนต์ไทย (พกไว้ในโปรเจกต์เพื่อให้เครื่องปลายทางใช้ได้แน่นอน)
-        $font = $publicDir . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'fonts' . DIRECTORY_SEPARATOR . 'NotoSansThaiUI-Regular.ttf';
+        // ใช้ Tahoma เป็นหลัก (รองรับทั้งไทยและอังกฤษ/ตัวเลข)
+        $font = $publicDir . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'fonts' . DIRECTORY_SEPARATOR . 'tahoma.ttf';
+        
+        if (! is_file($font)) {
+            // Fallback: หากไม่มี Tahoma ให้ใช้ NotoSansThaiUI (เดิม)
+            $font = $publicDir . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'fonts' . DIRECTORY_SEPARATOR . 'NotoSansThaiUI-Regular.ttf';
+        }
+
         if (! is_file($font)) {
             // fallback: ให้ลองใช้ฟอนต์ในระบบ (เผื่อมี)
             $font = '/usr/share/fonts/truetype/noto/NotoSansThaiUI-Regular.ttf';
         }
+        
         if (! is_file($font)) {
-            throw new \Exception('Font file not found. Please make sure "NotoSansThaiUI-Regular.ttf" exists in "public/assets/fonts/".');
+            // Last resort: check for local tahoma in windows if dev env
+            $font = 'C:\Windows\Fonts\tahoma.ttf';
+        }
+
+        if (! is_file($font)) {
+            throw new \Exception('Font file not found. Please make sure "tahoma.ttf" or "NotoSansThaiUI-Regular.ttf" exists in "public/assets/fonts/".');
         }
 
         $w = 920;
