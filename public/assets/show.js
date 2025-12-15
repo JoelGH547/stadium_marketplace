@@ -167,6 +167,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const name = addBtn.dataset.itemName;
             const price = parseFloat(addBtn.dataset.itemPrice);
             const itemId = parseInt(addBtn.dataset.itemId);
+            const unit = addBtn.dataset.itemUnit || 'ชิ้น'; // Capture unit
             const image = addBtn.dataset.itemImage || ''; // Capture image
 
             // Create item object
@@ -175,6 +176,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 name: name,
                 price: price,
                 qty: 1,
+                unit: unit, // Store unit
                 image: image,
                 originalBtn: addBtn.cloneNode(true)
             };
@@ -578,6 +580,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         const name = cItem.name || addBtn.dataset.itemName;
                         const price = parseFloat(cItem.price || addBtn.dataset.itemPrice);
                         const qty = parseInt(cItem.qty || 1);
+                        const unit = cItem.unit || addBtn.dataset.itemUnit || 'ชิ้น';
                         const image = cItem.image || addBtn.dataset.itemImage;
 
                         selectedItems.set(parseInt(itemId), {
@@ -585,6 +588,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             name,
                             price,
                             qty: qty,
+                            unit: unit,
                             image: image,
                             originalBtn: addBtn.cloneNode(true)
                         });

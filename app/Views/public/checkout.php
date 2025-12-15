@@ -2,34 +2,12 @@
 
 <?= $this->section('content') ?>
 <?php
-// ใช้ mock data หาก Controller ยังไม่ส่งค่ามา
-$booking  = $booking  ?? [
-  'stadium_name' => 'Sport Arena A',
-  'date_label'   => 'วันเสาร์ที่ 10 พฤษภาคม 2568',
-  'time_label'   => '18:00 - 20:00 น.',
-];
-
-$cartItems = $cartItems ?? [
-  [
-    'item_name' => 'ไม้แบด Yonex Pro',
-    'unit'      => 'ชม.',
-    'qty'       => 1,
-    'price'     => 50,
-  ],
-  [
-    'item_name' => 'นวดนักกีฬา 60 นาที',
-    'unit'      => 'ครั้ง',
-    'qty'       => 1,
-    'price'     => 300,
-  ],
-];
-
-$subtotal = $subtotal ?? array_reduce($cartItems, static function ($carry, $row) {
-  return $carry + (float) $row['price'] * (int) $row['qty'];
-}, 0.0);
-
-$serviceFee = $serviceFee ?? ($subtotal * 0.05);
-$total      = $total ?? ($subtotal + $serviceFee);
+// Data is now passed from CheckoutController
+/** @var array $booking */
+/** @var array $cartItems */
+/** @var float $subtotal */
+/** @var float $serviceFee */
+/** @var float $total */
 ?>
 
 <section class="mx-auto max-w-5xl px-4 pt-4 pb-10 lg:px-0">
@@ -120,14 +98,21 @@ $total      = $total ?? ($subtotal + $serviceFee);
                     <div class="flex gap-2">
                         <dt class="w-20 text-gray-500">สนาม</dt>
                         <dd class="flex-1 font-medium text-gray-900">
-                            <?= esc($booking['stadium_name']) ?>
+                            <?= esc($booking['stadium_name'] ?? '-') ?>
+                        </dd>
+                    </div>
+
+                    <div class="flex gap-2">
+                        <dt class="w-20 text-gray-500">สนามย่อย</dt>
+                        <dd class="flex-1">
+                            <?= esc($booking['field_name'] ?? '-') ?>
                         </dd>
                     </div>
                     <div class="flex gap-2">
                         <dt class="w-20 text-gray-500">วันเวลา</dt>
                         <dd class="flex-1">
-                            <div><?= esc($booking['date_label']) ?></div>
-                            <div><?= esc($booking['time_label']) ?></div>
+                            <div><?= esc($booking['date_label'] ?? '-') ?></div>
+                            <div><?= esc($booking['time_label'] ?? '-') ?></div>
                         </dd>
                     </div>
                 </dl>
@@ -138,17 +123,17 @@ $total      = $total ?? ($subtotal + $serviceFee);
                     </p>
                     <ul class="max-h-40 space-y-1 overflow-auto pr-1 text-xs text-gray-700">
                         <?php foreach ($cartItems as $row): ?>
-                        <li class="flex items-center justify-between gap-2">
-                            <span class="flex-1">
-                                <?= esc($row['item_name']) ?>
-                                <span class="text-[11px] text-gray-500">
-                                    x<?= (int) $row['qty'] ?> <?= esc($row['unit'] ?? '') ?>
+                            <li class="flex items-center justify-between gap-2">
+                                <span class="flex-1">
+                                    <?= esc($row['name'] ?? '-') ?>
+                                    <span class="text-[11px] text-gray-500">
+                                        x<?= (int) ($row['qty'] ?? 0) ?> <?= esc($row['unit'] ?? '') ?>
+                                    </span>
                                 </span>
-                            </span>
-                            <span class="text-right">
-                                <?= number_format((float) $row['price'] * (int) $row['qty'], 2) ?>฿
-                            </span>
-                        </li>
+                                <span class="text-right">
+                                    <?= number_format((float) ($row['price'] ?? 0) * (int) ($row['qty'] ?? 0), 2) ?>฿
+                                </span>
+                            </li>
                         <?php endforeach; ?>
                     </ul>
 

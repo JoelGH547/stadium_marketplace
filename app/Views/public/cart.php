@@ -82,11 +82,6 @@ $items = $cartItems ?? [];
                                         <p class="font-semibold text-gray-900 line-clamp-2">
                                             <?= esc($row['item_name']) ?>
                                         </p>
-                                        <?php if (!empty($row['stadium_name'])): ?>
-                                            <p class="text-[11px] text-gray-500">
-                                                สนาม: <?= esc($row['stadium_name']) ?>
-                                            </p>
-                                        <?php endif; ?>
                                         <p class="mt-1 text-[11px] text-gray-500">
                                             จำนวน: <?= (int) $row['qty'] ?> <?= esc($row['unit'] ?? '') ?>
                                         </p>

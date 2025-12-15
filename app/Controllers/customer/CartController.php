@@ -3,6 +3,8 @@
 namespace App\Controllers\Customer;
 
 use App\Controllers\BaseController;
+use App\Models\StadiumFieldModel;
+use App\Models\VendorProductModel;
 
 class CartController extends BaseController
 {
@@ -65,10 +67,26 @@ class CartController extends BaseController
 
         // ตามด้วยไอเทมเสริม
         if (!empty($cart['items']) && is_array($cart['items'])) {
+            $productModel = new VendorProductModel();
+            $itemIds = array_filter(array_map(static function ($item) {
+                return $item['id'] ?? null;
+            }, $cart['items']));
+
+            $productsById = [];
+            if (!empty($itemIds)) {
+                $products = $productModel->whereIn('id', $itemIds)->findAll();
+                foreach ($products as $product) {
+                    $productsById[$product['id']] = $product;
+                }
+            }
+
             foreach ($cart['items'] as $row) {
                 if (!is_array($row)) {
                     continue;
                 }
+
+                $productId = $row['id'] ?? null;
+                $product = $productId ? ($productsById[$productId] ?? null) : null;
                 
                 // Item image
                 $itemImgPath = $row['image'] ?? $row['item_image'] ?? '';
@@ -77,7 +95,7 @@ class CartController extends BaseController
                 $items[] = [
                     'stadium_name' => $stadiumName,
                     'item_name'    => (string) ($row['name'] ?? $row['item_name'] ?? ''), 
-                    'unit'         => (string) ($row['unit'] ?? 'ชิ้น'),
+                    'unit'         => (string) ($product['unit'] ?? 'ชิ้น'),
                     'qty'          => (int) ($row['qty'] ?? 0),
                     'price'        => (float) ($row['price'] ?? 0),
                     'image'        => $itemImgUrl,
@@ -108,6 +126,15 @@ class CartController extends BaseController
         $fieldId     = $this->request->getPost('field_id'); // New
         $stadiumName = $this->request->getPost('stadium_name');
         $stadiumImage = $this->request->getPost('stadium_image');
+
+        $fieldName = '';
+        if ($fieldId) {
+            $fieldModel = new StadiumFieldModel();
+            $field = $fieldModel->find($fieldId);
+            if ($field) {
+                $fieldName = $field['name'];
+            }
+        }
 
         $bookingType = $this->request->getPost('booking_type') ?: 'hourly';
 
@@ -146,6 +173,7 @@ class CartController extends BaseController
         cart_set_booking([
             'stadium_id'          => $stadiumId,
             'field_id'            => $fieldId, // New
+            'field_name'          => $fieldName,
             'stadium_name'        => $stadiumName,
             'stadium_image'       => $stadiumImage,
             'booking_type'        => $bookingType,
