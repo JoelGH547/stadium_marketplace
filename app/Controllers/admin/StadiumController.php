@@ -318,17 +318,21 @@ class StadiumController extends BaseController
         if (!$stadium) return redirect()->to(base_url('admin/stadiums'))->with('error', 'ไม่พบข้อมูลสนาม');
 
         try {
-            $uploadPath = FCPATH . 'assets/uploads/stadiums/';
-
+            // 1. จำรายชื่อรูปไว้ก่อน
             $outsideImages = json_decode($stadium['outside_images'] ?? '[]', true);
-            foreach ($outsideImages as $img) @unlink($uploadPath . $img);
-
             $insideImages = json_decode($stadium['inside_images'] ?? '[]', true);
+
+            // 2. ลบข้อมูลในฐานข้อมูลก่อน (ถ้าติด Foreign Key จะเด้งไป catch)
+            $this->stadiumModel->delete($id);
+
+            // 3. ถ้าลบ DB ผ่าน ค่อยมาลบไฟล์รูปจริง
+            $uploadPath = FCPATH . 'assets/uploads/stadiums/';
+            foreach ($outsideImages as $img) @unlink($uploadPath . $img);
             foreach ($insideImages as $img) @unlink($uploadPath . $img);
 
-            $this->stadiumModel->delete($id);
             return redirect()->to(base_url('admin/stadiums'))->with('success', 'ลบข้อมูลเรียบร้อยแล้ว');
         } catch (DatabaseException $e) {
+            // 4. ถ้าลบ DB ไม่ผ่าน ไฟล์รูปยังอยู่ครบ ปลอดภัย
             return redirect()->to(base_url('admin/stadiums'))->with('error', 'ไม่สามารถลบได้ (ติดข้อมูลการจองหรืออื่นๆ)');
         }
     }

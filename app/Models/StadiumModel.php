@@ -39,6 +39,18 @@ class StadiumModel extends Model
     protected $createdField  = 'created_at';
     protected $updatedField  = 'updated_at';
 
+    // Callbacks to trim whitespace
+    protected $beforeInsert = ['trimData'];
+    protected $beforeUpdate = ['trimData'];
+
+    protected function trimData(array $data)
+    {
+        if (isset($data['data']['name'])) {
+            $data['data']['name'] = trim($data['data']['name']);
+        }
+        return $data;
+    }
+
     
     public function getStadiumsWithCategory($id = null)
     {

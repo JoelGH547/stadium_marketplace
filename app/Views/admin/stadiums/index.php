@@ -228,13 +228,18 @@
             table.column(2).search(searchInput.val()).draw();
         }
 
+        // Helper to escape regex special characters
+        function escapeRegExp(string) {
+            return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+
         // Bind keyup event
         searchInput.on('keyup', function() {
-             // Use Regex for strict "Starts With" search
-             // ^ means match start of string
              var val = this.value;
              if (val) {
-                 var regex = '^' + val; 
+                 // Use Regex for strict "Starts With" search
+                 var escapedVal = escapeRegExp(val);
+                 var regex = '^' + escapedVal; 
                  table.column(2).search(regex, true, false).draw();
              } else {
                  table.column(2).search('').draw();
