@@ -36,6 +36,7 @@ $routes->group('sport', ['filter' => 'customer'], static function ($routes) {
     $routes->get('profile', 'customer\ProfileController::show');
     $routes->get('profile/edit', 'customer\ProfileController::edit');
     $routes->post('profile/update', 'customer\ProfileController::update');
+    $routes->get('booking_history', 'customer\BookingController::index');
 });
 
 

@@ -102,6 +102,14 @@ $siteName = $siteName ?? 'Stadium Marketplace';
                                     โปรไฟล์ของฉัน
                                 </a>
 
+                                <a href="<?= base_url('sport/booking_history') ?>"
+                                    class="flex items-center gap-3 px-4 py-2 hover:bg-gray-100 transition rounded-md">
+                                    <svg class="w-5 h-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                                    </svg>
+                                    รายการจองของฉัน
+                                </a>
+
                                 <a href="#"
                                     class="flex items-center gap-3 px-4 py-2 hover:bg-gray-100 transition rounded-md">
                                     <svg class="w-5 h-5 text-yellow-500" fill="none" viewBox="0 0 24 24"

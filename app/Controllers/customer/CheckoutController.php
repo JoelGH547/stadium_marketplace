@@ -137,7 +137,7 @@ class CheckoutController extends BaseController
 
         $customerId = session()->get('customer_id');
         if (! $customerId) {
-            return redirect()->to(site_url('sport/login'));
+            return redirect()->to(site_url('customer/login'));
         }
 
         $cart = cart_get();
@@ -256,14 +256,30 @@ class CheckoutController extends BaseController
 
         // ไอเทมเสริม
         $items = $cart['items'] ?? [];
-        if (is_array($items)) {
+        if (is_array($items) && !empty($items)) {
+            // ดึงข้อมูลสินค้าล่าสุดจาก DB เพื่อเอาหน่วยนับ (unit) ที่ถุกต้อง
+            $productModel = new VendorProductModel();
+            $itemIds = array_filter(array_column($items, 'id'));
+            
+            $productsById = [];
+            if (!empty($itemIds)) {
+                $dbProducts = $productModel->whereIn('id', $itemIds)->findAll();
+                foreach ($dbProducts as $p) {
+                    $productsById[$p['id']] = $p;
+                }
+            }
+
             foreach ($items as $it) {
                 $name = (string)($it['name'] ?? $it['item_name'] ?? 'ไอเทม');
                 $qty  = (int)($it['qty'] ?? 0);
                 $price = (float)($it['price'] ?? 0.0);
                 if ($qty <= 0) continue;
 
-                $unit = (string)($it['unit'] ?? '');
+                // พยายามหา unit จาก DB ก่อน ถ้าไม่มีค่อยใช้จาก session
+                $pid = $it['id'] ?? 0;
+                $dbP = $productsById[$pid] ?? null;
+                $unit = (string)($dbP['unit'] ?? $it['unit'] ?? '');
+
                 $unitLabel = $unit !== '' ? (' ' . $unit) : '';
                 $leftLine  = $name . ' x' . $qty . $unitLabel;
                 $lines[] = ['type' => 'row', 'left' => $leftLine, 'right' => number_format($price * $qty, 2) . '฿'];
