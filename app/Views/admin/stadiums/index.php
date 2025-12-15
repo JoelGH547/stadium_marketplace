@@ -46,7 +46,7 @@
                     </div>
 
                     <div class="input-group" style="width: 300px;">
-                        <input type="text" name="search" class="form-control form-control-sm bg-light border-0 small" 
+                        <input type="text" id="searchInput" name="search" class="form-control form-control-sm bg-light border-0 small" 
                                placeholder="ค้นหาชื่อสนาม..." aria-label="Search" 
                                value="<?= esc($search ?? '') ?>">
                         <button class="btn btn-primary btn-sm" type="submit">
@@ -104,7 +104,7 @@
                                     <?php endif; ?>
                                 </td>
 
-                                <td>
+                                <td data-search="<?= esc($stadium['name']) ?>">
                                     <div class="fw-bold text-dark"><?= esc($stadium['name']) ?></div>
                                     <div class="small text-muted text-truncate" style="max-width: 150px;">
                                         <?= esc($stadium['description']) ?>
@@ -198,18 +198,16 @@
         // ยังคงบรรทัดนี้ไว้ตามที่ขอ (เผื่อกันเหนียว)
         $.fn.dataTable.ext.errMode = 'none';
         
-        $('#stadiumTable').DataTable({
-            "searching": false, 
+        var table = $('#stadiumTable').DataTable({
+            "dom": 'lrtip', // Hide default search box (f)
+            "searching": true, 
             "lengthMenu": [ [10, 50, 100, -1], [10, 50, 100, "ทั้งหมด"] ],
             "language": {
                 "lengthMenu": "แสดง _MENU_ รายการ",
-                
-                // [แก้ไขจุดที่ 2] ใส่ HTML ไอคอนโฟลเดอร์ลงไปตรงนี้ แทนข้อความปกติ
                 "zeroRecords": `<div class="text-center py-5 text-muted">
                                     <i class="fas fa-folder-open fa-3x mb-3 d-block text-gray-300"></i>
                                     ไม่พบข้อมูลสนาม
                                 </div>`,
-                
                 "info": "หน้า _PAGE_ จาก _PAGES_",
                 "infoEmpty": "ไม่มีข้อมูล",
                 "infoFiltered": "(กรองจาก _MAX_ รายการ)",
@@ -219,6 +217,35 @@
                     "next": "ถัดไป",
                     "previous": "ก่อนหน้า"
                 }
+            }
+        });
+
+        // Live Search Logic
+        var searchInput = $('#searchInput');
+        
+        // Apply initial search from server-side param if exists
+        if(searchInput.val()) {
+            table.column(2).search(searchInput.val()).draw();
+        }
+
+        // Bind keyup event
+        searchInput.on('keyup', function() {
+             // Use Regex for strict "Starts With" search
+             // ^ means match start of string
+             var val = this.value;
+             if (val) {
+                 var regex = '^' + val; 
+                 table.column(2).search(regex, true, false).draw();
+             } else {
+                 table.column(2).search('').draw();
+             }
+        });
+
+        // Prevent form submission on enter in search box (optional, effectively pure JS search)
+        searchInput.on('keypress', function(e) {
+            if(e.which == 13) {
+                e.preventDefault();
+                return false;
             }
         });
     });

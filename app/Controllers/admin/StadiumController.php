@@ -49,12 +49,7 @@ class StadiumController extends BaseController
             ->join('vendors', 'vendors.id = stadiums.vendor_id', 'left');
 
         // 3. ถ้ามีการค้นหา (Search)
-        if (!empty($search)) {
-            $builder->groupStart()
-                ->like('stadiums.name', $search)
-                ->orLike('vendors.vendor_name', $search)
-                ->groupEnd();
-        }
+
 
         // 4.1 ถ้ามีการกรองประเภทการจอง
         if (!empty($bookingFilter) && $bookingFilter != 'all') {
