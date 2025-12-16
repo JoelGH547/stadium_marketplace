@@ -94,12 +94,22 @@
                         </td>
                         <td class="px-6 py-4 align-top text-center">
                             <?php if (!empty($b['slip_image'])): ?>
-                            <a href="<?= base_url($b['slip_image']) ?>" target="_blank"
-                                class="text-blue-600 hover:text-blue-800 text-xs underline">
-                                ดูสลิป
-                            </a>
+                                <?php
+                                $slipPath = FCPATH . ltrim($b['slip_image'], '/');
+                                if (is_file($slipPath)) :
+                                ?>
+                                    <a href="<?= base_url($b['slip_image']) ?>" target="_blank"
+                                        class="text-blue-600 hover:text-blue-800 text-xs underline">
+                                        ดูสลิป
+                                    </a>
+                                <?php else: ?>
+                                    <button onclick="alert('สลิปหาย กรุณาแจ้งแอดมินหรือเจ้าของสนาม')"
+                                        class="text-red-500 hover:text-red-700 text-xs underline focus:outline-none">
+                                        สลิปหาย
+                                    </button>
+                                <?php endif; ?>
                             <?php else: ?>
-                            <span class="text-gray-400 text-xs">-</span>
+                                <span class="text-gray-400 text-xs">-</span>
                             <?php endif; ?>
                         </td>
                     </tr>

@@ -397,11 +397,11 @@
     </style>
 </head>
 
-<body class="bg-gray-50 text-[var(--text)] antialiased">
+<body class="bg-gray-50 text-[var(--text)] antialiased flex flex-col min-h-screen">
 
     <?= $this->include('layouts/public_header') ?>
 
-    <main>
+    <main class="flex-grow">
         <?= $this->renderSection('content') ?>
     </main>
 

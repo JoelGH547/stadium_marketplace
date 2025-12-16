@@ -17,16 +17,16 @@ $routes->get('/', static function () {
     return redirect()->to('/sport');
 });
 
-$routes->get('customer/login',  'customer\CustomerAuthController::login');
-$routes->post('customer/login', 'customer\CustomerAuthController::processLogin');
-$routes->post('customer/ajax_login', 'customer\CustomerAuthController::ajaxLogin');
-$routes->get('customer/register',  'customer\CustomerAuthController::register');
-$routes->post('customer/register', 'customer\CustomerAuthController::processRegister');
-$routes->get('customer/logout', 'customer\CustomerAuthController::logout');
+$routes->get('customer/login',  'Customer\CustomerAuthController::login');
+$routes->post('customer/login', 'Customer\CustomerAuthController::processLogin');
+$routes->post('customer/ajax_login', 'Customer\CustomerAuthController::ajaxLogin');
+$routes->get('customer/register',  'Customer\CustomerAuthController::register');
+$routes->post('customer/register', 'Customer\CustomerAuthController::processRegister');
+$routes->get('customer/logout', 'Customer\CustomerAuthController::logout');
 
-$routes->get('sport', 'customer\HomeController::index');
-$routes->get('sport/show/(:num)', 'customer\StadiumController::show/$1');
-$routes->get('sport/fields/(:num)', 'customer\StadiumController::fields/$1');
+$routes->get('sport', 'Customer\HomeController::index');
+$routes->get('sport/show/(:num)', 'Customer\StadiumController::show/$1');
+$routes->get('sport/fields/(:num)', 'Customer\StadiumController::fields/$1');
 
 $routes->group('sport', ['filter' => 'customer'], static function ($routes) {
     $routes->get('view', 'customer\StadiumController::view');
