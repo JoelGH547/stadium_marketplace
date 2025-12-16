@@ -178,6 +178,9 @@
                     <label for="outside_image" class="fw-bold">Replace Outside Cover Image (optional)</label>
                     <input type="file" id="outside_image" name="outside_image"
                            class="form-control" accept="image/*">
+                    <div class="mt-2">
+                        <img id="preview_outside" src="#" alt="Preview" class="img-thumbnail d-none" style="max-height: 200px;">
+                    </div>
                 </div>
 
                 <div class="form-group mb-3">
@@ -214,6 +217,7 @@
                     <label for="inside_images" class="fw-bold">Add More Inside Images</label>
                     <input type="file" id="inside_images" name="inside_images[]"
                            class="form-control" accept="image/*" multiple>
+                    <div class="mt-2 d-flex flex-wrap gap-2" id="preview_inside_container"></div>
                 </div>
 
                 <div class="form-group mt-4 text-end">
@@ -268,6 +272,60 @@
             latInput.value = e.latlng.lat.toFixed(6);
             lngInput.value = e.latlng.lng.toFixed(6);
         });
+
+        // --- Image Preview Logic (Same as Create) ---
+        
+        // 1. Outside Image Preview
+        const outsideInput = document.getElementById('outside_image');
+        const outsidePreview = document.getElementById('preview_outside');
+
+        if(outsideInput) {
+            outsideInput.addEventListener('change', function() {
+                const file = this.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        outsidePreview.src = e.target.result;
+                        outsidePreview.classList.remove('d-none');
+                    }
+                    reader.readAsDataURL(file);
+                } else {
+                    outsidePreview.src = '#';
+                    outsidePreview.classList.add('d-none');
+                }
+            });
+        }
+
+        // 2. Inside Images Preview
+        const insideInput = document.getElementById('inside_images');
+        const insideContainer = document.getElementById('preview_inside_container');
+
+        if(insideInput) {
+            insideInput.addEventListener('change', function() {
+                insideContainer.innerHTML = '';
+                const files = this.files;
+                if (files) {
+                    Array.from(files).forEach(file => {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            const imgWrapper = document.createElement('div');
+                            imgWrapper.className = 'position-relative';
+                            
+                            const img = document.createElement('img');
+                            img.src = e.target.result;
+                            img.className = 'img-thumbnail';
+                            img.style.height = '100px';
+                            img.style.width = '100px';
+                            img.style.objectFit = 'cover';
+                            
+                            imgWrapper.appendChild(img);
+                            insideContainer.appendChild(imgWrapper);
+                        }
+                        reader.readAsDataURL(file);
+                    });
+                }
+            });
+        }
     });
 </script>
 
