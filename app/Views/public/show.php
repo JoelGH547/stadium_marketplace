@@ -368,7 +368,7 @@ $isMaintenance = ($stadiumStatus === 'maintenance');
                         สนาม: <?= esc($fieldName) ?>
                     </h3>
                     <p class="mt-1 text-xs text-gray-500">
-                        ดูได้ทั้งรายเดือน/สัปดาห์/วัน • สีเขียว=จองแล้ว • สีอำพัน=รออนุมัติ
+                        ดูได้ทั้งรายเดือน/สัปดาห์/วัน • สีแดง=จองรายวัน • สีเขียว=จองรายชั่วโมง
                     </p>
                 </div>
 
@@ -386,11 +386,11 @@ $isMaintenance = ($stadiumStatus === 'maintenance');
             <!-- Body -->
             <div class="px-6 py-4">
                 <div class="mb-3 flex flex-wrap items-center gap-3 text-xs">
-                    <span class="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 font-semibold text-emerald-700 ring-1 ring-emerald-100">
-                        <span class="h-2 w-2 rounded-full bg-emerald-500"></span> จองแล้ว
+                    <span class="inline-flex items-center gap-2 rounded-full bg-red-50 px-3 py-1 font-semibold text-red-700 ring-1 ring-red-100">
+                        <span class="h-2 w-2 rounded-full bg-red-500"></span> จองรายวัน
                     </span>
-                    <span class="inline-flex items-center gap-2 rounded-full bg-amber-50 px-3 py-1 font-semibold text-amber-700 ring-1 ring-amber-100">
-                        <span class="h-2 w-2 rounded-full bg-amber-500"></span> รออนุมัติ
+                    <span class="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 font-semibold text-emerald-700 ring-1 ring-emerald-100">
+                        <span class="h-2 w-2 rounded-full bg-emerald-500"></span> จองรายชั่วโมง
                     </span>
 
                     <span class="ml-auto text-xs text-gray-500">
@@ -778,8 +778,5 @@ $isMaintenance = ($stadiumStatus === 'maintenance');
   #scheduleCalendar .fc .fc-scrollgrid{border-radius:1rem;overflow:hidden}
   #scheduleCalendar .fc .fc-event{border:0;border-radius:.75rem;padding:2px 6px}
   #scheduleCalendar .fc .fc-timegrid-event{box-shadow:0 8px 18px rgba(15,23,42,.08)}
-  /* status colors */
-  #scheduleCalendar .fc-event.is-confirmed{background:#059669;color:#fff}
-  #scheduleCalendar .fc-event.is-pending{background:#d97706;color:#fff}
 </style>
 <?= $this->endSection() ?>
