@@ -415,6 +415,61 @@
     <script src="<?= base_url('assets/field.js') ?>"></script>
 
     <?= $this->renderSection('scripts') ?>
+    <div id="loginBackdrop" class="hidden fixed inset-0 bg-black/60 z-50"></div>
+
+    <div id="loginPanel" class="hidden fixed inset-0 z-50 flex items-center justify-center px-4">
+        <div class="relative max-w-md w-full bg-white rounded-2xl shadow-2xl border border-gray-100">
+            <!-- ปุ่มปิด -->
+            <button type="button"
+                class="absolute top-3 right-3 inline-flex items-center justify-center h-8 w-8 rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200"
+                data-login-overlay-close>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+
+            <div class="px-6 pt-6 pb-7">
+                <h2 class="text-lg font-semibold text-gray-900 mb-1">
+                    เข้าสู่ระบบเพื่อใช้งานต่อ
+                </h2>
+                <p class="text-sm text-gray-600 mb-4">
+                    คุณต้องเข้าสู่ระบบก่อนจึงจะสามารถดูรายละเอียดสนาม ค้นหาสนาม และดูทั้งหมดได้
+                </p>
+
+                <form action="<?= site_url('customer/login') ?>" method="post" class="space-y-3" autocomplete="off">
+                    <?= csrf_field() ?>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-800 mb-1.5">อีเมล</label>
+                        <input type="email" name="email"
+                            class="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary)]/20"
+                            placeholder="you@example.com" required>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-800 mb-1.5">รหัสผ่าน</label>
+                        <input type="password" name="password"
+                            class="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary)]/20"
+                            placeholder="••••••••" required>
+                    </div>
+
+                    <button type="submit"
+                        class="w-full mt-1 inline-flex items-center justify-center rounded-2xl bg-[var(--primary)] px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-[var(--primary)]/30 hover:shadow-lg hover:shadow-[var(--primary)]/40 transition">
+                        เข้าสู่ระบบ
+                    </button>
+                </form>
+
+                <p class="mt-4 text-center text-xs text-gray-500">
+                    ยังไม่มีบัญชี?
+                    <a href="<?= route_to('customer/register') ?>"
+                        class="font-medium text-[var(--primary)] hover:underline">
+                        สมัครสมาชิก
+                    </a>
+                </p>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>

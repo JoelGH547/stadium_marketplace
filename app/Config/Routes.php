@@ -24,11 +24,11 @@ $routes->post('customer/register', 'customer\CustomerAuthController::processRegi
 $routes->get('customer/logout', 'customer\CustomerAuthController::logout');
 
 $routes->get('sport', 'customer\HomeController::index');
+$routes->get('sport/show/(:num)', 'customer\StadiumController::show/$1');
+$routes->get('sport/fields/(:num)', 'customer\StadiumController::fields/$1');
 
 $routes->group('sport', ['filter' => 'customer'], static function ($routes) {
     $routes->get('view', 'customer\StadiumController::view');
-    $routes->get('show/(:num)', 'customer\StadiumController::show/$1');
-    $routes->get('fields/(:num)', 'customer\StadiumController::fields/$1');
     $routes->get('cart', 'customer\CartController::index');
     $routes->post('cart/add', 'customer\CartController::add');
     $routes->get('checkout', 'customer\CheckoutController::index');

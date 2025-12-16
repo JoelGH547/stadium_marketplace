@@ -792,3 +792,49 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 
+document.addEventListener('DOMContentLoaded', function() {
+    const btnBookNow = document.getElementById('btnBookNow');
+    const bookingSubmitForm = document.getElementById('bookingSubmitForm');
+    const loginPanel = document.getElementById('loginPanel');
+    const loginBackdrop = document.getElementById('loginBackdrop');
+    const loginOverlayClose = document.querySelector('[data-login-overlay-close]');
+
+    // Function to show login panel
+    function showLoginPanel() {
+        if (loginPanel && loginBackdrop) {
+            loginPanel.classList.remove('hidden');
+            loginBackdrop.classList.remove('hidden');
+            document.body.classList.add('overflow-hidden'); // Prevent scrolling
+        }
+    }
+
+    // Function to hide login panel
+    function hideLoginPanel() {
+        if (loginPanel && loginBackdrop) {
+            loginPanel.classList.add('hidden');
+            loginBackdrop.classList.add('hidden');
+            document.body.classList.remove('overflow-hidden');
+        }
+    }
+
+    // Event listener for closing login panel
+    if (loginOverlayClose) {
+        loginOverlayClose.addEventListener('click', hideLoginPanel);
+    }
+    if (loginBackdrop) {
+        loginBackdrop.addEventListener('click', hideLoginPanel);
+    }
+
+    if (btnBookNow) {
+        btnBookNow.addEventListener('click', function(event) {
+            if (!window.IS_LOGGED_IN) {
+                event.preventDefault(); // Prevent form submission
+                showLoginPanel();
+            } else {
+                // If logged in, allow form submission (or trigger it if type="button")
+                // Since it's type="button", we need to manually submit the form
+                bookingSubmitForm.submit();
+            }
+        });
+    }
+});

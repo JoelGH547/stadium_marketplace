@@ -668,6 +668,7 @@ $isMaintenance = ($stadiumStatus === 'maintenance');
 <script>
     // Pass PHP data to JS
     window.cartData = <?= json_encode($cartData ?? null) ?>;
+    window.IS_LOGGED_IN = <?= $isLoggedIn ? 'true' : 'false' ?>;
 </script>
 
 

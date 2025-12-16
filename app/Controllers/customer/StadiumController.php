@@ -193,6 +193,7 @@ class StadiumController extends BaseController
             'addressFull'   => $addressFull,
             'timeLabel'     => $timeLabel,
             'cartData'      => $cartData, // Pass cart data to frontend
+            'isLoggedIn'    => session()->get('customer_logged_in') ?? false, // Pass login status
         ]);
     }
 
