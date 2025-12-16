@@ -8,9 +8,14 @@
 
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h3 class="h3 mb-0 text-gray-800">จัดการสนาม (Stadiums)</h3>
-        <a href="<?= base_url('admin/stadiums/create') ?>" class="btn btn-primary shadow-sm">
-            <i class="fas fa-plus fa-sm text-white-50 me-1"></i> เพิ่มสนามใหม่
-        </a>
+        <div>
+            <button id="btnBulkDelete" class="btn btn-danger shadow-sm me-2 d-none">
+                <i class="fas fa-trash-alt me-1"></i> ลบที่เลือก (<span id="selectedCount">0</span>)
+            </button>
+            <a href="<?= base_url('admin/stadiums/create') ?>" class="btn btn-primary shadow-sm">
+                <i class="fas fa-plus fa-sm text-white-50 me-1"></i> เพิ่มสนามใหม่
+            </a>
+        </div>
     </div>
 
     <?php if(session()->getFlashdata('success')): ?>
@@ -74,6 +79,9 @@
                 <table class="table table-bordered table-hover align-middle" id="stadiumTable" width="100%" cellspacing="0">
                     <thead class="table-light">
                         <tr>
+                            <th width="5%" class="text-center">
+                                <input type="checkbox" id="checkAll" class="form-check-input">
+                            </th>
                             <th width="5%" class="text-center">#</th>
                             <th width="10%">รูปปก</th>
                             <th width="20%">ชื่อสนาม</th>
@@ -88,6 +96,9 @@
                             <?php foreach($stadiums as $stadium): ?>
                             
                             <tr data-type="complex">
+                                <td class="text-center">
+                                    <input type="checkbox" class="form-check-input check-item" value="<?= $stadium['id'] ?>">
+                                </td>
                                 <td class="text-center fw-bold"><?= $stadium['id'] ?></td>
                                 
                                 <td class="text-center">
@@ -306,6 +317,76 @@
                 });
             });
         });
+
+        // --- Bulk Delete Logic ---
+        const checkAll = document.getElementById('checkAll');
+        const btnBulkDelete = document.getElementById('btnBulkDelete');
+        const selectedCountSpan = document.getElementById('selectedCount');
+        
+        // Listen ONLY to checkboxes with class 'check-item'
+        $(document).on('change', '.check-item', function() {
+            updateBulkButton();
+        });
+
+        if(checkAll) {
+            checkAll.addEventListener('change', function() {
+                $('.check-item').prop('checked', this.checked);
+                updateBulkButton();
+            });
+        }
+
+        function updateBulkButton() {
+            const checkedCount = $('.check-item:checked').length;
+            selectedCountSpan.textContent = checkedCount;
+            if (checkedCount > 0) {
+                btnBulkDelete.classList.remove('d-none');
+            } else {
+                btnBulkDelete.classList.add('d-none');
+            }
+        }
+
+        if(btnBulkDelete) {
+            btnBulkDelete.addEventListener('click', function() {
+                const selectedIds = $('.check-item:checked').map(function() {
+                    return $(this).val();
+                }).get();
+
+                if (selectedIds.length === 0) return;
+
+                Swal.fire({
+                    title: 'ยืนยันลบ ' + selectedIds.length + ' รายการ?',
+                    text: "ข้อมูลและรูปภาพทั้งหมดจะหายไปและกู้คืนไม่ได้!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'ใช่, ลบทิ้งเลย!',
+                    cancelButtonText: 'ยกเลิก'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: '<?= base_url("admin/stadiums/deleteBatch") ?>',
+                            type: 'POST',
+                            data: {
+                                ids: selectedIds,
+                                <?= csrf_token() ?>: '<?= csrf_hash() ?>'
+                            },
+                            success: function(response) {
+                                if (response.success) {
+                                    Swal.fire('สำเร็จ!', response.message, 'success')
+                                        .then(() => location.reload());
+                                } else {
+                                    Swal.fire('ผิดพลาด!', response.message, 'error');
+                                }
+                            },
+                            error: function() {
+                                Swal.fire('Error!', 'เกิดข้อผิดพลาดในการเชื่อมต่อ', 'error');
+                            }
+                        });
+                    }
+                });
+            });
+        }
     });
 </script>
 

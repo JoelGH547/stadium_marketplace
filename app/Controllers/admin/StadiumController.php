@@ -337,6 +337,56 @@ class StadiumController extends BaseController
         }
     }
 
+    public function deleteBatch()
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setStatusCode(400)->setJSON(['success' => false, 'message' => 'Invalid request']);
+        }
+
+        $ids = $this->request->getPost('ids');
+        if (empty($ids) || !is_array($ids)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'No items selected']);
+        }
+
+        $successCount = 0;
+        $failCount = 0;
+        $uploadPath = FCPATH . 'assets/uploads/stadiums/';
+
+        foreach ($ids as $id) {
+            $stadium = $this->stadiumModel->find($id);
+            if (!$stadium) continue;
+
+            try {
+                // 1. จำรูป
+                $outsideImages = json_decode($stadium['outside_images'] ?? '[]', true);
+                $insideImages = json_decode($stadium['inside_images'] ?? '[]', true);
+
+                // 2. ลบ DB
+                $this->stadiumModel->delete($id);
+
+                // 3. ลบรูป
+                foreach ($outsideImages as $img) @unlink($uploadPath . $img);
+                foreach ($insideImages as $img)  @unlink($uploadPath . $img);
+
+                $successCount++;
+            } catch (DatabaseException $e) {
+                // ติดจอง
+                $failCount++;
+            }
+        }
+
+        $message = "ลบสำเร็จ $successCount รายการ";
+        if ($failCount > 0) {
+            $message .= " (ลบไม่ได้ $failCount รายการ เนื่องจากข้อมูลถูกใช้งานอยู่)";
+        }
+
+        return $this->response->setJSON([
+            'success' => true,
+            'message' => $message,
+            'reload'  => true
+        ]);
+    }
+
     // =================================================================================
     // 🥅 [PART 2] จัดการพื้นที่สนาม (Fields) + สินค้า (Items)
     // =================================================================================

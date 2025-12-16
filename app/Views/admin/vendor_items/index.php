@@ -121,7 +121,7 @@
                                 </td>
 
                                 <td>
-                                    <a href="<?= base_url('admin/vendor_items/delete/' . $item['id']) ?>" 
+                                    <a href="<?= base_url('admin/vendor-items/delete/' . $item['id']) ?>" 
                                        class="btn btn-outline-danger btn-sm btn-delete">
                                         <i class="fas fa-trash"></i>
                                     </a>
