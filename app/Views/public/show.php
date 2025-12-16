@@ -655,7 +655,7 @@ $isMaintenance = ($stadiumStatus === 'maintenance');
                             <?php endif; ?>
 
                             <div id="stadiumGalleryOverlay"
-                                class="fixed inset-0 z-50 hidden bg-black/70 backdrop-blur-sm flex items-center justify-center px-4"
+                                class="fixed inset-0 z-[90] hidden bg-black/70 backdrop-blur-sm flex items-center justify-center px-4"
                                 role="dialog" aria-modal="true" aria-labelledby="galleryModalTitle">
                                 <div
                                     class="relative max-w-4xl w-full bg-gray-800 rounded-2xl shadow-xl overflow-hidden flex flex-col max-h-[90vh]">
