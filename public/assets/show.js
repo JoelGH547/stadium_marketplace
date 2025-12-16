@@ -643,6 +643,64 @@ document.addEventListener('DOMContentLoaded', function () {
     if (loginBackdrop) {
         loginBackdrop.addEventListener('click', hideLoginPanel);
     }
+
+    const loginForm = document.getElementById('popupLoginForm');
+    const loginErrorDiv = document.getElementById('popupLoginError');
+
+    if (loginForm) {
+        loginForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            loginErrorDiv.classList.add('hidden');
+            loginErrorDiv.textContent = '';
+
+            const submitButton = loginForm.querySelector('button[type="submit"]');
+            const originalButtonText = submitButton.innerHTML;
+            submitButton.disabled = true;
+            submitButton.innerHTML = `
+                <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                กำลังตรวจสอบ...
+            `;
+
+            const formData = new FormData(loginForm);
+            const actionUrl = loginForm.getAttribute('action');
+
+            try {
+                const response = await fetch(actionUrl, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                const data = await response.json();
+
+                const csrfTokenName = loginForm.dataset.csrfName;
+                const csrfField = loginForm.querySelector(`input[name="${csrfTokenName}"]`);
+                if (data.csrf_hash && csrfField) {
+                    csrfField.value = data.csrf_hash;
+                }
+
+                if (data.success) {
+                    window.IS_LOGGED_IN = true;
+                    hideLoginPanel();
+                    document.getElementById('btnBookNow').click();
+                } else {
+                    loginErrorDiv.textContent = data.message || 'เกิดข้อผิดพลาดบางอย่าง';
+                    loginErrorDiv.classList.remove('hidden');
+                }
+            } catch (error) {
+                loginErrorDiv.textContent = 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้';
+                loginErrorDiv.classList.remove('hidden');
+            } finally {
+                submitButton.disabled = false;
+                submitButton.innerHTML = originalButtonText;
+            }
+        });
+    }
     // --- End Login Panel Logic ---
 
 

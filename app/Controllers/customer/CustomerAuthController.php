@@ -65,6 +65,52 @@ class CustomerAuthController extends BaseController
     }
 
     /**
+     * ประมวลผล Login ผ่าน AJAX สำหรับ Popup
+     */
+    public function ajaxLogin()
+    {
+        // ตรวจสอบว่าเป็น AJAX request หรือไม่
+        if (! $this->request->isAJAX()) {
+            return $this->response->setStatusCode(403, 'Forbidden');
+        }
+
+        $email    = trim((string) $this->request->getPost('email'));
+        $password = (string) $this->request->getPost('password');
+
+        $responsePayload = ['csrf_hash' => csrf_hash()];
+
+        if ($email === '' || $password === '') {
+            $responsePayload['success'] = false;
+            $responsePayload['message'] = 'กรุณากรอกอีเมลและรหัสผ่าน';
+
+            return $this->response->setJSON($responsePayload)->setStatusCode(401);
+        }
+
+        $user = $this->customerModel
+            ->where('email', $email)
+            ->first();
+
+        if (! $user || ! password_verify($password, $user['password_hash'] ?? '')) {
+            $responsePayload['success'] = false;
+            $responsePayload['message'] = 'อีเมลหรือรหัสผ่านไม่ถูกต้อง';
+
+            return $this->response->setJSON($responsePayload)->setStatusCode(401);
+        }
+
+        // เซต session ฝั่ง customer
+        session()->set([
+            'customer_id'        => $user['id'],
+            'customer_email'     => $user['email'],
+            'customer_name'      => $user['full_name'] ?? $user['username'] ?? $user['email'],
+            'customer_logged_in' => true,
+        ]);
+
+        $responsePayload['success'] = true;
+
+        return $this->response->setJSON($responsePayload);
+    }
+
+    /**
      * แสดงหน้า Register (GET /register)
      */
     public function register()

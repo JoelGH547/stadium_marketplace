@@ -437,7 +437,7 @@
                     คุณต้องเข้าสู่ระบบก่อนจึงจะสามารถดูรายละเอียดสนาม ค้นหาสนาม และดูทั้งหมดได้
                 </p>
 
-                <form action="<?= site_url('customer/login') ?>" method="post" class="space-y-3" autocomplete="off">
+                <form id="popupLoginForm" action="<?= site_url('customer/ajax_login') ?>" method="post" class="space-y-3" autocomplete="off" data-csrf-name="<?= csrf_token() ?>">
                     <?= csrf_field() ?>
 
                     <div>
@@ -453,6 +453,8 @@
                             class="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary)]/20"
                             placeholder="••••••••" required>
                     </div>
+
+                    <div id="popupLoginError" class="hidden text-red-500 text-sm pt-1 text-center"></div>
 
                     <button type="submit"
                         class="w-full mt-1 inline-flex items-center justify-center rounded-2xl bg-[var(--primary)] px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-[var(--primary)]/30 hover:shadow-lg hover:shadow-[var(--primary)]/40 transition">

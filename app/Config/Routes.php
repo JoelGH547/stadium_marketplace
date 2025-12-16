@@ -19,6 +19,7 @@ $routes->get('/', static function () {
 
 $routes->get('customer/login',  'customer\CustomerAuthController::login');
 $routes->post('customer/login', 'customer\CustomerAuthController::processLogin');
+$routes->post('customer/ajax_login', 'customer\CustomerAuthController::ajaxLogin');
 $routes->get('customer/register',  'customer\CustomerAuthController::register');
 $routes->post('customer/register', 'customer\CustomerAuthController::processRegister');
 $routes->get('customer/logout', 'customer\CustomerAuthController::logout');
