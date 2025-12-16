@@ -616,15 +616,54 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
 
-    // Add click handler for Book Now to validate
+    // --- Login Panel Logic ---
+    const loginPanel = document.getElementById('loginPanel');
+    const loginBackdrop = document.getElementById('loginBackdrop');
+    const loginOverlayClose = document.querySelector('[data-login-overlay-close]');
+
+    function showLoginPanel() {
+        if (loginPanel && loginBackdrop) {
+            loginPanel.classList.remove('hidden');
+            loginBackdrop.classList.remove('hidden');
+            document.body.classList.add('overflow-hidden');
+        }
+    }
+
+    function hideLoginPanel() {
+        if (loginPanel && loginBackdrop) {
+            loginPanel.classList.add('hidden');
+            loginBackdrop.classList.add('hidden');
+            document.body.classList.remove('overflow-hidden');
+        }
+    }
+
+    if (loginOverlayClose) {
+        loginOverlayClose.addEventListener('click', hideLoginPanel);
+    }
+    if (loginBackdrop) {
+        loginBackdrop.addEventListener('click', hideLoginPanel);
+    }
+    // --- End Login Panel Logic ---
+
+
+    // Add click handler for Book Now to validate and handle login
     btnBookNow.addEventListener('click', function (e) {
-        // Double check validity before submit
-        if (btnBookNow.disabled) {
-            e.preventDefault();
-            return;
+        // Always prevent default to handle logic here
+        e.preventDefault();
+
+        // 1. Check if user is logged in
+        if (!window.IS_LOGGED_IN) {
+            showLoginPanel();
+            return; // Stop execution, just show login panel
         }
 
-        // Populate hidden fields one last time
+        // 2. If logged in, check if button is disabled (e.g., no valid time selected)
+        if (btnBookNow.disabled) {
+            return; // Do nothing if button is disabled
+        }
+
+        // 3. If logged in and button is enabled, populate fields and submit
+        const bookingSubmitForm = document.getElementById('bookingSubmitForm');
         const bookingType = bookingTypeSelect.value;
         document.getElementById('bookingTypeField').value = bookingType;
 
@@ -646,8 +685,7 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('bookingDaysField').value = '';
             document.getElementById('bookingPricePerDayField').value = '';
 
-        } else {
-            // Daily
+        } else { // Daily
             const days = getDurationDays();
             const price = getPriceFromElement(infoBoxPriceDayEl);
             const totalField = days * price;
@@ -666,18 +704,18 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('bookingPricePerHourField').value = '';
         }
 
-        // Add selected items to a hidden field as JSON
         const itemsArray = Array.from(selectedItems.values()).map(item => ({
-            id: item.id, // Assuming item.id is available or can be derived
+            id: item.id,
             name: item.name,
             price: item.price,
             qty: item.qty,
-            image: item.image // Ensure image is included
+            image: item.image
         }));
         document.getElementById('bookingItemsField').value = JSON.stringify(itemsArray);
 
-        document.getElementById('bookingSubmitForm').submit();
+        bookingSubmitForm.submit();
     });
+
 
     // Listeners
     bookingTypeSelect.addEventListener('change', updateBookingUI);
@@ -789,52 +827,4 @@ document.addEventListener('DOMContentLoaded', function () {
             setup(); // วัดใหม่เฉพาะตอนที่การ์ดยังไม่ลอย
         }
     });
-});
-
-
-document.addEventListener('DOMContentLoaded', function() {
-    const btnBookNow = document.getElementById('btnBookNow');
-    const bookingSubmitForm = document.getElementById('bookingSubmitForm');
-    const loginPanel = document.getElementById('loginPanel');
-    const loginBackdrop = document.getElementById('loginBackdrop');
-    const loginOverlayClose = document.querySelector('[data-login-overlay-close]');
-
-    // Function to show login panel
-    function showLoginPanel() {
-        if (loginPanel && loginBackdrop) {
-            loginPanel.classList.remove('hidden');
-            loginBackdrop.classList.remove('hidden');
-            document.body.classList.add('overflow-hidden'); // Prevent scrolling
-        }
-    }
-
-    // Function to hide login panel
-    function hideLoginPanel() {
-        if (loginPanel && loginBackdrop) {
-            loginPanel.classList.add('hidden');
-            loginBackdrop.classList.add('hidden');
-            document.body.classList.remove('overflow-hidden');
-        }
-    }
-
-    // Event listener for closing login panel
-    if (loginOverlayClose) {
-        loginOverlayClose.addEventListener('click', hideLoginPanel);
-    }
-    if (loginBackdrop) {
-        loginBackdrop.addEventListener('click', hideLoginPanel);
-    }
-
-    if (btnBookNow) {
-        btnBookNow.addEventListener('click', function(event) {
-            if (!window.IS_LOGGED_IN) {
-                event.preventDefault(); // Prevent form submission
-                showLoginPanel();
-            } else {
-                // If logged in, allow form submission (or trigger it if type="button")
-                // Since it's type="button", we need to manually submit the form
-                bookingSubmitForm.submit();
-            }
-        });
-    }
 });
