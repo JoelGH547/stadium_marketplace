@@ -58,11 +58,21 @@
                                 </td>
 
                                 <td>
-                                    <div><?= date('d/m/Y', strtotime($row['booking_start_time'])) ?></div>
-                                    <small class="text-muted badge bg-light text-dark border">
-                                        <?= date('H:i', strtotime($row['booking_start_time'])) ?> - 
-                                        <?= date('H:i', strtotime($row['booking_end_time'])) ?>
-                                    </small>
+                                    <?php $range = booking_format_range($row['booking_start_time'] ?? null, $row['booking_end_time'] ?? null); ?>
+
+                                    <?php if ($range['type'] === 'daily'): ?>
+                                        <div><?= esc($range['startDate']) ?></div>
+                                        <small class="text-muted badge bg-light text-dark border">
+                                            ถึง <?= esc($range['endDate']) ?> (<?= (int) $range['days'] ?> วัน)
+                                        </small>
+                                    <?php elseif ($range['type'] === 'hourly'): ?>
+                                        <div><?= esc($range['startDate']) ?></div>
+                                        <small class="text-muted badge bg-light text-dark border">
+                                            <?= esc($range['startTime']) ?> - <?= esc($range['endTime']) ?>
+                                        </small>
+                                    <?php else: ?>
+                                        <div><?= esc($range['label']) ?></div>
+                                    <?php endif; ?>
                                 </td>
 
                                 <td class="fw-bold text-success">฿<?= number_format($row['total_price'], 0) ?></td>

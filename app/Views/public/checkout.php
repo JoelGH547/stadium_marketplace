@@ -8,6 +8,8 @@
 /** @var float $subtotal */
 /** @var float $serviceFee */
 /** @var float $total */
+/** @var bool $canSubmit */
+/** @var string|null $bookingConflict */
 ?>
 
 <section class="mx-auto max-w-5xl px-4 pt-4 pb-10 lg:px-0">
@@ -40,6 +42,13 @@
             <span><?= session()->getFlashdata('error') ?></span>
         </div>
     <?php endif; ?>
+    <?php if (isset($canSubmit) && $canSubmit === false && ! empty($bookingConflict)): ?>
+        <div class="mb-4 rounded-lg bg-yellow-50 p-4 text-sm text-yellow-800 border border-yellow-200" role="alert">
+            <strong class="font-bold">ช่วงเวลานี้ไม่ว่าง</strong>
+            <span><?= esc($bookingConflict) ?></span>
+        </div>
+    <?php endif; ?>
+
 
     <div class="grid gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1.2fr)]">
         <!-- ฟอร์มข้อมูลผู้จอง -->
@@ -83,8 +92,9 @@
                         placeholder="เช่น ขอเตรียมลูกแบดเพิ่ม หรือแจ้งจำนวนผู้เล่นโดยประมาณ"></textarea>
                 </div>
 
+                <?php $forceDisabled = (isset($canSubmit) && $canSubmit === false); ?>
                 <div class="pt-2">
-                    <button type="submit" id="submitBtn" class="inline-flex w-full items-center justify-center rounded-xl bg-[var(--primary)]
+                    <button type="submit" id="submitBtn" data-force-disabled="<?= $forceDisabled ? '1' : '0' ?>" <?= $forceDisabled ? 'disabled' : '' ?> class="inline-flex w-full items-center justify-center rounded-xl bg-[var(--primary)]
                          px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-teal-600 transition disabled:opacity-50">
                         ยืนยันการจอง
                     </button>
@@ -181,7 +191,8 @@
             const isNameValid = customerNameInput.value.trim() !== '';
             const isPhoneValid = /^[0-9]{10}$/.test(customerPhoneInput.value);
             
-            submitBtn.disabled = !isNameValid || !isPhoneValid;
+            const forceDisabled = submitBtn.dataset.forceDisabled === '1';
+            submitBtn.disabled = forceDisabled || !isNameValid || !isPhoneValid;
         }
 
         function validatePhoneInput(event) {
@@ -199,6 +210,13 @@
         validateForm();
 
         checkoutForm.addEventListener('submit', function (event) {
+            const forceDisabled = submitBtn.dataset.forceDisabled === '1';
+            if (forceDisabled) {
+                event.preventDefault();
+                alert('ช่วงวัน/เวลานี้ถูกจองแล้ว กรุณาเลือกวัน/เวลาใหม่');
+                return;
+            }
+
             if (submitBtn.disabled) {
                 event.preventDefault();
                 alert('กรุณากรอกชื่อและเบอร์โทรศัพท์ให้ถูกต้อง');

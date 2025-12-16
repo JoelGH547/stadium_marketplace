@@ -1,6 +1,7 @@
 <?= $this->extend('layouts/public') ?>
 
 <?= $this->section('content') ?>
+<?php helper('booking_format'); ?>
 <div class="container mx-auto px-4 py-8 max-w-7xl">
 
     <div class="flex items-center gap-3 mb-6">
@@ -41,33 +42,28 @@
                             <?= esc($b['vendor_name'] ?? '-') ?>
                         </td>
                         <td class="px-6 py-4 align-top whitespace-nowrap">
-                            <?php 
-                                        $start = strtotime($b['booking_start_time']);
-                                        $end   = strtotime($b['booking_end_time']);
-                                        
-                                        // ตรวจสอบว่าเป็นรายวันหรือรายชั่วโมง
-                                        // ถ้ารายวัน production code อาจดูจาก field type หรือระยะเวลา
-                                        // แต่เบื้องต้นโชว์ start - end
-                                        
-                                        $dateStart = date('d/m/Y', $start);
-                                        $dateEnd   = date('d/m/Y', $end);
-                                        
-                                        $timeStart = date('H:i', $start);
-                                        $timeEnd   = date('H:i', $end);
-                                    ?>
+                            <?php
+                                $range = booking_format_range($b['booking_start_time'] ?? null, $b['booking_end_time'] ?? null);
+                            ?>
 
-                            <?php if ($dateStart === $dateEnd): ?>
-                            <!-- วันเดียวกัน (รายชั่วโมง) -->
-                            <div>
-                                <span class="block text-gray-900"><?= $dateStart ?></span>
-                                <span class="text-xs text-gray-500"><?= $timeStart ?> - <?= $timeEnd ?> น.</span>
-                            </div>
+                            <?php if ($range['type'] === 'daily'): ?>
+                                <div>
+                                    <span class="block text-gray-900"><?= esc($range['startDate']) ?></span>
+                                    <?php if ((int) $range['days'] > 1): ?>
+                                        <span class="text-xs text-gray-500">ถึง <?= esc($range['endDate']) ?> (<?= (int) $range['days'] ?> วัน)</span>
+                                    <?php else: ?>
+                                        <span class="text-xs text-gray-500">(1 วัน)</span>
+                                    <?php endif; ?>
+                                </div>
+                            <?php elseif ($range['type'] === 'hourly'): ?>
+                                <div>
+                                    <span class="block text-gray-900"><?= esc($range['startDate']) ?></span>
+                                    <span class="text-xs text-gray-500"><?= esc($range['startTime']) ?> - <?= esc($range['endTime']) ?> น.</span>
+                                </div>
                             <?php else: ?>
-                            <!-- ข้ามวัน (รายวัน) -->
-                            <div>
-                                <span class="block text-gray-900"><?= $dateStart ?></span>
-                                <span class="text-xs text-gray-500">ถึง <?= $dateEnd ?></span>
-                            </div>
+                                <div>
+                                    <span class="block text-gray-900"><?= esc($range['label']) ?></span>
+                                </div>
                             <?php endif; ?>
                         </td>
                         <td class="px-6 py-4 align-top text-right font-medium text-gray-900">

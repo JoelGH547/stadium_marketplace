@@ -121,6 +121,48 @@ class CheckoutController extends BaseController
             }
         }
 
+        // 3.5 ตรวจสอบว่าช่วงวัน/เวลานี้ถูกจองไปแล้วหรือไม่ (เพื่อ UX หน้า checkout)
+        $canSubmit = true;
+        $bookingConflict = null;
+
+        try {
+            $fieldIdForCheck = (int) ($cart['field_id'] ?? 0);
+            if ($fieldIdForCheck > 0) {
+                $bookingModel = new BookingModel();
+
+                $bookingType = (string) ($cart['booking_type'] ?? 'hourly');
+                $startStr = null;
+                $endStr   = null;
+
+                if ($bookingType === 'daily') {
+                    $sd = (string) ($cart['start_date'] ?? '');
+                    $ed = (string) ($cart['end_date'] ?? '');
+                    if ($sd !== '' && $ed !== '') {
+                        $startStr = $sd . ' 00:00:00';
+                        $endStr   = (new \DateTime($ed . ' 00:00:00'))->modify('+1 day')->format('Y-m-d H:i:s');
+                    }
+                } else {
+                    $bd = (string) ($cart['booking_date'] ?? '');
+                    $ts = (string) ($cart['time_start'] ?? '');
+                    $te = (string) ($cart['time_end'] ?? '');
+                    if ($bd !== '' && $ts !== '' && $te !== '') {
+                        $startStr = $bd . ' ' . (strlen($ts) === 5 ? ($ts . ':00') : $ts);
+                        $endStr   = $bd . ' ' . (strlen($te) === 5 ? ($te . ':00') : $te);
+                    }
+                }
+
+                if ($startStr && $endStr) {
+                    $conflicts = $bookingModel->getScheduleForField($fieldIdForCheck, $startStr, $endStr);
+                    if (! empty($conflicts)) {
+                        $canSubmit = false;
+                        $bookingConflict = 'ช่วงวัน/เวลานี้ถูกจองแล้ว กรุณาเลือกวัน/เวลาใหม่';
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            // หากพลาดเรื่อง parse เวลา ให้ปล่อยผ่าน (แต่ฝั่ง confirm จะเช็คซ้ำอีกที)
+        }
+
         // 4. ส่งข้อมูลไปที่ View
         return view('public/checkout', [
             'booking'    => $bookingDetails,
@@ -128,6 +170,8 @@ class CheckoutController extends BaseController
             'subtotal'   => (float) ($cart['subtotal'] ?? 0.0),
             'serviceFee' => (float) ($cart['fee'] ?? 0.0),
             'total'      => (float) ($cart['total'] ?? 0.0),
+            'canSubmit'  => $canSubmit,
+            'bookingConflict' => $bookingConflict,
         ]);
     }
 
@@ -171,7 +215,7 @@ class CheckoutController extends BaseController
             }
 
             $startAt = Time::parse($startDate . ' 00:00:00');
-            $endAt   = Time::parse($endDate . ' 23:59:59');
+            $endAt   = Time::parse($endDate . ' 00:00:00')->addDays(1);
         } else {
             $bookingDate = (string) ($cart['booking_date'] ?? '');
             $timeStart   = (string) ($cart['time_start'] ?? '');
@@ -260,7 +304,7 @@ class CheckoutController extends BaseController
             // ดึงข้อมูลสินค้าล่าสุดจาก DB เพื่อเอาหน่วยนับ (unit) ที่ถุกต้อง
             $productModel = new VendorProductModel();
             $itemIds = array_filter(array_column($items, 'id'));
-            
+
             $productsById = [];
             if (!empty($itemIds)) {
                 $dbProducts = $productModel->whereIn('id', $itemIds)->findAll();
@@ -320,7 +364,25 @@ class CheckoutController extends BaseController
             return redirect()->to(site_url('sport/checkout'))->with('error', 'ไม่สามารถสร้างสลิปการจองได้: ' . $e->getMessage());
         }
 
+        // ตรวจซ้ำอีกครั้งก่อนบันทึก (กันชนพร้อมกัน)
         $bookingModel = new BookingModel();
+        $conflicts2 = $bookingModel->getScheduleForField(
+            $fieldId,
+            $startAt->toDateTimeString(),
+            $endAt->toDateTimeString()
+        );
+
+        if (! empty($conflicts2)) {
+            // ถ้าสร้างสลิปไปแล้ว ให้ลบไฟล์ทิ้งกันค้าง
+            if (! empty($dbSlipPath) && defined('FCPATH')) {
+                $full = rtrim(FCPATH, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $dbSlipPath);
+                if (is_file($full)) {
+                    @unlink($full);
+                }
+            }
+            return redirect()->to(site_url('sport/checkout'))->with('error', 'มีผู้จองช่วงวัน/เวลานี้ไปก่อนแล้ว กรุณาเลือกวัน/เวลาใหม่');
+        }
+
         $bookingModel->insert([
             'customer_id'        => (int) $customerId,
             'stadium_id'         => $stadiumId,
