@@ -52,4 +52,19 @@ class BookingModel extends Model
                     ->orderBy('bookings.created_at', 'DESC')
                     ->findAll();
     }
+/**
+ * ดึงรายการจองของสนามย่อยในช่วงเวลา (สำหรับปฏิทิน)
+ * เงื่อนไข overlap:
+ *   booking_start_time < $end AND booking_end_time > $start
+ */
+public function getScheduleForField(int $fieldId, string $start, string $end): array
+{
+    return $this->select('id, booking_start_time, booking_end_time, status')
+                ->where('field_id', $fieldId)
+                ->whereIn('status', ['pending', 'confirmed'])
+                ->where('booking_start_time <', $end)
+                ->where('booking_end_time >', $start)
+                ->orderBy('booking_start_time', 'ASC')
+                ->findAll();
+}
 }

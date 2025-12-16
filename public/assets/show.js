@@ -885,4 +885,167 @@ document.addEventListener('DOMContentLoaded', function () {
             setup(); // วัดใหม่เฉพาะตอนที่การ์ดยังไม่ลอย
         }
     });
+// ======================================================
+// Schedule Modal (FullCalendar) — ใช้กับปุ่ม "Show Schedule"
+// ======================================================
+// ======================================================
+// Schedule Modal (FullCalendar) — robust init (works even if modal opened by other scripts)
+// ======================================================
+(function setupScheduleModal(){
+    const overlay = document.getElementById('scheduleOverlay');
+    const calEl = document.getElementById('scheduleCalendar');
+    const loadingEl = document.getElementById('scheduleLoading');
+    const errorEl = document.getElementById('scheduleError');
+
+    // optional open button (may exist)
+    const btn = document.getElementById('btnShowSchedule');
+
+    if (!overlay || !calEl) return;
+
+    const closeBtns = overlay.querySelectorAll('[data-schedule-close]');
+    let calendar = null;
+
+    function setLoading(on){
+        if (!loadingEl) return;
+        loadingEl.classList.toggle('hidden', !on);
+    }
+
+    function setError(msg){
+        if (!errorEl) return;
+        if (!msg){
+            errorEl.classList.add('hidden');
+            errorEl.textContent = '';
+            return;
+        }
+        errorEl.textContent = msg;
+        errorEl.classList.remove('hidden');
+    }
+
+    function getScheduleUrl(){
+        const url = (overlay.dataset.scheduleUrl || (btn && btn.dataset.scheduleUrl) || '').trim();
+        return url;
+    }
+
+    function ensureCalendar(){
+        try{
+            const scheduleUrl = getScheduleUrl();
+            if (!scheduleUrl) {
+                setError('ไม่พบ URL สำหรับดึงข้อมูลตารางการจอง');
+                return;
+            }
+
+            if (!window.FullCalendar || !window.FullCalendar.Calendar) {
+                setError('FullCalendar ยังโหลดไม่สำเร็จ (ตรวจสอบว่า CDN โหลดได้)');
+                return;
+            }
+
+            // These exist in the main show.js scope on this page:
+            // openTimeRaw / closeTimeRaw come from #stadiumDetail dataset
+            const slotMin = (typeof openTimeRaw === 'string' && openTimeRaw ? (openTimeRaw + ':00') : '06:00:00');
+            const slotMax = (typeof closeTimeRaw === 'string' && closeTimeRaw ? (closeTimeRaw + ':00') : '24:00:00');
+
+            if (!calendar) {
+                setError(null);
+
+                calendar = new FullCalendar.Calendar(calEl, {
+                    initialView: 'timeGridWeek',
+                    height: 540,
+                    expandRows: true,
+                    nowIndicator: true,
+                    locale: 'th',
+                    timeZone: 'local',
+                    firstDay: 1,
+
+                    headerToolbar: {
+                        left: 'prev,next today',
+                        center: 'title',
+                        right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'
+                    },
+
+                    allDaySlot: false,
+                    slotMinTime: slotMin,
+                    slotMaxTime: slotMax,
+                    slotDuration: '01:00:00',
+                    scrollTime: slotMin,
+
+                    eventTimeFormat: { hour: '2-digit', minute: '2-digit', hour12: false },
+
+                    events: function(fetchInfo, successCallback, failureCallback){
+                        setLoading(true);
+                        setError(null);
+
+                        const qs = new URLSearchParams({
+                            start: fetchInfo.startStr,
+                            end: fetchInfo.endStr
+                        });
+
+                        fetch(scheduleUrl + '?' + qs.toString(), { headers: { 'Accept': 'application/json' } })
+                            .then(r => r.ok ? r.json() : Promise.reject(r))
+                            .then(data => {
+                                setLoading(false);
+                                successCallback(Array.isArray(data) ? data : []);
+                            })
+                            .catch(err => {
+                                console.error('Schedule fetch failed', err);
+                                setLoading(false);
+                                setError('โหลดตารางไม่สำเร็จ (ตรวจสอบ route/API)');
+                                failureCallback();
+                            });
+                    },
+
+                    loading: function(isLoading){ setLoading(isLoading); },
+
+                    eventDidMount: function(info){
+                        const status = info.event.extendedProps?.status || '';
+                        const start = info.event.start ? info.event.start.toLocaleString() : '';
+                        const end = info.event.end ? info.event.end.toLocaleString() : '';
+                        info.el.title = (info.event.title || 'การจอง') + (status ? (' ('+status+')') : '') + '\n' + start + ' - ' + end;
+                    }
+                });
+
+                calendar.render();
+            } else {
+                calendar.refetchEvents();
+            }
+
+            // In modal: update sizing after it becomes visible
+            if (typeof calendar.updateSize === 'function') {
+                setTimeout(() => calendar.updateSize(), 30);
+            }
+        } catch (e){
+            console.error('Schedule calendar init error', e);
+            setLoading(false);
+            setError('เกิดข้อผิดพลาดในการแสดงปฏิทิน (ดู Console)');
+        }
+    }
+
+    function open(){
+        overlay.classList.remove('hidden');
+        overlay.setAttribute('aria-hidden', 'false');
+        document.documentElement.classList.add('overflow-hidden');
+        document.body.classList.add('overflow-hidden');
+        requestAnimationFrame(ensureCalendar);
+    }
+
+    function close(){
+        overlay.classList.add('hidden');
+        overlay.setAttribute('aria-hidden', 'true');
+        document.documentElement.classList.remove('overflow-hidden');
+        document.body.classList.remove('overflow-hidden');
+    }
+
+    if (btn){
+        btn.addEventListener('click', open);
+    }
+    closeBtns.forEach(el => el.addEventListener('click', close));
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+
+    // Robust: if some other script opens the modal, we still init calendar
+    const mo = new MutationObserver(() => {
+        if (!overlay.classList.contains('hidden')) {
+            requestAnimationFrame(ensureCalendar);
+        }
+    });
+    mo.observe(overlay, { attributes: true, attributeFilter: ['class'] });
+})();;
 });

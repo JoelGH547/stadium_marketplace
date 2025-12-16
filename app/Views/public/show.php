@@ -84,6 +84,10 @@ foreach ($fieldsRaw as $f) {
 // If no fields exist, $initialField will be null.
 $initialField = $fieldsRaw[0] ?? null;
 
+// ใช้สำหรับปุ่ม/โมดัล "ตารางการจอง"
+$fieldId   = $initialField ? (int) ($initialField['id'] ?? 0) : 0;
+$fieldName = (string) ($initialField['name'] ?? '');
+
 // ✅ ตรวจสอบสถานะของ "สนามย่อย" ที่กำลังดูอยู่
 $stadiumStatus = strtolower((string) ($stadium['status'] ?? 'active'));
 $isMaintenance = ($stadiumStatus === 'maintenance');
@@ -337,16 +341,74 @@ $isMaintenance = ($stadiumStatus === 'maintenance');
                                 <?php if ($hasAnyField): ?>
                                     <!-- "Show schedule" button -->
                                     <button type="button" id="btnShowSchedule"
-                                        data-base-url="<?= base_url('customer/booking/stadium/' . $stadium['id']) ?>"
-                                        class="inline-flex items-center justify-center rounded-full
-                                                                   bg-[var(--primary)] px-8 py-3 text-sm sm:text-base
-                                                                   font-semibold text-white shadow-md shadow-[var(--primary)]/40
-                                                                   hover:bg-teal-600 focus-visible:outline-none
-                                                                   focus-visible:ring-2 focus-visible:ring-[var(--primary)]
-                                                                   focus-visible:ring-offset-2 focus-visible:ring-offset-white">
-                                        <span class="mr-2 text-lg">📅</span>
-                                        <span>show schedule</span>
-                                    </button>
+    data-schedule-url="<?= site_url('sport/schedule/field/' . $fieldId) ?>"
+    data-field-id="<?= (int) $fieldId ?>"
+    data-field-name="<?= esc($fieldName) ?>"
+    class="inline-flex items-center justify-center rounded-full
+               bg-[var(--primary)] px-8 py-3 text-sm sm:text-base
+               font-semibold text-white shadow-md shadow-[var(--primary)]/40
+               hover:bg-teal-600 focus-visible:outline-none
+               focus-visible:ring-2 focus-visible:ring-[var(--primary)]
+               focus-visible:ring-offset-2 focus-visible:ring-offset-white">
+    <span class="mr-2 text-lg">📅</span>
+    <span>Show Schedule</span>
+</button>
+
+<!-- Schedule Modal (Overlay) -->
+<div id="scheduleOverlay" class="fixed inset-0 z-[70] hidden" aria-hidden="true" data-schedule-url="<?= site_url('sport/schedule/field/' . $fieldId) ?>" data-field-name="<?= esc($fieldName) ?>">
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" data-schedule-close></div>
+
+    <div class="relative mx-auto flex h-full max-w-6xl items-center justify-center p-4">
+        <div id="schedulePanel" class="w-full overflow-hidden rounded-3xl bg-white shadow-2xl ring-1 ring-black/5">
+            <!-- Header -->
+            <div class="flex items-start justify-between gap-4 border-b border-gray-100 px-6 py-5">
+                <div class="min-w-0">
+                    <p class="text-xs font-semibold text-gray-500">📅 ตารางการจอง</p>
+                    <h3 class="mt-1 text-lg sm:text-xl font-bold text-gray-900 truncate">
+                        สนาม: <?= esc($fieldName) ?>
+                    </h3>
+                    <p class="mt-1 text-xs text-gray-500">
+                        ดูได้ทั้งรายเดือน/สัปดาห์/วัน • สีเขียว=จองแล้ว • สีอำพัน=รออนุมัติ
+                    </p>
+                </div>
+
+                <button type="button"
+                    class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200"
+                    data-schedule-close>
+                    <span class="sr-only">ปิด</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Body -->
+            <div class="px-6 py-4">
+                <div class="mb-3 flex flex-wrap items-center gap-3 text-xs">
+                    <span class="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 font-semibold text-emerald-700 ring-1 ring-emerald-100">
+                        <span class="h-2 w-2 rounded-full bg-emerald-500"></span> จองแล้ว
+                    </span>
+                    <span class="inline-flex items-center gap-2 rounded-full bg-amber-50 px-3 py-1 font-semibold text-amber-700 ring-1 ring-amber-100">
+                        <span class="h-2 w-2 rounded-full bg-amber-500"></span> รออนุมัติ
+                    </span>
+
+                    <span class="ml-auto text-xs text-gray-500">
+                        เวลาเปิด-ปิด: <?= esc($timeLabel) ?>
+                    </span>
+                </div>
+
+                <div id="scheduleError" class="hidden mb-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"></div>
+
+                <div id="scheduleLoading" class="hidden mb-3 rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700">
+                    กำลังโหลดตารางการจอง...
+                </div>
+
+                <div id="scheduleCalendar" class="min-h-[520px] rounded-2xl border border-gray-200 bg-white p-2 sm:p-3"></div>
+            </div>
+        </div>
+    </div>
+</div>
 
                                     <!-- Booking form -->
                                     <form id="bookingSubmitForm" action="<?= site_url('sport/cart/add') ?>"
@@ -672,4 +734,25 @@ $isMaintenance = ($stadiumStatus === 'maintenance');
 </script>
 
 
+<?= $this->endSection() ?>
+
+<?= $this->section('scripts') ?>
+<!-- FullCalendar (CSS) : จำเป็น ไม่งั้นปฏิทินจะ render แล้วดูว่าง/พัง layout -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.19/index.global.min.css">
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.19/index.global.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.19/locales-all.global.min.js"></script>
+<style>
+  /* FullCalendar small tweaks to match your rounded/mint theme */
+  #scheduleCalendar .fc .fc-toolbar-title{font-size:1rem;font-weight:800;color:#0f172a}
+  #scheduleCalendar .fc .fc-button{border-radius:9999px;padding:.35rem .75rem;font-size:.8rem}
+  #scheduleCalendar .fc .fc-button-primary{background:var(--primary);border-color:var(--primary)}
+  #scheduleCalendar .fc .fc-button-primary:not(:disabled).fc-button-active,
+  #scheduleCalendar .fc .fc-button-primary:not(:disabled):active{filter:brightness(.92)}
+  #scheduleCalendar .fc .fc-scrollgrid{border-radius:1rem;overflow:hidden}
+  #scheduleCalendar .fc .fc-event{border:0;border-radius:.75rem;padding:2px 6px}
+  #scheduleCalendar .fc .fc-timegrid-event{box-shadow:0 8px 18px rgba(15,23,42,.08)}
+  /* status colors */
+  #scheduleCalendar .fc-event.is-confirmed{background:#059669;color:#fff}
+  #scheduleCalendar .fc-event.is-pending{background:#d97706;color:#fff}
+</style>
 <?= $this->endSection() ?>
