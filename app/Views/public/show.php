@@ -404,7 +404,34 @@ $isMaintenance = ($stadiumStatus === 'maintenance');
                     กำลังโหลดตารางการจอง...
                 </div>
 
-                <div id="scheduleCalendar" class="min-h-[520px] rounded-2xl border border-gray-200 bg-white p-2 sm:p-3"></div>
+                <style>
+  /* FullCalendar: highlight "today" (default is pale yellow) -> light green */
+  .fc .fc-day-today {
+    background: rgba(34, 197, 94, 0.12) !important; /* green-500 @ 12% */
+  }
+  /* Also cover timeGrid column */
+  .fc .fc-timegrid-col.fc-day-today,
+  .fc .fc-timegrid-col.fc-day-today .fc-timegrid-col-frame {
+    background: rgba(34, 197, 94, 0.10) !important;
+  }
+
+  /* Event styles */
+    .fc .fc-event.booking-hourly {
+    background: rgba(34, 197, 94, 0.95) !important; /* green-500 */
+    border-color: rgba(34, 197, 94, 0.95) !important;
+    color: #ffffff !important;
+  }
+    .fc .fc-event.booking-daily {
+    background: rgba(239, 68, 68, 0.95) !important; /* red-500 */
+    border-color: rgba(239, 68, 68, 0.95) !important;
+    color: #ffffff !important;
+  }
+  /* Make event text a bit cleaner in month view */
+  .fc .fc-event .fc-event-title {
+    font-weight: 600;
+  }
+</style>
+<div id="scheduleCalendar" class="min-h-[520px] rounded-2xl border border-gray-200 bg-white p-2 sm:p-3"></div>
             </div>
         </div>
     </div>
