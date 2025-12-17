@@ -38,10 +38,30 @@ class BookingController extends BaseController
         }
         unset($b);
 
-        // 3. Prepare data for View
+        // 3. Separate bookings by status
+        $pending   = [];
+        $confirmed = [];
+        $cancelled = [];
+
+        foreach ($bookings as $b) {
+            $status = strtolower((string) ($b['status'] ?? ''));
+            if ($status === 'approved' || $status === 'paid' || $status === 'confirmed') {
+                $confirmed[] = $b;
+            } elseif ($status === 'cancelled' || $status === 'rejected') {
+                $cancelled[] = $b;
+            } else {
+                // pending or others
+                $pending[] = $b;
+            }
+        }
+
+        // 4. Prepare data for View
         $data = [
-            'bookings' => $bookings,
-            'title'    => 'รายการจองของฉัน'
+            'bookings'  => $bookings, // Keep original for reference if needed, or remove if unused
+            'pending'   => $pending,
+            'confirmed' => $confirmed,
+            'cancelled' => $cancelled,
+            'title'     => 'รายการจองของฉัน'
         ];
 
         return view('public/booking_status', $data);
