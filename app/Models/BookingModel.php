@@ -41,17 +41,18 @@ class BookingModel extends Model
     }
 
     public function getBookingsByCustomerId($customerId)
-    {
-        return $this->select('bookings.*, 
-                              stadiums.name as stadium_name, 
-                              stadium_fields.name as field_name, 
-                                                        vendors.vendor_name')                    ->join('stadiums', 'stadiums.id = bookings.stadium_id', 'left')
-                    ->join('stadium_fields', 'stadium_fields.id = bookings.field_id', 'left')
-                    ->join('vendors', 'vendors.id = bookings.vendor_id', 'left')
-                    ->where('bookings.customer_id', $customerId)
-                    ->orderBy('bookings.created_at', 'DESC')
-                    ->findAll();
-    }
+{
+    return $this->select('bookings.*, 
+                          stadiums.name as stadium_name, 
+                          stadium_fields.name as field_name, 
+                          vendors.vendor_name')
+                ->join('stadiums', 'stadiums.id = bookings.stadium_id', 'left')
+                ->join('stadium_fields', 'stadium_fields.id = bookings.field_id', 'left')
+                ->join('vendors', 'vendors.id = bookings.vendor_id', 'left')
+                ->where('bookings.customer_id', $customerId)
+                ->orderBy('bookings.created_at', 'DESC')
+                ->findAll();
+}
 /**
  * ดึงรายการจองของสนามย่อยในช่วงเวลา (สำหรับปฏิทิน)
  * เงื่อนไข overlap:

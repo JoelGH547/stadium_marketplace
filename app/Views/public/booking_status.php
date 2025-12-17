@@ -8,6 +8,18 @@
         <h1 class="text-2xl font-bold text-gray-800">รายการจองของฉัน</h1>
     </div>
 
+<?php if (session()->getFlashdata('success')): ?>
+    <div class="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-800 text-sm">
+        <?= esc(session()->getFlashdata('success')) ?>
+    </div>
+<?php endif; ?>
+
+<?php if (session()->getFlashdata('error')): ?>
+    <div class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-red-700 text-sm">
+        <?= esc(session()->getFlashdata('error')) ?>
+    </div>
+<?php endif; ?>
+
     <div class="bg-white shadow-sm border border-gray-200 rounded-xl overflow-hidden">
 
         <?php if (empty($bookings)): ?>
@@ -29,6 +41,7 @@
                         <th class="px-6 py-4 font-semibold text-right">ยอดชำระ</th>
                         <th class="px-6 py-4 font-semibold text-center">สถานะ</th>
                         <th class="px-6 py-4 font-semibold text-center">หลักฐาน</th>
+                        <th class="px-6 py-4 font-semibold text-center">รีวิว</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
@@ -104,6 +117,18 @@
                                         สลิปหาย
                                     </button>
                                 <?php endif; ?>
+                            <?php else: ?>
+                                <span class="text-gray-400 text-xs">-</span>
+                            <?php endif; ?>
+                        </td>
+                        <td class="px-6 py-4 align-top text-center">
+                            <?php if (!empty($b['can_review'])): ?>
+                                <a href="<?= site_url('sport/reviews/create/' . (int) $b['id']) ?>"
+                                   class="inline-flex items-center justify-center rounded-lg bg-[var(--primary)] px-3 py-2 text-xs font-semibold text-white hover:opacity-90">
+                                    เขียนรีวิว
+                                </a>
+                            <?php elseif (!empty($b['reviewed'])): ?>
+                                <span class="text-emerald-700 text-xs font-semibold">รีวิวแล้ว</span>
                             <?php else: ?>
                                 <span class="text-gray-400 text-xs">-</span>
                             <?php endif; ?>

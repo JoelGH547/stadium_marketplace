@@ -6,6 +6,7 @@ use App\Controllers\BaseController;
 use App\Models\StadiumModel;
 use App\Models\CategoryModel;
 use App\Models\StadiumFieldModel;
+use App\Models\StadiumReviewModel;
 // use App\Models\VendorItemModel; // Unused
 
 class StadiumController extends BaseController
@@ -324,12 +325,19 @@ class StadiumController extends BaseController
             ];
         }
 
+        // รีวิว + คะแนนดาว (รวมของสนามย่อยทั้งหมดเข้าที่สนามหลัก)
+        $reviewModel   = new StadiumReviewModel();
+        $ratingSummary = $reviewModel->getSummaryForStadium((int) $id);
+        $latestReviews = $reviewModel->getLatestForStadium((int) $id, 8);
+
         // ส่งตัวแปรให้ field.php (dummy ใน view จะไม่ถูกใช้เพราะเราส่งค่ามาแล้ว)
         return view('public/field', [
             'stadium'   => $stadium,
             'stadiumId' => (int) $id,
             'fields'    => $fields,
             'stadiumImages'  => $stadiumImages,
+            'ratingSummary' => $ratingSummary,
+            'latestReviews' => $latestReviews,
         ]);
     }
 }

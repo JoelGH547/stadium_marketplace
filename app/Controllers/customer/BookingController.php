@@ -4,6 +4,7 @@ namespace App\Controllers\customer;
 
 use App\Controllers\BaseController;
 use App\Models\BookingModel;
+use App\Models\StadiumReviewModel;
 
 class BookingController extends BaseController
 {
@@ -19,6 +20,23 @@ class BookingController extends BaseController
         // 2. Fetch Bookings
         $bookingModel = new BookingModel();
         $bookings = $bookingModel->getBookingsByCustomerId($customerId);
+
+        // 2.1 Review eligibility (confirmed + ended + not reviewed)
+        $reviewModel = new StadiumReviewModel();
+        $bookingIds  = array_map(static fn($x) => (int)($x['id'] ?? 0), $bookings);
+        $existing    = $reviewModel->getExistingByBookingIds($bookingIds);
+        $nowTs       = time();
+
+        foreach ($bookings as &$b) {
+            $bid      = (int) ($b['id'] ?? 0);
+            $status   = strtolower((string) ($b['status'] ?? ''));
+            $endTs    = strtotime((string) ($b['booking_end_time'] ?? ''));
+            $reviewed = isset($existing[$bid]);
+            $can      = (!$reviewed && $status === 'confirmed' && $endTs && $endTs < $nowTs);
+            $b['reviewed']   = $reviewed;
+            $b['can_review'] = $can;
+        }
+        unset($b);
 
         // 3. Prepare data for View
         $data = [

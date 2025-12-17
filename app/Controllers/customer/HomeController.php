@@ -6,6 +6,7 @@ use App\Controllers\BaseController;
 use App\Models\StadiumModel;
 use App\Models\CategoryModel;
 use App\Models\StadiumFieldModel;
+use App\Models\StadiumReviewModel;
 
 class HomeController extends BaseController
 {
@@ -20,6 +21,11 @@ class HomeController extends BaseController
             ->orderBy('stadiums.id', 'DESC')
             ->findAll();
 
+        // Rating summary (รวมคะแนนของสนามย่อยทั้งหมดเป็นของสนามหลัก)
+        $reviewModel = new StadiumReviewModel();
+        $stadiumIds  = array_map(static fn($x) => (int)($x['id'] ?? 0), $venueCards);
+        $summaries   = $reviewModel->getSummariesForStadiumIds($stadiumIds);
+
         foreach ($venueCards as &$v) {
             // ชื่อประเภท
             $catName  = (string)($v['category_name']  ?? '');
@@ -28,6 +34,11 @@ class HomeController extends BaseController
             // ถ้าไม่มี emoji ใน DB ให้ fallback เป็นไอคอนสนามทั่วไป
             $v['type_icon']  = $catEmoji !== '' ? $catEmoji : '🏟️';
             $v['type_label'] = $catName  !== '' ? $catName  : 'สนามกีฬา';
+
+            // ดาวรีวิว (ถ้าไม่มีรีวิวให้เป็น 0)
+            $sid = (int) ($v['id'] ?? 0);
+            $avg = $summaries[$sid]['avg'] ?? 0.0;
+            $v['rating'] = $avg > 0 ? round((float)$avg, 1) : 0.0;
 
             // รูปปกด้านนอกใบแรกจาก JSON
             $cover = null;

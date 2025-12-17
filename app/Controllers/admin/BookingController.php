@@ -9,6 +9,7 @@ class BookingController extends BaseController
 
     public function __construct()
     {
+        helper('booking_format');
         $this->bookingModel = new BookingModel();
     }
 
