@@ -39,7 +39,7 @@ $routes->group('sport', ['filter' => 'customer'], static function ($routes) {
     $routes->get('profile/edit', 'customer\ProfileController::edit');
     $routes->post('profile/update', 'customer\ProfileController::update');
     $routes->get('booking_history', 'customer\BookingController::index');
-    $routes->get('reviews/create/(:num)', 'customer\ReviewController::create/$1');
+
     $routes->post('reviews/store', 'customer\ReviewController::store');
 });
 

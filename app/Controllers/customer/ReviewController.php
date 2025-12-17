@@ -8,54 +8,7 @@ use App\Models\StadiumReviewModel;
 
 class ReviewController extends BaseController
 {
-    public function create($bookingId = null)
-    {
-        if (! session()->get('customer_logged_in')) {
-            return redirect()->to(site_url('customer/login'));
-        }
 
-        $customerId = (int) session()->get('customer_id');
-        $bookingId  = (int) ($bookingId ?? 0);
-
-        if ($bookingId <= 0) {
-            return redirect()->to(site_url('sport/booking_history'))
-                ->with('error', 'ไม่พบรายการจองที่ต้องการรีวิว');
-        }
-
-        $bookingModel = new BookingModel();
-        $booking = $bookingModel->where('id', $bookingId)
-            ->where('customer_id', $customerId)
-            ->first();
-
-        if (! $booking) {
-            return redirect()->to(site_url('sport/booking_history'))
-                ->with('error', 'ไม่พบรายการจอง หรือคุณไม่มีสิทธิ์เข้าถึง');
-        }
-
-        $status = strtolower((string) ($booking['status'] ?? ''));
-        $endTs  = strtotime((string) ($booking['booking_end_time'] ?? ''));
-
-        if ($status !== 'confirmed') {
-            return redirect()->to(site_url('sport/booking_history'))
-                ->with('error', 'รีวิวได้เฉพาะรายการที่ยืนยันแล้วเท่านั้น');
-        }
-
-        if (! $endTs || $endTs >= time()) {
-            return redirect()->to(site_url('sport/booking_history'))
-                ->with('error', 'ยังไม่สามารถรีวิวได้ (ต้องหมดช่วงเวลาที่จองก่อน)');
-        }
-
-        $reviewModel = new StadiumReviewModel();
-        if ($reviewModel->existsForBooking($bookingId)) {
-            return redirect()->to(site_url('sport/booking_history'))
-                ->with('error', 'รายการนี้ถูกรีวิวไปแล้ว');
-        }
-
-        return view('public/review_create', [
-            'title'   => 'เขียนรีวิว',
-            'booking' => $booking,
-        ]);
-    }
 
     public function store()
     {

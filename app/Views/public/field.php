@@ -320,60 +320,85 @@
                     <p class="text-gray-500 text-sm">ยังไม่ระบุพิกัดแผนที่</p>
                 <?php endif; ?>
             </div>
+
+            <!-- Separator -->
+            <div class="border-t border-gray-200"></div>
+
+            <!-- Section 4: Reviews -->
+            <div class="p-4 sm:p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h2 class="text-lg sm:text-xl font-semibold text-gray-900">รีวิวจากผู้ใช้</h2>
+                        <p class="text-sm text-gray-500">รวมรีวิวจากทุกสนามย่อยของสนามนี้</p>
+                    </div>
+                    <div class="text-sm text-gray-700 bg-gray-50 px-3 py-1 rounded-lg border border-gray-100">
+                        ⭐ <span class="font-semibold"><?= $reviewCount > 0 ? number_format($avgRating, 1) : '0.0' ?></span>
+                        <span class="text-gray-500">(<?= $reviewCount ?>)</span>
+                    </div>
+                </div>
+
+                <?php if (empty($latestReviews)): ?>
+                    <div class="text-center py-8 text-gray-500 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                        ยังไม่มีรีวิวในตอนนี้
+                    </div>
+                <?php else: ?>
+                    <div class="grid grid-cols-1 gap-4">
+                        <?php
+                        $thaiMonths = [
+                            1 => 'มกราคม', 2 => 'กุมภาพันธ์', 3 => 'มีนาคม', 4 => 'เมษายน',
+                            5 => 'พฤษภาคม', 6 => 'มิถุนายน', 7 => 'กรกฎาคม', 8 => 'สิงหาคม',
+                            9 => 'กันยายน', 10 => 'ตุลาคม', 11 => 'พฤศจิกายน', 12 => 'ธันวาคม'
+                        ];
+                        ?>
+                        <?php foreach ($latestReviews as $r): ?>
+                            <div class="rounded-xl border border-gray-200 p-4 hover:border-gray-300 transition bg-white shadow-sm shadow-gray-100">
+                                <div class="flex items-start justify-between gap-3 mb-2">
+                                    <div class="flex items-center gap-2">
+                                        <div class="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center text-xs font-semibold text-gray-600">
+                                            <?= mb_substr($r['customer_name'] ?? 'U', 0, 1) ?>
+                                        </div>
+                                        <div>
+                                            <div class="text-sm font-semibold text-gray-900">
+                                                <?= esc($r['customer_name'] ?? 'ผู้ใช้') ?>
+                                            </div>
+                                            <div class="text-xs text-gray-500">
+                                                <?php
+                                                $ts = strtotime($r['created_at'] ?? 'now');
+                                                $day = date('d', $ts);
+                                                $month = $thaiMonths[(int)date('n', $ts)];
+                                                $year = date('Y', $ts); // Requested 2025 format
+                                                echo "รีวิวเมื่อ $day $month $year";
+                                                ?>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-1 bg-yellow-50 px-1.5 py-0.5 rounded text-xs font-medium text-yellow-700 border border-yellow-100">
+                                        <span>⭐</span>
+                                        <span><?= (int)($r['rating'] ?? 0) ?></span>
+                                    </div>
+                                </div>
+                                <?php if (!empty($r['comment'])): ?>
+                                    <div class="text-sm text-gray-600 whitespace-pre-line leading-relaxed">
+                                        <?= esc($r['comment']) ?>
+                                    </div>
+                                <?php else: ?>
+                                    <div class="text-xs text-gray-400 italic">ไม่มีข้อความรีวิว</div>
+                                <?php endif; ?>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                    <?php if (count($latestReviews) >= 4): ?>
+                         <div class="mt-4 text-center">
+                            <button type="button" class="text-sm text-[var(--primary)] hover:underline font-medium">ดูรีวิวทั้งหมด</button>
+                         </div>
+                    <?php endif; ?>
+                <?php endif; ?>
+            </div>
         </div> <!-- End of Unified Card -->
     </div>
 </section>
 
 
 <!-- REVIEWS -->
-<section class="bg-white pb-10">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="mt-6 rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
-            <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between gap-4">
-                <div>
-                    <h2 class="text-lg font-semibold text-gray-900">รีวิวจากผู้ใช้</h2>
-                    <p class="text-sm text-gray-500">รวมรีวิวจากทุกสนามย่อยของสนามนี้</p>
-                </div>
-                <div class="text-sm text-gray-700">
-                    ⭐ <span class="font-semibold"><?= $reviewCount > 0 ? number_format($avgRating, 1) : '0.0' ?></span>
-                    <span class="text-gray-500">(<?= $reviewCount ?>)</span>
-                </div>
-            </div>
 
-            <div class="p-5">
-                <?php if (empty($latestReviews)): ?>
-                    <div class="text-sm text-gray-500">ยังไม่มีรีวิวในตอนนี้</div>
-                <?php else: ?>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <?php foreach ($latestReviews as $r): ?>
-                            <div class="rounded-xl border border-gray-200 p-4">
-                                <div class="flex items-start justify-between gap-3">
-                                    <div>
-                                        <div class="text-sm font-semibold text-gray-900">
-                                            <?= esc($r['customer_name'] ?? 'ผู้ใช้') ?>
-                                        </div>
-                                        <div class="text-xs text-gray-500">
-                                            <?= esc($r['created_at'] ?? '') ?>
-                                        </div>
-                                    </div>
-                                    <div class="text-sm text-gray-900">
-                                        <?php $stars = (int)($r['rating'] ?? 0); ?>
-                                        <span class="font-semibold"><?= $stars ?></span><span class="text-gray-500">/5</span>
-                                    </div>
-                                </div>
-                                <?php if (!empty($r['comment'])): ?>
-                                    <div class="mt-3 text-sm text-gray-700 whitespace-pre-line">
-                                        <?= esc($r['comment']) ?>
-                                    </div>
-                                <?php else: ?>
-                                    <div class="mt-3 text-sm text-gray-400">ไม่มีข้อความรีวิว</div>
-                                <?php endif; ?>
-                            </div>
-                        <?php endforeach; ?>
-                    </div>
-                <?php endif; ?>
-            </div>
-        </div>
-    </div>
-</section>
 <?= $this->endSection() ?>
