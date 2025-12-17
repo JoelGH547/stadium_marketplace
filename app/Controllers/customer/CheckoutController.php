@@ -346,7 +346,7 @@ class CheckoutController extends BaseController
             $gen = new SlipGenerator();
             $slipFilename = $gen->generate([
                 'title' => 'สลิปการจองสนาม',
-                'meta'  => 'สร้างเมื่อ ' . date('d/m/Y H:i') . ' น.',
+                'meta'  => 'สร้างเมื่อ ' . Time::now('Asia/Bangkok')->format('d/m/Y H:i') . ' น.',
                 'lines' => $lines,
             ]);
 

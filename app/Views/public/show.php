@@ -114,7 +114,7 @@ $isMaintenance = ($stadiumStatus === 'maintenance');
     </section>
 
     <section class="relative mx-auto max-w-5xl">
-        <article id="stadiumDetail" class="bg-white shadow-sm sm:shadow-md sm:rounded-3xl overflow-hidden"
+        <article id="stadiumDetail" class="bg-white shadow-sm sm:shadow-md sm:rounded-3xl"
             data-lat="<?= esc($lat ?? '') ?>" data-lng="<?= esc($lng ?? '') ?>" data-price-hour="<?= esc($price) ?>"
             data-open-time="<?= esc($openTimeRaw) ?>" data-close-time="<?= esc($closeTimeRaw) ?>">
 
