@@ -38,8 +38,10 @@ class HomeController extends BaseController
 
             // ดาวรีวิว (ถ้าไม่มีรีวิวให้เป็น 0)
             $sid = (int) ($v['id'] ?? 0);
-            $avg = $summaries[$sid]['avg'] ?? 0.0;
-            $v['rating'] = $avg > 0 ? round((float)$avg, 1) : 0.0;
+            $summary = $summaries[$sid] ?? ['avg' => 0.0, 'count' => 0];
+            $v['avg_rating'] = round((float)$summary['avg'], 1);
+            $v['review_count'] = (int)$summary['count'];
+            $v['rating'] = $v['avg_rating']; // Keep for nearby section
 
             // รูปปกด้านนอกใบแรกจาก JSON
             $cover = null;

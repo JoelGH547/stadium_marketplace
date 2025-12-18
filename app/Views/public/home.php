@@ -502,80 +502,87 @@
                             <?php if (empty($venueCards)): ?>
                             <div class="text-center py-10 text-gray-500">ไม่พบสนามที่ค้นหา</div>
                             <?php else: ?>
-                            <?php
-                                $limitedVenues = array_slice($venueCards, 0, 20);
-                                foreach ($limitedVenues as $idx => $v):
-                                    $id = $v['id'] ?? null;
-                                    $detailUrl = $id ? site_url('sport/fields/' . $id) : site_url('sport/fields');
-                                    $name = $v['name'] ?? 'ชื่อสนาม';
-                                    $address = trim(($v['address'] ?? '') . ' ' . ($v['province'] ?? ''));
-                                    $address = $address !== '' ? $address : 'ยังไม่ระบุที่อยู่';
-                                    $open = $v['open_time'] ?? null;
-                                    $close = $v['close_time'] ?? null;
-                                    if ($open !== null && strlen($open) >= 5) $open = substr($open, 0, 5);
-                                    if ($close !== null && strlen($close) >= 5) $close = substr($close, 0, 5);
-                                    $timeLabel = ($open && $close) ? ($open . ' – ' . $close) : 'ยังไม่ระบุเวลา';
-                                    $typeIcon = $v['type_icon'] ?? '🏟️';
-                                    $typeLabel = $v['type_label'] ?? ($v['category_name'] ?? 'สนามกีฬา');
-                                    $cover = $v['cover_image'] ?? null;
-                                    $coverUrl = $cover ? base_url('assets/uploads/stadiums/' . $cover) : base_url('assets/uploads/home/1.jpg');
-                                    $lat = $v['lat'] ?? null;
-                                    $lng = $v['lng'] ?? null;
-                                ?>
-                            <li class="relative bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-200 overflow-hidden"
-                                data-distance-km="" data-rating="0" data-popular="<?= 100 - (int) $idx ?>"
-                                <?php if (!empty($lat) && !empty($lng)): ?> data-lat="<?= esc($lat) ?>"
-                                data-lng="<?= esc($lng) ?>" <?php endif; ?>>
-
-                                <div class="flex flex-col md:flex-row">
-                                    <!-- Image Section -->
-                                    <div class="relative w-full md:w-80 h-56 flex-shrink-0">
-                                        <?php if (!empty($detailUrl)): ?>
-                                        <a href="<?= esc($detailUrl) ?>" class="absolute inset-0 z-[5]">
-                                            <span class="sr-only">ดูรายละเอียดสนาม</span>
-                                        </a>
-                                        <?php endif; ?>
-                                        <img src="<?= esc($coverUrl) ?>" class="w-full h-full object-cover"
-                                            alt="<?= esc($name) ?>">
-
-                                        <!-- Sport Type Badge -->
-                                        <div
-                                            class="absolute bottom-3 left-3 z-[6] inline-flex items-center gap-1 text-[var(--primary)] text-xs font-semibold px-3 py-1.5 rounded-full bg-white/90 shadow-md backdrop-blur-sm border border-white/60">
-                                            <span class="text-sm"><?= esc($typeIcon) ?></span>
-                                            <span><?= esc($typeLabel) ?></span>
-                                        </div>
-
-                                        <!-- Heart Icon (Favorite) -->
-                                        <?php $sid = (int) ($v['id'] ?? 0);
-                                                $isFav = !empty($favoriteMap[$sid]); ?>
-                                        <button type="button"
-                                            class="js-fav-toggle absolute top-3 right-3 z-[6] w-10 h-10 rounded-full flex items-center justify-center shadow-md transition-colors <?= $isFav ? 'bg-rose-50 ring-2 ring-rose-200' : 'bg-white/90 hover:bg-white' ?>"
-                                            data-stadium-id="<?= $sid ?>" data-favorited="<?= $isFav ? '1' : '0' ?>"
-                                            title="<?= $isFav ? 'ลบออกจากรายการโปรด' : 'เพิ่มในรายการโปรด' ?>">
-                                            <svg xmlns="http://www.w3.org/2000/svg"
-                                                class="h-5 w-5 transition <?= $isFav ? 'text-rose-600' : 'text-gray-600' ?>"
-                                                fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                                            </svg>
-                                        </button>
-                                    </div>
-                                    <!-- Content Section -->
-                                    <div class="flex-1 p-5 md:p-6">
-                                        <h3 class="text-xl font-bold text-gray-900 mb-2 line-clamp-2">
-                                            <?= esc($name) ?>
-                                        </h3>
-
-                                        <div class="flex items-center gap-2 text-sm text-gray-600 mb-3">
-                                            <span class="inline-flex items-center gap-1">
-                                                ⭐ <strong class="text-gray-900">0.0</strong>
-                                            </span>
-                                            <span class="text-gray-400">•</span>
-                                            <span class="inline-flex items-center gap-1 dist-badge">
-                                                📍 <span>-- km.</span>
-                                            </span>
-                                        </div>
-                                        <p class="text-sm text-gray-600 mb-3 line-clamp-1">
+                                                            <?php
+                                                            $limitedVenues = array_slice($venueCards, 0, 20);
+                                                            foreach ($limitedVenues as $idx => $v):
+                                                                $id = $v['id'] ?? null;
+                                                                $detailUrl = $id ? site_url('sport/fields/' . $id) : site_url('sport/fields');
+                                                                $name = $v['name'] ?? 'ชื่อสนาม';
+                                                                $address = trim(($v['address'] ?? '') . ' ' . ($v['province'] ?? ''));
+                                                                $address = $address !== '' ? $address : 'ยังไม่ระบุที่อยู่';
+                                                                $open = $v['open_time'] ?? null;
+                                                                $close = $v['close_time'] ?? null;
+                                                                if ($open !== null && strlen($open) >= 5) $open = substr($open, 0, 5);
+                                                                if ($close !== null && strlen($close) >= 5) $close = substr($close, 0, 5);
+                                                                $timeLabel = ($open && $close) ? ($open . ' – ' . $close) : 'ยังไม่ระบุเวลา';
+                                                                $typeIcon = $v['type_icon'] ?? '🏟️';
+                                                                $typeLabel = $v['type_label'] ?? ($v['category_name'] ?? 'สนามกีฬา');
+                                                                $cover = $v['cover_image'] ?? null;
+                                                                $coverUrl = $cover ? base_url('assets/uploads/stadiums/' . $cover) : base_url('assets/uploads/home/1.jpg');
+                                                                $lat = $v['lat'] ?? null;
+                                                                $lng = $v['lng'] ?? null;
+                                                                
+                                                                $avgRating   = (float) ($v['avg_rating'] ?? $v['rating'] ?? 0);
+                                                                $reviewCount = (int) ($v['review_count'] ?? 0);
+                                                            ?>
+                                                        <li class="relative bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-200 overflow-hidden"
+                                                            data-distance-km="" data-rating="<?= $avgRating ?>" data-popular="<?= 100 - (int) $idx ?>"
+                                                            <?php if (!empty($lat) && !empty($lng)): ?> data-lat="<?= esc($lat) ?>"
+                                                            data-lng="<?= esc($lng) ?>" <?php endif; ?>>
+                            
+                                                            <div class="flex flex-col md:flex-row">
+                                                                <!-- Image Section -->
+                                                                <div class="relative w-full md:w-80 h-56 flex-shrink-0">
+                                                                    <?php if (!empty($detailUrl)): ?>
+                                                                    <a href="<?= esc($detailUrl) ?>" class="absolute inset-0 z-[5]">
+                                                                        <span class="sr-only">ดูรายละเอียดสนาม</span>
+                                                                    </a>
+                                                                    <?php endif; ?>
+                                                                    <img src="<?= esc($coverUrl) ?>" class="w-full h-full object-cover"
+                                                                        alt="<?= esc($name) ?>">
+                            
+                                                                    <!-- Sport Type Badge -->
+                                                                    <div
+                                                                        class="absolute bottom-3 left-3 z-[6] inline-flex items-center gap-1 text-[var(--primary)] text-xs font-semibold px-3 py-1.5 rounded-full bg-white/90 shadow-md backdrop-blur-sm border border-white/60">
+                                                                        <span class="text-sm"><?= esc($typeIcon) ?></span>
+                                                                        <span><?= esc($typeLabel) ?></span>
+                                                                    </div>
+                            
+                                                                    <!-- Heart Icon (Favorite) -->
+                                                                    <?php $sid = (int) ($v['id'] ?? 0);
+                                                                            $isFav = !empty($favoriteMap[$sid]); ?>
+                                                                    <button type="button"
+                                                                        class="js-fav-toggle absolute top-3 right-3 z-[6] w-10 h-10 rounded-full flex items-center justify-center shadow-md transition-colors <?= $isFav ? 'bg-rose-50 ring-2 ring-rose-200' : 'bg-white/90 hover:bg-white' ?>"
+                                                                        data-stadium-id="<?= $sid ?>" data-favorited="<?= $isFav ? '1' : '0' ?>"
+                                                                        title="<?= $isFav ? 'ลบออกจากรายการโปรด' : 'เพิ่มในรายการโปรด' ?>">
+                                                                        <svg xmlns="http://www.w3.org/2000/svg"
+                                                                            class="h-5 w-5 transition <?= $isFav ? 'text-rose-600' : 'text-gray-600' ?>"
+                                                                            fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                                                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                                                        </svg>
+                                                                    </button>
+                                                                </div>
+                                                                <!-- Content Section -->
+                                                                <div class="flex-1 p-5 md:p-6">
+                                                                    <h3 class="text-xl font-bold text-gray-900 mb-2 line-clamp-2">
+                                                                        <?= esc($name) ?>
+                                                                    </h3>
+                            
+                                                                    <div class="flex items-center gap-2 text-sm text-gray-600 mb-3">
+                                                                        <span class="inline-flex items-center gap-1">
+                                                                            ⭐ <strong class="text-gray-900"><?= $reviewCount > 0 ? number_format($avgRating, 1) : '0.0' ?></strong>
+                                                                            <?php if ($reviewCount > 0): ?>
+                                                                                <span class="text-gray-500">(<?= $reviewCount ?> รีวิว)</span>
+                                                                            <?php else: ?>
+                                                                                <span class="text-gray-400">(ยังไม่มีรีวิว)</span>
+                                                                            <?php endif; ?>
+                                                                        </span>
+                                                                        <span class="text-gray-400">•</span>
+                                                                        <span class="inline-flex items-center gap-1 dist-badge">
+                                                                            📍 <span>-- km.</span>
+                                                                        </span>
+                                                                    </div>                                        <p class="text-sm text-gray-600 mb-3 line-clamp-1">
                                             <?= esc($address) ?>
                                         </p>
                                         <div class="flex flex-wrap items-center gap-2 text-sm">
