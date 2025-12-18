@@ -22,6 +22,20 @@
     .sidebar-header { border-radius: 20px 20px 0 0 !important; background: linear-gradient(135deg, var(--primary) 0%, #0d9488 100%); }
     
     .custom-control-input:checked ~ .custom-control-label::before { background-color: var(--primary); border-color: var(--primary); }
+
+    /* Availability Grid Styles */
+    .availability-container { background: #fff; border-radius: 16px; border: 1px solid #e2e8f0; }
+    .slot-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 10px; }
+    .time-slot { padding: 10px 5px; border-radius: 10px; border: 1px solid #e2e8f0; text-align: center; cursor: pointer; transition: 0.2s; font-size: 0.85rem; font-weight: 600; }
+    .time-slot.available { background: #f0fdf4; color: #16a34a; border-color: #bcf0da; }
+    .time-slot.available:hover { background: #dcfce7; transform: scale(1.05); }
+    .time-slot.booked { background: #fef2f2; color: #dc2626; border-color: #fecaca; cursor: not-allowed; opacity: 0.7; }
+    .time-slot.selected { background: var(--primary); color: #fff; border-color: var(--primary); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+    
+    .contact-btn { padding: 8px 16px; border-radius: 99px; font-weight: 600; font-size: 0.85rem; transition: 0.2s; border: 1px solid #e2e8f0; color: #475569; background: #fff; text-decoration: none !important; }
+    .contact-btn:hover { background: #f8fafc; color: var(--primary); border-color: var(--primary); }
+    .copy-btn { cursor: pointer; color: var(--primary); margin-left: 8px; font-size: 0.9rem; }
+    .copy-btn:hover { color: #0d9488; }
 </style>
 <?= $this->endSection() ?>
 
@@ -66,10 +80,26 @@
                     <div class="d-flex justify-content-between align-items-start mb-3">
                         <div>
                             <h1 class="fw-bold text-dark mb-1 h3"><?= esc($stadium['name']) ?></h1>
-                            <p class="text-muted mb-0 small"><i class="fas fa-map-marker-alt text-danger mr-2"></i><?= esc($stadium['address']) ?></p>
+                            <p class="text-muted mb-0 small">
+                                <i class="fas fa-map-marker-alt text-danger mr-2"></i><?= esc($stadium['address']) ?>
+                                <i class="far fa-copy copy-btn" onclick="copyAddress('<?= esc($stadium['address']) ?>')" title="คัดลอกที่อยู่"></i>
+                            </p>
                         </div>
                         <span class="badge badge-info px-3 py-2 rounded-pill font-weight-normal"><?= esc($stadium['category_name']) ?></span>
                     </div>
+
+                    <div class="d-flex flex-wrap gap-2 mb-4">
+                        <?php if(!empty($stadium['open_time'])): ?>
+                            <div class="contact-btn"><i class="far fa-clock mr-2 text-warning"></i>เปิด: <?= date('H:i', strtotime($stadium['open_time'])) ?> - <?= date('H:i', strtotime($stadium['close_time'])) ?></div>
+                        <?php endif; ?>
+                        <?php if(!empty($stadium['contact_phone'])): ?>
+                            <a href="tel:<?= $stadium['contact_phone'] ?>" class="contact-btn"><i class="fas fa-phone-alt mr-2 text-success"></i><?= $stadium['contact_phone'] ?></a>
+                        <?php endif; ?>
+                        <?php if(!empty($stadium['contact_email'])): ?>
+                            <a href="mailto:<?= $stadium['contact_email'] ?>" class="contact-btn"><i class="fas fa-envelope mr-2 text-primary"></i>อีเมลสนาม</a>
+                        <?php endif; ?>
+                    </div>
+
                     <hr class="my-4 opacity-50">
                     <h5 class="fw-bold mb-3 d-flex align-items-center"><i class="fas fa-info-circle mr-2 text-primary"></i>รายละเอียดสนาม</h5>
                     <p class="text-secondary leading-relaxed"><?= nl2br(esc($stadium['description'])) ?></p>
@@ -119,6 +149,28 @@
                 <?php endforeach; ?>
             </div>
 
+            <!-- Availability Grid -->
+            <div id="availability-section" class="mb-5 animate__animated animate__fadeIn" style="display: none;">
+                <div class="d-flex align-items-center mb-3">
+                    <h5 class="fw-bold mb-0 flex-grow-1"><i class="far fa-calendar-check mr-2 text-primary"></i>ตารางเวลาว่างวันนี้</h5>
+                    <span id="open-hours-label" class="badge badge-light border text-muted px-3 py-2 rounded-pill small"></span>
+                </div>
+                <div class="availability-container p-4 shadow-sm">
+                    <div id="grid-loading" class="text-center py-4" style="display: none;">
+                        <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                        <span class="ml-2 small text-muted">กำลังโหลดตารางว่าง...</span>
+                    </div>
+                    <div id="slot-grid" class="slot-grid">
+                        <!-- Slots will be injected here -->
+                    </div>
+                    <div class="mt-4 pt-3 border-top d-flex justify-content-center gap-4">
+                        <div class="small text-muted"><span class="badge badge-success p-1 px-2 mr-1">&nbsp;</span> ว่าง</div>
+                        <div class="small text-muted"><span class="badge badge-danger p-1 px-2 mr-1">&nbsp;</span> ไม่ว่าง / ติดจอง</div>
+                        <div class="small text-muted"><span class="badge badge-primary p-1 px-2 mr-1">&nbsp;</span> เวลาที่เลือก</div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Map Section -->
             <?php if(!empty($stadium['lat']) && !empty($stadium['lng'])): ?>
             <div class="card border-0 shadow-sm mb-5 rounded-4 overflow-hidden">
@@ -156,7 +208,7 @@
                                 <div class="input-group-prepend">
                                     <span class="input-group-text bg-white border-right-0"><i class="far fa-calendar-alt text-primary"></i></span>
                                 </div>
-                                <input type="date" name="booking_date" class="form-control form-control-lg border-left-0 pl-0 font-weight-bold" required min="<?= date('Y-m-d') ?>" value="<?= date('Y-m-d') ?>">
+                                <input type="date" name="booking_date" id="booking_date" class="form-control form-control-lg border-left-0 pl-0 font-weight-bold" required min="<?= date('Y-m-d') ?>" value="<?= date('Y-m-d') ?>">
                             </div>
                         </div>
 
@@ -167,7 +219,7 @@
                                     <div class="input-group-prepend">
                                         <span class="input-group-text bg-white border-right-0"><i class="far fa-clock text-primary"></i></span>
                                     </div>
-                                    <input type="time" name="start_time" class="form-control form-control-lg border-left-0 pl-0 font-weight-bold" required value="17:00">
+                                    <input type="time" name="start_time" id="start_time" class="form-control form-control-lg border-left-0 pl-0 font-weight-bold" required value="17:00">
                                 </div>
                             </div>
                             <div class="col-5">
@@ -221,7 +273,24 @@
 <!-- Data for JS -->
 <script>
 const fieldsData = <?= json_encode($fields) ?>;
+const stadiumHours = {
+    open: '<?= $stadium['open_time'] ? date('H:i', strtotime($stadium['open_time'])) : '00:00' ?>',
+    close: '<?= $stadium['close_time'] ? date('H:i', strtotime($stadium['close_time'])) : '23:59' ?>'
+};
 let selectedFieldId = null;
+
+// Copy Address Helper
+function copyAddress(text) {
+    navigator.clipboard.writeText(text);
+    Swal.fire({
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 1500,
+        icon: 'success',
+        title: 'คัดลอกที่อยู่แล้ว'
+    });
+}
 
 function selectField(id) {
     selectedFieldId = id;
@@ -237,8 +306,12 @@ function selectField(id) {
     document.getElementById('addon-section').style.display = 'block';
     document.getElementById('summary-section').style.display = 'block';
     document.getElementById('select-field-prompt').style.display = 'none';
+    document.getElementById('availability-section').style.display = 'block';
     document.getElementById('btn-submit').disabled = false;
     
+    // Load Availability
+    fetchAvailability();
+
     // Load Add-ons
     const field = fieldsData.find(f => f.id == id);
     const addonList = document.getElementById('addon-list');
@@ -280,6 +353,67 @@ function selectField(id) {
     calculateTotal();
 }
 
+async function fetchAvailability() {
+    if (!selectedFieldId) return;
+    
+    const date = document.getElementById('booking_date').value;
+    const grid = document.getElementById('slot-grid');
+    const loader = document.getElementById('grid-loading');
+    
+    grid.innerHTML = '';
+    loader.style.display = 'block';
+    
+    try {
+        const response = await fetch(`<?= base_url('customer/booking/check-availability') ?>?field_id=${selectedFieldId}&date=${date}`);
+        const data = await response.json();
+        renderGrid(data.booked_slots);
+    } catch (err) {
+        console.error('Failed to fetch availability:', err);
+        grid.innerHTML = '<div class="col-12 text-center text-danger small">ไม่สามารถโหลดข้อมูลเวลาว่างได้</div>';
+    } finally {
+        loader.style.display = 'none';
+    }
+}
+
+function renderGrid(bookedSlots) {
+    const grid = document.getElementById('slot-grid');
+    const startTimeStr = stadiumHours.open;
+    const endTimeStr = stadiumHours.close;
+    
+    document.getElementById('open-hours-label').innerText = `เวลาทำการ: ${startTimeStr} - ${endTimeStr}`;
+    
+    let startHour = parseInt(startTimeStr.split(':')[0]);
+    let endHour = parseInt(endTimeStr.split(':')[0]);
+    
+    if (endHour <= startHour) endHour += 24; // Handle overnight hours if any
+
+    for (let h = startHour; h < endHour; h++) {
+        const hour = h % 24;
+        const timeStr = `${hour.toString().padStart(2, '0')}:00`;
+        const endTimeStrSlot = `${(hour + 1).toString().padStart(2, '0')}:00`;
+        
+        const isBooked = bookedSlots.some(slot => {
+            // Check overlap
+            return timeStr >= slot.start && timeStr < slot.end;
+        });
+        
+        const slot = document.createElement('div');
+        slot.className = `time-slot ${isBooked ? 'booked' : 'available'}`;
+        slot.innerText = timeStr;
+        
+        if (!isBooked) {
+            slot.onclick = () => {
+                document.getElementById('start_time').value = timeStr;
+                document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
+                slot.classList.add('selected');
+                calculateTotal();
+            };
+        }
+        
+        grid.appendChild(slot);
+    }
+}
+
 function calculateTotal() {
     if(!selectedFieldId) return;
     
@@ -298,6 +432,8 @@ function calculateTotal() {
 }
 
 document.getElementById('hours_input').addEventListener('input', calculateTotal);
+document.getElementById('start_time').addEventListener('change', calculateTotal);
+document.getElementById('booking_date').addEventListener('change', fetchAvailability);
 
 document.getElementById('bookingForm').addEventListener('submit', function(e) {
     if(!selectedFieldId) {

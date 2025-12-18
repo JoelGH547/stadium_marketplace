@@ -186,4 +186,39 @@ class BookingController extends BaseController
         ];
         return view('customer/payment_success', $data);
     }
+
+    /**
+     * API: Check field availability for a specific date
+     */
+    public function checkAvailability()
+    {
+        $fieldId = $this->request->getGet('field_id');
+        $date    = $this->request->getGet('date');
+
+        if (!$fieldId || !$date) {
+            return $this->response->setJSON(['error' => 'Missing parameters']);
+        }
+
+        // Fetch bookings for this field on this date
+        $bookings = $this->bookingModel
+            ->where('field_id', $fieldId)
+            ->where('status !=', 'cancelled')
+            ->where("DATE(booking_start_time)", $date)
+            ->findAll();
+
+        $slots = [];
+        foreach ($bookings as $b) {
+            $slots[] = [
+                'start' => date('H:i', strtotime($b['booking_start_time'])),
+                'end'   => date('H:i', strtotime($b['booking_end_time'])),
+                'status' => $b['status']
+            ];
+        }
+
+        return $this->response->setJSON([
+            'date' => $date,
+            'field_id' => $fieldId,
+            'booked_slots' => $slots
+        ]);
+    }
 }

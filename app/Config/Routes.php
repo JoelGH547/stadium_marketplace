@@ -131,6 +131,7 @@ $routes->group('customer', ['filter' => ['customer']], static function ($routes)
     $routes->get('payment/checkout/(:num)', 'BookingController::checkout/$1');
     $routes->post('payment/process', 'BookingController::processPayment');
     $routes->get('payment/success/(:num)', 'BookingController::paymentSuccess/$1');
+    $routes->get('booking/check-availability', 'BookingController::checkAvailability');
 
     
 

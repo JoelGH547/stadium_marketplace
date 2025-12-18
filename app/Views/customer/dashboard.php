@@ -38,7 +38,7 @@
         </div>
     </div>
 
-    <div class="stadium-grid">
+    <div class="stadium-grid mb-5">
         <?php if (! empty($stadiums) && is_array($stadiums)): ?>
             <?php foreach ($stadiums as $stadium): ?>
                 <div class="stadium-card shadow-sm border-0 h-100 bg-white">
@@ -85,6 +85,75 @@
                 <p class="lead text-muted">ขออภัย, ยังไม่มีสนามกีฬาที่เปิดให้จองในขณะนี้</p>
             </div>
         <?php endif; ?>
+    </div>
+
+    <!-- Booking History Section -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-5">
+        <div class="card-header bg-white border-0 pt-4 px-4">
+            <h5 class="fw-bold text-dark mb-0"><i class="fas fa-history mr-2 text-primary"></i>ประวัติการจองล่าสุด</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="bg-light text-muted small text-uppercase letter-spacing-1">
+                        <tr>
+                            <th class="border-0 pl-4">สนาม/พื้นที่</th>
+                            <th class="border-0 text-center">วันที่เข้าใช้งาน</th>
+                            <th class="border-0 text-center">เวลา</th>
+                            <th class="border-0 text-center">ทำรายการเมื่อ</th>
+                            <th class="border-0 text-right pr-4">ยอดรวม / สถานะ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (!empty($myBookings)): ?>
+                            <?php foreach ($myBookings as $booking): ?>
+                                <tr onclick="window.location='<?= base_url('customer/payment/checkout/' . $booking['id']) ?>'" style="cursor: pointer;">
+                                    <td class="pl-4 py-3">
+                                        <div class="fw-bold text-dark mb-0"><?= esc($booking['stadium_name']) ?></div>
+                                        <div class="small text-muted"><?= esc($booking['field_name']) ?></div>
+                                    </td>
+                                    <td class="py-3 align-middle text-center">
+                                        <div class="small font-weight-bold"><?= date('d M Y', strtotime($booking['booking_start_time'])) ?></div>
+                                    </td>
+                                    <td class="py-3 align-middle text-center">
+                                        <span class="badge badge-light border rounded-pill px-3">
+                                            <?= date('H:i', strtotime($booking['booking_start_time'])) ?> - <?= date('H:i', strtotime($booking['booking_end_time'])) ?>
+                                        </span>
+                                    </td>
+                                    <td class="py-3 align-middle text-center">
+                                        <div class="small text-muted"><?= date('d/m/Y H:i', strtotime($booking['created_at'])) ?></div>
+                                    </td>
+                                    <td class="py-3 align-middle text-right pr-4">
+                                        <div class="fw-bold text-primary mb-1">฿<?= number_format($booking['total_price']) ?></div>
+                                        <?php 
+                                            $statusClass = 'secondary';
+                                            $statusText = $booking['status'];
+                                            if ($booking['status'] == 'pending') { $statusClass = 'warning'; $statusText = 'รอชำระเงิน'; }
+                                            elseif ($booking['status'] == 'paid') { $statusClass = 'success'; $statusText = 'จ่ายแล้ว'; }
+                                            elseif ($booking['status'] == 'confirmed') { $statusClass = 'info'; $statusText = 'ยืนยันแล้ว'; }
+                                            elseif ($booking['status'] == 'cancelled') { $statusClass = 'danger'; $statusText = 'ยกเลิก'; }
+                                        ?>
+                                        <span class="badge badge-<?= $statusClass ?> rounded-pill px-2" style="font-size: 0.7rem; font-weight: normal;"><?= $statusText ?></span>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <tr>
+                                <td colspan="4" class="text-center py-5">
+                                    <div class="text-muted small">คุณยังไม่มีประวัติการจอง</div>
+                                    <a href="#stadium-grid" class="btn btn-link btn-sm text-primary">เริ่มจองสนามแรกของคุณ</a>
+                                </td>
+                            </tr>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+            <?php if (!empty($myBookings) && count($myBookings) >= 5): ?>
+                <div class="p-3 text-center border-top">
+                    <a href="#" class="small fw-bold text-primary">ดูประวัติการจองทั้งหมด</a>
+                </div>
+            <?php endif; ?>
+        </div>
     </div>
 </div>
 <?= $this->endSection() ?>
