@@ -112,6 +112,7 @@ $routes->group('admin', ['filter' => ['admin']], static function ($routes) {
 
     // --- Bookings (การจอง) ---
     $routes->get('bookings', 'Admin\BookingController::index'); 
+    $routes->get('bookings/api', 'Admin\BookingController::api'); 
     
     // จัดการสถานะจอง
     $routes->post('bookings/updateStatus', 'Admin\BookingController::updateStatus');

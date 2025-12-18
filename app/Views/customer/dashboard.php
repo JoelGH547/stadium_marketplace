@@ -1,107 +1,90 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= esc($title ?? 'Customer Dashboard') ?></title>
-    
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+<?= $this->extend('layouts/customer') ?>
 
-    <style>
-        .stadium-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
-        }
-        .stadium-card {
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        .stadium-card-image {
-            width: 100%;
-            height: 180px;
-            background-color: #eee;
-            
-        }
-        .stadium-card-content {
-            padding: 15px;
-        }
-        .stadium-card h3 {
-            margin-top: 0;
-        }
-        .stadium-card .price {
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: #e67e22;
-        }
-        .stadium-card .category {
-            display: inline-block;
-            background-color: #3498db;
-            color: white;
-            padding: 3px 8px;
-            border-radius: 4px;
-            font-size: 0.8rem;
-            margin-bottom: 10px;
-        }
-    </style>
-</head>
-<body>
+<?= $this->section('extra-css') ?>
+<style>
+    .stadium-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 20px;
+    }
+    .stadium-card {
+        border-radius: 12px;
+        overflow: hidden;
+    }
+    .stadium-card-image {
+        width: 100%;
+        height: 200px;
+        background-color: #f8f9fa;
+    }
+    .category {
+        display: inline-block;
+        background-color: #e3f2fd;
+        color: #1976d2;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+</style>
+<?= $this->endSection() ?>
 
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <a class="navbar-brand" href="<?= base_url('customer/dashboard') ?>">Stadium Booking</a>
-        <div class="collapse navbar-collapse">
-            <ul class="navbar-nav ml-auto">
-                <li class="nav-item">
-                    <span class="navbar-text">
-                        สวัสดี, <?= esc(session()->get('username')) ?>
-                    </span>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="<?= base_url('logout') ?>">Logout</a>
-                </li>
-            </ul>
+<?= $this->section('content') ?>
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1 font-weight-bold text-dark"><?= esc($title) ?></h1>
+            <p class="text-muted">ยินดีต้อนรับ! เลือกสนามที่คุณต้องการจอง:</p>
         </div>
-    </nav>
+    </div>
 
-    <div class="container" style="margin-top: 30px;">
-
-        <h1><?= esc($title) ?></h1>
-        <p>ยินดีต้อนรับ! เลือกสนามที่คุณต้องการจอง:</p>
-
-        <div class="stadium-grid">
-            <?php if (! empty($stadiums) && is_array($stadiums)): ?>
-                <?php foreach ($stadiums as $stadium): ?>
-                    
-                    <div class="stadium-card">
-                        <div class="stadium-card-image">
+    <div class="stadium-grid">
+        <?php if (! empty($stadiums) && is_array($stadiums)): ?>
+            <?php foreach ($stadiums as $stadium): ?>
+                <div class="stadium-card shadow-sm border-0 h-100 bg-white">
+                    <?php 
+                        $images = json_decode($stadium['outside_images'] ?? '[]', true);
+                        $cover = !empty($images[0]) ? $images[0] : null;
+                    ?>
+                    <div class="stadium-card-image position-relative">
+                        <?php if($cover): ?>
+                            <img src="<?= base_url('assets/uploads/stadiums/'.$cover) ?>" 
+                                 class="w-100 h-100 object-fit-cover">
+                        <?php else: ?>
+                            <div class="d-flex align-items-center justify-content-center h-100 bg-light">
+                                <i class="fas fa-image fa-3x text-muted opacity-25"></i>
                             </div>
-                        <div class="stadium-card-content">
-                            <span class="category"><?= esc($stadium['category_name'] ?? 'N/A') ?></span>
-                            
-                            <h3><?= esc($stadium['name']) ?></h3>
-                            <p><?= esc($stadium['description']) ?></p>
-                            
-                            <div classs="price">
-                                ราคา: <?= esc(number_format($stadium['price'], 2)) ?> บาท/ชั่วโมง
-                            </div>
-                            
-                            <a href="<?= base_url('customer/booking/stadium/' . $stadium['id']) ?>" class="btn btn-primary" style="margin-top: 15px;">
-                                ดูรายละเอียด และ จอง
-                            </a>
-                        </div>
+                        <?php endif; ?>
                     </div>
-
-                <?php endforeach; ?>
-            <?php else: ?>
-                <p>ขออภัย, ยังไม่มีสนามกีฬาที่เปิดให้จองในขณะนี้</p>
-            <?php endif; ?>
-        </div>
-
-    </div> <footer class="text-center" style="margin-top: 50px; padding: 20px; background-color: #f8f9fa;">
-        <p>&copy; <?= date('Y') ?> Stadium Marketplace. All rights reserved.</p>
-    </footer>
-
-</body>
-</html>
+                    
+                    <div class="p-3">
+                        <span class="category mb-2"><?= esc($stadium['category_name'] ?? 'General') ?></span>
+                        
+                        <h3 class="h5 fw-bold mb-2 text-dark"><?= esc($stadium['name']) ?></h3>
+                        <p class="small text-muted mb-3" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                            <?= esc($stadium['description']) ?>
+                        </p>
+                        
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div class="price">
+                                <span class="h5 mb-0 text-primary font-weight-bold">฿<?= number_format($stadium['price'] ?? 0, 0) ?></span> 
+                                <small class="text-muted">/ชม.</small>
+                            </div>
+                        </div>
+                        
+                        <a href="<?= base_url('customer/booking/stadium/' . $stadium['id']) ?>" 
+                           class="btn btn-primary btn-block py-2 fw-bold shadow-sm rounded-pill">
+                            ดูรายละเอียด และ จอง
+                        </a>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        <?php else: ?>
+            <div class="col-12 text-center py-5">
+                <i class="fas fa-calendar-times fa-4x text-muted mb-3"></i>
+                <p class="lead text-muted">ขออภัย, ยังไม่มีสนามกีฬาที่เปิดให้จองในขณะนี้</p>
+            </div>
+        <?php endif; ?>
+    </div>
+</div>
+<?= $this->endSection() ?>

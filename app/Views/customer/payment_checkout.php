@@ -149,20 +149,15 @@
             }
 
             
-            let timerInterval;
             Swal.fire({
                 title: 'กำลังเชื่อมต่อธนาคาร...',
                 html: 'กรุณาอย่าปิดหน้าต่างนี้',
-                timer: 2000, 
+                timer: 1500, 
                 timerProgressBar: true,
                 didOpen: () => {
                     Swal.showLoading();
-                },
-                willClose: () => {
-                    clearInterval(timerInterval);
                 }
-            }).then((result) => {
-                
+            }).then(() => {
                 form.submit();
             });
         });

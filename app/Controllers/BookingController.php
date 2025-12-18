@@ -21,23 +21,40 @@ class BookingController extends BaseController
     
     public function viewStadium($stadium_id = null)
     {
-        
         $stadium = $this->stadiumModel->getStadiumsWithCategory($stadium_id);
 
         if (!$stadium) {
             throw new \CodeIgniter\Exceptions\PageNotFoundException('ไม่พบสนามที่ต้องการจอง');
         }
 
-        
+        // Get fields with facilities and items
         $fieldModel = new StadiumFieldModel();
         $fields = $fieldModel->where('stadium_id', $stadium_id)
                              ->where('status', 'active')
                              ->findAll();
 
+        foreach ($fields as &$field) {
+            // Get facilities for this field
+            $db = \Config\Database::connect();
+            $field['facilities'] = $db->table('stadium_facilities')
+                ->select('stadium_facilities.id as stadium_facility_id, facility_types.name')
+                ->join('facility_types', 'facility_types.id = stadium_facilities.facility_type_id')
+                ->where('stadium_facilities.field_id', $field['id'])
+                ->get()->getResultArray();
+
+            // For each facility, get vendor items
+            foreach ($field['facilities'] as &$facility) {
+                $facility['items'] = $db->table('vendor_items')
+                    ->where('stadium_facility_id', $facility['stadium_facility_id'])
+                    ->where('status', 'active')
+                    ->get()->getResultArray();
+            }
+        }
+
         $data = [
             'title'   => 'จองสนาม: ' . esc($stadium['name']),
             'stadium' => $stadium,
-            'fields'  => $fields, 
+            'fields'  => $fields,
         ];
 
         return view('customer/booking_form', $data);
@@ -76,11 +93,20 @@ class BookingController extends BaseController
         
         $fieldModel = new StadiumFieldModel();
         $fieldData = $fieldModel->find($fieldId);
-        $pricePerHour = $fieldData ? $fieldData['price'] : $stadium['price']; 
+        $pricePerHour = $fieldData ? $fieldData['price'] : $stadium['price'];
 
-        $totalPrice = $pricePerHour * $hours;
+        // Calculate Item Add-ons
+        $selectedItems = $this->request->getPost('items') ?? [];
+        $itemTotal = 0;
+        if (!empty($selectedItems)) {
+            $itemModel = new \App\Models\VendorItemModel();
+            $itemsData = $itemModel->whereIn('id', $selectedItems)->findAll();
+            foreach ($itemsData as $item) {
+                $itemTotal += (float)$item['price'];
+            }
+        }
 
-        
+        $totalPrice = ($pricePerHour * $hours) + $itemTotal;
 
         $data = [
             'stadium_id'       => $stadiumId,

@@ -54,8 +54,13 @@ class StadiumModel extends Model
     
     public function getStadiumsWithCategory($id = null)
     {
-        $builder = $this->select('stadiums.*, categories.name as category_name, categories.emoji as category_emoji')
-                        ->join('categories', 'categories.id = stadiums.category_id', 'left');
+        // 1. เพิ่ม MIN(stadium_fields.price) as price เพื่อดึงราคาเริ่มต้น
+        $builder = $this->select('stadiums.*, categories.name as category_name, categories.emoji as category_emoji, MIN(stadium_fields.price) as price')
+                        ->join('categories', 'categories.id = stadiums.category_id', 'left')
+                        // 2. Join ตารางลูก (stadium_fields) เข้ามา
+                        ->join('stadium_fields', 'stadium_fields.stadium_id = stadiums.id', 'left')
+                        // 3. Group by เพื่อรวมราคาหลายๆ สนามย่อย ให้เหลือบรรทัดเดียวต่อ 1 สนามหลัก
+                        ->groupBy('stadiums.id');
 
         if ($id !== null) {
             return $builder->where('stadiums.id', $id)->first();
