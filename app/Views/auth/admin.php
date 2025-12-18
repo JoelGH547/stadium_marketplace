@@ -39,8 +39,8 @@
         <button type="submit" class="btn btn-primary">Login as Admin</button>
     </form>
 
-    <div class="auth-links text-sm text-gray-500">
-    Login for Admin only
+    <div class="auth-links text-sm text-gray-500 text-center">
+        <a href="<?= base_url('/login') ?>">ไปหน้าเข้าสู่ระบบสำหรับลูกค้า (Customer Login)</a>
     </div>
 </div>
 

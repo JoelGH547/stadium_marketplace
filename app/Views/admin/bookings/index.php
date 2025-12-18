@@ -92,7 +92,7 @@
                                 <td class="text-center">
                                     <?php if(!empty($row['slip_image'])): ?>
                                         <button type="button" class="btn btn-sm btn-outline-info btn-view-slip" 
-                                                data-img="<?= base_url('assets/uploads/slips/' . $row['slip_image']) ?>"
+                                                data-img="<?= base_url('uploads/slips/' . $row['slip_image']) ?>"
                                                 data-bs-toggle="modal" data-bs-target="#slipModal">
                                             <i class="fas fa-receipt"></i>
                                         </button>

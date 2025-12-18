@@ -100,9 +100,14 @@
 
                 <button class="btn mint-btn text-white w-100 py-2 mt-2">เข้าสู่ระบบ</button>
 
-                <div class="text-center mt-3">
-                    <span>ยังไม่มีบัญชีใช่ไหม?</span>
-                    <a href="<?= base_url('owner/register') ?>" style="color:#22b094;">สมัครสมาชิก</a>
+                <div class="text-center mt-3 d-flex flex-column gap-2">
+                    <div>
+                        <span>ยังไม่มีบัญชีใช่ไหม?</span>
+                        <a href="<?= base_url('owner/register') ?>" style="color:#22b094;">สมัครสมาชิก</a>
+                    </div>
+                    <div class="mt-2 small">
+                        <a href="<?= base_url('/login') ?>" class="text-muted text-decoration-none">ไปหน้าเข้าสู่ระบบสำหรับลูกค้า</a>
+                    </div>
                 </div>
 
             </form>
