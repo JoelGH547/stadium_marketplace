@@ -152,6 +152,161 @@ document.addEventListener('DOMContentLoaded', () => {
     // browser ไม่รองรับ geolocation: จำกัดจำนวน 8/20 ตามลำดับเดิม
     applyRanking();
   }
+
+
+  // ===============================
+  // Home Search Filters: Date/Time Slots (00:00-24:00) + Basic Validation
+  // - Prevent past dates via min attribute in HTML (server should still validate)
+  // - If date is today, hide past time slots (like show page)
+  // - End time must be > start time
+  // - If user doesn't set anything (q/category/date/time), go to /sport/view plain
+  // ===============================
+  const hourlyDateInput = document.getElementById('hourlyDate');
+  const homeStartTime   = document.getElementById('homeStartTime');
+  const homeEndTime     = document.getElementById('homeEndTime');
+  const dailyStartDate  = document.getElementById('dailyStartDate');
+  const dailyEndDate    = document.getElementById('dailyEndDate');
+
+  const pad2 = (n) => String(n).padStart(2, '0');
+  const minutesToLabel = (m) => {
+    if (m === 1440) return '24:00';
+    const h = Math.floor(m / 60);
+    const mm = m % 60;
+    return pad2(h) + ':' + pad2(mm);
+  };
+  const labelToMinutes = (label) => {
+    if (!label) return null;
+    if (label === '24:00') return 1440;
+    const parts = String(label).split(':');
+    if (parts.length < 2) return null;
+    const h = parseInt(parts[0], 10);
+    const mm = parseInt(parts[1], 10);
+    if (!Number.isFinite(h) || !Number.isFinite(mm)) return null;
+    return h * 60 + mm;
+  };
+  const clearSelect = (select, placeholder) => {
+    if (!select) return;
+    select.innerHTML = '';
+    const opt = document.createElement('option');
+    opt.value = '';
+    opt.textContent = placeholder;
+    select.appendChild(opt);
+  };
+
+  function buildHomeStartOptions(dateStr) {
+    if (!homeStartTime || !homeEndTime) return;
+    clearSelect(homeStartTime, '— เลือกเวลาเริ่มต้น —');
+    clearSelect(homeEndTime, '— เลือกเวลาสิ้นสุด —');
+    homeEndTime.disabled = true;
+
+    if (!dateStr) return;
+
+    const todayStr = new Date().toISOString().split('T')[0];
+    let startMin = 0;
+
+    // If selected date is today, start from next full hour
+    if (dateStr === todayStr) {
+      const now = new Date();
+      const cur = now.getHours() * 60 + now.getMinutes();
+      const nextHour = (Math.floor(cur / 60) + 1) * 60;
+      startMin = Math.min(Math.max(0, nextHour), 1380); // last start at 23:00
+    }
+
+    for (let m = startMin; m <= 1380; m += 60) {
+      const opt = document.createElement('option');
+      opt.value = minutesToLabel(m);
+      opt.textContent = minutesToLabel(m);
+      homeStartTime.appendChild(opt);
+    }
+
+    homeStartTime.disabled = homeStartTime.options.length <= 1;
+  }
+
+  function buildHomeEndOptions() {
+    if (!homeStartTime || !homeEndTime) return;
+
+    const startVal = homeStartTime.value;
+    clearSelect(homeEndTime, '— เลือกเวลาสิ้นสุด —');
+
+    if (!startVal) {
+      homeEndTime.disabled = true;
+      return;
+    }
+
+    const sMin = labelToMinutes(startVal);
+    if (sMin === null || sMin >= 1440) {
+      homeEndTime.disabled = true;
+      return;
+    }
+
+    for (let m = sMin + 60; m <= 1440; m += 60) {
+      const opt = document.createElement('option');
+      opt.value = minutesToLabel(m);
+      opt.textContent = minutesToLabel(m);
+      homeEndTime.appendChild(opt);
+    }
+
+    homeEndTime.disabled = homeEndTime.options.length <= 1;
+  }
+
+  if (hourlyDateInput) {
+    hourlyDateInput.addEventListener('change', () => {
+      buildHomeStartOptions(hourlyDateInput.value);
+      if (homeStartTime) homeStartTime.value = '';
+      buildHomeEndOptions();
+    });
+  }
+  if (homeStartTime) {
+    homeStartTime.addEventListener('change', () => {
+      buildHomeEndOptions();
+    });
+  }
+
+  // Daily date basic constraint: end >= start
+  if (dailyStartDate && dailyEndDate) {
+    dailyStartDate.addEventListener('change', () => {
+      if (dailyStartDate.value) dailyEndDate.min = dailyStartDate.value;
+      if (dailyEndDate.value && dailyStartDate.value && dailyEndDate.value < dailyStartDate.value) {
+        dailyEndDate.value = dailyStartDate.value;
+      }
+    });
+  }
+
+  function shouldGoPlainView(form) {
+    try {
+      const fd = new FormData(form);
+      const q = String(fd.get('q') || '').trim();
+      const cat = String(fd.get('category') || '').trim();
+
+      const date = String(fd.get('date') || '').trim();
+      const st = String(fd.get('start_time') || '').trim();
+      const et = String(fd.get('end_time') || '').trim();
+
+      const sd = String(fd.get('start_date') || '').trim();
+      const ed = String(fd.get('end_date') || '').trim();
+
+      return !q && !cat && !date && !st && !et && !sd && !ed;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // If user doesn't fill anything, go /sport/view (no query)
+  [formHourly, formDaily].forEach((f) => {
+    if (!f) return;
+    f.addEventListener('submit', (e) => {
+      if (shouldGoPlainView(f)) {
+        e.preventDefault();
+        window.location.href = (f && f.action) ? f.action.split('?')[0] : (window.location.origin + '/sport/view');
+      }
+    });
+  });
+
+  // Init if back with date
+  if (hourlyDateInput && hourlyDateInput.value) {
+    buildHomeStartOptions(hourlyDateInput.value);
+    if (homeStartTime && homeStartTime.value) buildHomeEndOptions();
+  }
 });
 
 /* ============ เก็บลำดับเดิมของการ์ด (ใช้กับยอดนิยม/ดีฟอลต์) ============ */

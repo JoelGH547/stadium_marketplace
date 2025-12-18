@@ -37,7 +37,7 @@
                     <div class="space-y-4">
 
                         <!-- Form: Hourly Booking -->
-                        <form action="<?= site_url('sport/search') ?>" method="get" id="formHourly" class="block">
+                        <form action="<?= site_url('sport/view') ?>" method="get" id="formHourly" class="block">
                             <input type="hidden" name="mode" value="hourly">
 
                             <div class="space-y-4">
@@ -67,27 +67,30 @@
                                     <div class="flex flex-col gap-2">
                                         <label
                                             class="text-xs font-semibold uppercase tracking-wide text-gray-500">วันที่</label>
-                                        <input type="date" name="date"
-                                            class="w-full rounded-xl border border-gray-200 px-3 py-3 text-sm sm:text-base focus:outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)]">
+                                        <input type="date" id="hourlyDate" name="date" min="<?= date('Y-m-d') ?>" class="w-full rounded-xl border border-gray-200 px-3 py-3 text-sm sm:text-base focus:outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)]">
                                     </div>
                                     <div class="flex flex-col gap-2">
                                         <label
                                             class="text-xs font-semibold uppercase tracking-wide text-gray-500">เวลาเริ่มต้น</label>
-                                        <input type="time" name="start_time"
+                                        <select name="start_time" id="homeStartTime" 
                                             class="w-full rounded-xl border border-gray-200 px-3 py-3 text-sm sm:text-base focus:outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)]">
+                                                <option value="">— เลือกเวลาเริ่มต้น —</option>
+                                            </select>
                                     </div>
                                     <div class="flex flex-col gap-2">
                                         <label
                                             class="text-xs font-semibold uppercase tracking-wide text-gray-500">เวลาสิ้นสุด</label>
-                                        <input type="time" name="end_time"
+                                        <select name="end_time" id="homeEndTime" 
                                             class="w-full rounded-xl border border-gray-200 px-3 py-3 text-sm sm:text-base focus:outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)]">
+                                                <option value="">— เลือกเวลาสิ้นสุด —</option>
+                                            </select>
                                     </div>
                                 </div>
                             </div>
                         </form>
 
                         <!-- Form: Daily Booking -->
-                        <form action="<?= site_url('sport/search') ?>" method="get" id="formDaily" class="hidden">
+                        <form action="<?= site_url('sport/view') ?>" method="get" id="formDaily" class="hidden">
                             <input type="hidden" name="mode" value="daily">
 
                             <div class="space-y-4">
@@ -117,14 +120,12 @@
                                     <div class="flex flex-col gap-2">
                                         <label
                                             class="text-xs font-semibold uppercase tracking-wide text-gray-500">วันที่เริ่มต้น</label>
-                                        <input type="date" name="start_date"
-                                            class="w-full rounded-xl border border-gray-200 px-3 py-3 text-sm sm:text-base focus:outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)]">
+                                        <input type="date" id="dailyStartDate" name="start_date" min="<?= date('Y-m-d') ?>" class="w-full rounded-xl border border-gray-200 px-3 py-3 text-sm sm:text-base focus:outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)]">
                                     </div>
                                     <div class="flex flex-col gap-2">
                                         <label
                                             class="text-xs font-semibold uppercase tracking-wide text-gray-500">วันที่สิ้นสุด</label>
-                                        <input type="date" name="end_date"
-                                            class="w-full rounded-xl border border-gray-200 px-3 py-3 text-sm sm:text-base focus:outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)]">
+                                        <input type="date" id="dailyEndDate" name="end_date" min="<?= date('Y-m-d') ?>" class="w-full rounded-xl border border-gray-200 px-3 py-3 text-sm sm:text-base focus:outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)]">
                                     </div>
                                 </div>
                             </div>

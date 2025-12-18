@@ -4,6 +4,167 @@ document.addEventListener('DOMContentLoaded', function () {
   const searchInput  = document.getElementById('venueSearch');
   const listEl       = document.getElementById('allVenueList');
 
+  // ===============================
+  // View Page: Server-side search filters (mode/date/time)
+  // ===============================
+  const viewMode      = document.getElementById('viewMode');
+  const viewHourlyBox = document.getElementById('viewHourlyBox');
+  const viewDailyBox  = document.getElementById('viewDailyBox');
+
+  const viewDate      = document.getElementById('viewDate');
+  const viewStartTime = document.getElementById('viewStartTime');
+  const viewEndTime   = document.getElementById('viewEndTime');
+
+  const viewStartDate = document.getElementById('viewStartDate');
+  const viewEndDate   = document.getElementById('viewEndDate');
+
+  const pad2 = (n) => String(n).padStart(2, '0');
+  const minutesToLabel = (m) => {
+    if (m === 1440) return '24:00';
+    const h = Math.floor(m / 60);
+    const mm = m % 60;
+    return pad2(h) + ':' + pad2(mm);
+  };
+  const labelToMinutes = (label) => {
+    if (!label) return null;
+    if (label === '24:00') return 1440;
+    const parts = String(label).split(':');
+    if (parts.length < 2) return null;
+    const h = parseInt(parts[0], 10);
+    const mm = parseInt(parts[1], 10);
+    if (!Number.isFinite(h) || !Number.isFinite(mm)) return null;
+    return h * 60 + mm;
+  };
+  const clearSelect = (select, placeholder) => {
+    if (!select) return;
+    select.innerHTML = '';
+    const opt = document.createElement('option');
+    opt.value = '';
+    opt.textContent = placeholder;
+    select.appendChild(opt);
+  };
+
+  function applyModeUI() {
+    if (!viewMode) return;
+    const mode = String(viewMode.value || '');
+    if (mode === 'daily') {
+      if (viewHourlyBox) viewHourlyBox.classList.add('hidden');
+      if (viewDailyBox) viewDailyBox.classList.remove('hidden');
+    } else if (mode === 'hourly') {
+      if (viewHourlyBox) viewHourlyBox.classList.remove('hidden');
+      if (viewDailyBox) viewDailyBox.classList.add('hidden');
+    } else {
+      // show nothing extra when mode is not selected
+      if (viewHourlyBox) viewHourlyBox.classList.add('hidden');
+      if (viewDailyBox) viewDailyBox.classList.add('hidden');
+    }
+  }
+
+  function buildViewStartOptions(dateStr) {
+    if (!viewStartTime || !viewEndTime) return;
+    clearSelect(viewStartTime, '— เลือกเวลาเริ่มต้น —');
+    clearSelect(viewEndTime, '— เลือกเวลาสิ้นสุด —');
+    viewEndTime.disabled = true;
+
+    if (!dateStr) return;
+
+    const todayStr = new Date().toISOString().split('T')[0];
+    let startMin = 0;
+
+    if (dateStr === todayStr) {
+      const now = new Date();
+      const cur = now.getHours() * 60 + now.getMinutes();
+      const nextHour = (Math.floor(cur / 60) + 1) * 60;
+      startMin = Math.min(Math.max(0, nextHour), 1380);
+    }
+
+    for (let m = startMin; m <= 1380; m += 60) {
+      const opt = document.createElement('option');
+      opt.value = minutesToLabel(m);
+      opt.textContent = minutesToLabel(m);
+      viewStartTime.appendChild(opt);
+    }
+    viewStartTime.disabled = viewStartTime.options.length <= 1;
+
+    const want = (viewStartTime.dataset.selected || '').trim();
+    if (want) {
+      const has = Array.from(viewStartTime.options).some(o => o.value === want);
+      if (has) viewStartTime.value = want;
+    }
+  }
+
+  function buildViewEndOptions() {
+    if (!viewStartTime || !viewEndTime) return;
+
+    const startVal = viewStartTime.value;
+    clearSelect(viewEndTime, '— เลือกเวลาสิ้นสุด —');
+
+    if (!startVal) {
+      viewEndTime.disabled = true;
+      return;
+    }
+
+    const sMin = labelToMinutes(startVal);
+    if (sMin === null || sMin >= 1440) {
+      viewEndTime.disabled = true;
+      return;
+    }
+
+    for (let m = sMin + 60; m <= 1440; m += 60) {
+      const opt = document.createElement('option');
+      opt.value = minutesToLabel(m);
+      opt.textContent = minutesToLabel(m);
+      viewEndTime.appendChild(opt);
+    }
+
+    viewEndTime.disabled = viewEndTime.options.length <= 1;
+
+    const want = (viewEndTime.dataset.selected || '').trim();
+    if (want) {
+      const has = Array.from(viewEndTime.options).some(o => o.value === want);
+      if (has) viewEndTime.value = want;
+    }
+  }
+
+  if (viewMode) viewMode.addEventListener('change', applyModeUI);
+
+  if (viewDate) {
+    viewDate.addEventListener('change', () => {
+      // reset selected so end options rebuild cleanly
+      if (viewStartTime) viewStartTime.dataset.selected = '';
+      if (viewEndTime) viewEndTime.dataset.selected = '';
+      buildViewStartOptions(viewDate.value);
+      if (viewStartTime) viewStartTime.value = '';
+      buildViewEndOptions();
+    });
+  }
+  if (viewStartTime) {
+    viewStartTime.addEventListener('change', () => {
+      if (viewEndTime) viewEndTime.dataset.selected = '';
+      buildViewEndOptions();
+    });
+  }
+
+  if (viewStartDate && viewEndDate) {
+    viewStartDate.addEventListener('change', () => {
+      if (viewStartDate.value) viewEndDate.min = viewStartDate.value;
+      if (viewEndDate.value && viewEndDate.value < viewStartDate.value) {
+        viewEndDate.value = viewStartDate.value;
+      }
+    });
+  }
+
+  // init
+  applyModeUI();
+  if (viewDate && viewDate.value) {
+    buildViewStartOptions(viewDate.value);
+    buildViewEndOptions();
+  } else {
+    // still try to build options if mode is hourly and date empty? keep placeholders
+    if (viewStartTime) clearSelect(viewStartTime, '— เลือกเวลาเริ่มต้น —');
+    if (viewEndTime) { clearSelect(viewEndTime, '— เลือกเวลาสิ้นสุด —'); viewEndTime.disabled = true; }
+  }
+
   const venueItems   = Array.from(document.querySelectorAll('.venue-item'));
   const sportChips   = Array.from(document.querySelectorAll('.filter-chip[data-filter-type="sport"]'));
   const sortChips    = Array.from(document.querySelectorAll('.sort-chip'));

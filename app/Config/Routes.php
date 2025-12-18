@@ -28,9 +28,9 @@ $routes->get('sport', 'customer\HomeController::index');
 $routes->get('sport/show/(:num)', 'customer\StadiumController::show/$1');
 $routes->get('sport/schedule/field/(:num)', 'customer\\BookingController::fieldSchedule/$1');
 $routes->get('sport/fields/(:num)', 'customer\StadiumController::fields/$1');
+$routes->get('sport/view', 'customer\\StadiumController::view');
 
 $routes->group('sport', ['filter' => 'customer'], static function ($routes) {
-    $routes->get('view', 'customer\StadiumController::view');
     $routes->get('favorites', 'customer\FavoriteController::index');
     $routes->get('cart', 'customer\CartController::index');
     $routes->post('cart/add', 'customer\CartController::add');

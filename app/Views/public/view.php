@@ -1,6 +1,16 @@
 <?= $this->extend('layouts/public') ?>
 
 <?= $this->section('content') ?>
+<?php
+  $filters = $filters ?? [];
+  $mode = (string)($filters['mode'] ?? '');
+  $qVal = (string)($filters['q'] ?? '');
+  $dateVal = (string)($filters['date'] ?? '');
+  $startTimeVal = (string)($filters['start_time'] ?? '');
+  $endTimeVal = (string)($filters['end_time'] ?? '');
+  $startDateVal = (string)($filters['start_date'] ?? '');
+  $endDateVal = (string)($filters['end_date'] ?? '');
+?>
 <main class="bg-gray-50 min-h-screen">
   <!-- Header / Title -->
   <section class="bg-[var(--primary)] text-white">
@@ -17,12 +27,14 @@
         </div>
       </div>
     </div>
-  </section>
+  
+      </form>
+</section>
 
   <!-- Search + Filter bar -->
   <section class="bg-white border-b border-gray-200">
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4">
-      <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+      <form method="get" action="<?= site_url('sport/view') ?>" class="flex flex-col gap-3 sm:flex-row sm:items-center">
         <!-- Search -->
         <div class="relative flex-1">
           <span class="pointer-events-none absolute inset-y-0 left-3 inline-flex items-center text-gray-400">
@@ -36,6 +48,8 @@
           <input
             id="venueSearch"
             type="text"
+            name="q"
+            value="<?= esc($qVal) ?>"
             class="w-full rounded-full border border-[var(--line)] bg-gray-50/60 pl-10 pr-4 py-2.5 text-sm
                    text-[var(--text)]
                    focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]
@@ -61,6 +75,15 @@
             </svg>
             <span>ฟิลเตอร์</span>
           </button>
+
+          <button type="submit"
+            class="inline-flex items-center rounded-full bg-[var(--primary)] px-5 py-2.5 text-sm font-semibold text-white
+                   shadow-sm hover:opacity-95 transition"
+          >ค้นหา</button>
+          <a href="<?= site_url('sport/view') ?>"
+             class="inline-flex items-center rounded-full border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700
+                    hover:bg-gray-50 transition"
+          >ล้าง</a>
         </div>
       </div>
 
@@ -69,6 +92,60 @@
         id="filterPanel"
         class="mt-3 hidden rounded-2xl border border-gray-200 bg-gray-50/80 p-4 text-sm"
       >
+        <!-- Search Filter: Mode + Date/Time -->
+        <div class="mb-4 rounded-2xl border border-gray-200 bg-white p-4">
+          <div class="grid grid-cols-1 md:grid-cols-6 gap-3">
+            <div class="md:col-span-2">
+              <label class="block text-[11px] font-semibold uppercase tracking-wide text-gray-600 mb-1">รูปแบบการจอง</label>
+              <select name="mode" id="viewMode"
+                class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary)]">
+                <option value="" <?= $mode === '' ? 'selected' : '' ?>>ทั้งหมด</option>
+                <option value="hourly" <?= $mode === 'hourly' ? 'selected' : '' ?>>รายชั่วโมง</option>
+                <option value="daily"  <?= $mode === 'daily'  ? 'selected' : '' ?>>รายวัน</option>
+              </select>
+            </div>
+
+            <div id="viewHourlyBox" class="md:col-span-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <label class="block text-[11px] font-semibold uppercase tracking-wide text-gray-600 mb-1">วันที่</label>
+                <input type="date" id="viewDate" name="date" min="<?= date('Y-m-d') ?>" value="<?= esc($dateVal) ?>"
+                  class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary)]" />
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold uppercase tracking-wide text-gray-600 mb-1">เวลาเริ่มต้น</label>
+                <select id="viewStartTime" name="start_time" data-selected="<?= esc($startTimeVal) ?>"
+                  class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary)]">
+                  <option value="">— เลือกเวลาเริ่มต้น —</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold uppercase tracking-wide text-gray-600 mb-1">เวลาสิ้นสุด</label>
+                <select id="viewEndTime" name="end_time" data-selected="<?= esc($endTimeVal) ?>"
+                  class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary)]" disabled>
+                  <option value="">— เลือกเวลาสิ้นสุด —</option>
+                </select>
+              </div>
+            </div>
+
+            <div id="viewDailyBox" class="md:col-span-4 grid grid-cols-1 sm:grid-cols-2 gap-3 hidden">
+              <div>
+                <label class="block text-[11px] font-semibold uppercase tracking-wide text-gray-600 mb-1">วันที่เริ่มต้น</label>
+                <input type="date" id="viewStartDate" name="start_date" min="<?= date('Y-m-d') ?>" value="<?= esc($startDateVal) ?>"
+                  class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary)]" />
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold uppercase tracking-wide text-gray-600 mb-1">วันที่สิ้นสุด</label>
+                <input type="date" id="viewEndDate" name="end_date" min="<?= date('Y-m-d') ?>" value="<?= esc($endDateVal) ?>"
+                  class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary)]" />
+              </div>
+            </div>
+          </div>
+
+          <p class="mt-3 text-xs text-gray-500">
+            * ถ้าเลือกเวลารายชั่วโมง ระบบจะกรองเฉพาะสนามที่ “คิวว่าง” และ “เวลาเปิด-ปิด” ครอบคลุมช่วงเวลาที่เลือก
+          </p>
+        </div>
+
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <!-- ประเภทกีฬา ดึงจาก categories -->
           <div>

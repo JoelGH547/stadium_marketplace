@@ -14,6 +14,7 @@ class HomeController extends BaseController
     public function index()
     {
         $stadiumModel = new StadiumModel();
+        $categoryModel = new CategoryModel();
 
         // ดึงสนามมาใช้ในการ์ด section ด้านล่าง + ดึงชื่อประเภท + emoji จาก categories
         $venueCards = $stadiumModel
@@ -131,11 +132,15 @@ class HomeController extends BaseController
             $favoriteMap = array_fill_keys($favIds, true);
         }
 
-$data = [
+        // ดึงประเภทกีฬาไปใช้ใน filter (dynamic)
+        $categories = $categoryModel->orderBy('name', 'ASC')->findAll();
+
+        $data = [
             'heroUrl'    => 'assets/images/batminton.webp',
             'title'      => 'จองสนามกีฬาออนไลน์',
             'venueCards' => $venueCards,
             'favoriteMap' => $favoriteMap,
+            'categories' => $categories,
         ];
 
         return view('public/home', $data);
