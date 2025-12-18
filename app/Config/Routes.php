@@ -31,6 +31,7 @@ $routes->get('sport/fields/(:num)', 'customer\StadiumController::fields/$1');
 
 $routes->group('sport', ['filter' => 'customer'], static function ($routes) {
     $routes->get('view', 'customer\StadiumController::view');
+    $routes->get('favorites', 'customer\FavoriteController::index');
     $routes->get('cart', 'customer\CartController::index');
     $routes->post('cart/add', 'customer\CartController::add');
     $routes->get('checkout', 'customer\CheckoutController::index');
@@ -39,9 +40,11 @@ $routes->group('sport', ['filter' => 'customer'], static function ($routes) {
     $routes->get('profile/edit', 'customer\ProfileController::edit');
     $routes->post('profile/update', 'customer\ProfileController::update');
     $routes->get('booking_history', 'customer\BookingController::index');
-
     $routes->post('reviews/store', 'customer\ReviewController::store');
 });
+
+// Favorites (AJAX toggle without auth filter; return JSON need_login)
+$routes->post('sport/favorites/toggle', 'customer\FavoriteController::toggle');
 
 
 // ==========================================================

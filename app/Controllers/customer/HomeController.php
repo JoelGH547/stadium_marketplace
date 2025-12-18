@@ -7,6 +7,7 @@ use App\Models\StadiumModel;
 use App\Models\CategoryModel;
 use App\Models\StadiumFieldModel;
 use App\Models\StadiumReviewModel;
+use App\Models\CustomerFavoriteModel;
 
 class HomeController extends BaseController
 {
@@ -52,10 +53,20 @@ class HomeController extends BaseController
         }
         unset($v);
 
-        $data = [
+        
+        // Favorites map (for heart icon state)
+        $favoriteMap = [];
+        if (session()->get('customer_logged_in')) {
+            $favModel = new CustomerFavoriteModel();
+            $favIds   = $favModel->getFavoriteStadiumIds((int) session('customer_id'));
+            $favoriteMap = array_fill_keys($favIds, true);
+        }
+
+$data = [
             'heroUrl'    => 'assets/images/batminton.webp',
             'title'      => 'จองสนามกีฬาออนไลน์',
             'venueCards' => $venueCards,
+            'favoriteMap' => $favoriteMap,
         ];
 
         return view('public/home', $data);

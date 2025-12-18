@@ -7,6 +7,7 @@ use App\Models\StadiumModel;
 use App\Models\CategoryModel;
 use App\Models\StadiumFieldModel;
 use App\Models\StadiumReviewModel;
+use App\Models\CustomerFavoriteModel;
 // use App\Models\VendorItemModel; // Unused
 
 class StadiumController extends BaseController
@@ -330,7 +331,15 @@ class StadiumController extends BaseController
         $ratingSummary = $reviewModel->getSummaryForStadium((int) $id);
         $latestReviews = $reviewModel->getLatestForStadium((int) $id, 8);
 
-        // ส่งตัวแปรให้ field.php (dummy ใน view จะไม่ถูกใช้เพราะเราส่งค่ามาแล้ว)
+        
+        // Favorite state for this stadium
+        $isFavorite = false;
+        if (session()->get('customer_logged_in')) {
+            $favModel    = new CustomerFavoriteModel();
+            $isFavorite  = $favModel->isFavorited((int) session('customer_id'), (int) $id);
+        }
+
+// ส่งตัวแปรให้ field.php (dummy ใน view จะไม่ถูกใช้เพราะเราส่งค่ามาแล้ว)
         return view('public/field', [
             'stadium'   => $stadium,
             'stadiumId' => (int) $id,
@@ -338,6 +347,7 @@ class StadiumController extends BaseController
             'stadiumImages'  => $stadiumImages,
             'ratingSummary' => $ratingSummary,
             'latestReviews' => $latestReviews,
+            'isFavorite'    => $isFavorite,
         ]);
     }
 }

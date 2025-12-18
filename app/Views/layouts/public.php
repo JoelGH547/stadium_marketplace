@@ -408,11 +408,15 @@
     <?= $this->include('layouts/public_footer') ?>
     <script>
         window.CUSTOMER_LOGGED_IN = <?= session('customer_logged_in') ? 'true' : 'false' ?>;
+        window.IS_LOGGED_IN = window.CUSTOMER_LOGGED_IN;
+        window.FAVORITE_TOGGLE_URL = "<?= site_url('sport/favorites/toggle') ?>";
+        window.FAVORITES_URL = "<?= site_url('sport/favorites') ?>";
     </script>
     <script src="<?= base_url('assets/home.js') ?>"></script>
     <script src="<?= base_url('assets/view.js') ?>"></script>
     <script src="<?= base_url('assets/show.js') ?>"></script>
     <script src="<?= base_url('assets/field.js') ?>"></script>
+    <script src="<?= base_url('assets/favorites.js') ?>"></script>
 
     <?= $this->renderSection('scripts') ?>
     <div id="loginBackdrop" class="hidden fixed inset-0 bg-black/60 z-50"></div>

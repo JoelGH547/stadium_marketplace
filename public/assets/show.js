@@ -686,8 +686,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 if (data.success) {
                     window.IS_LOGGED_IN = true;
+                    window.CUSTOMER_LOGGED_IN = true;
                     hideLoginPanel();
-                    document.getElementById('btnBookNow').click();
+                    const bn = document.getElementById('btnBookNow');
+                    if (bn) bn.click();
                 } else {
                     loginErrorDiv.textContent = data.message || 'เกิดข้อผิดพลาดบางอย่าง';
                     loginErrorDiv.classList.remove('hidden');
@@ -705,7 +707,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
     // Add click handler for Book Now to validate and handle login
-    btnBookNow.addEventListener('click', function (e) {
+    if (btnBookNow) btnBookNow.addEventListener('click', function (e) {
         // Always prevent default to handle logic here
         e.preventDefault();
 
