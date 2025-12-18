@@ -46,7 +46,7 @@
                                     <label class="text-xs font-semibold uppercase tracking-wide text-gray-500">
                                         ช่องกรอกชื่อสนาม
                                     </label>
-                                    <input type="text" name="q" placeholder="ระบุชื่อสนามที่ต้องการค้นหา..."
+                                    <input type="text" name="q" placeholder="ระบุชื่อสนามที่ต้องการค้นหา..." autocomplete="off"
                                         class="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm sm:text-base focus:outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)]">
                                 </div>
 
@@ -99,7 +99,7 @@
                                     <label class="text-xs font-semibold uppercase tracking-wide text-gray-500">
                                         ช่องกรอกชื่อสนาม
                                     </label>
-                                    <input type="text" name="q" placeholder="ระบุชื่อสนามที่ต้องการค้นหา..."
+                                    <input type="text" name="q" placeholder="ระบุชื่อสนามที่ต้องการค้นหา..." autocomplete="off"
                                         class="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm sm:text-base focus:outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)]">
                                 </div>
 

@@ -179,50 +179,95 @@ class StadiumController extends BaseController
                 }));
             }
         }
-
+        
         // -------------------------
-        // Category presentation helpers (existing behavior)
+        // ADDED: Get ratings and prices
         // -------------------------
-        foreach ($venueCards as &$venue) {
-            $cat = strtolower(trim((string) ($venue['category_name'] ?? '')));
-            $venue['type_icon'] = match ($cat) {
-                'football'  => '⚽',
-                'basketball'=> '🏀',
-                'badminton' => '🏸',
-                'tennis'    => '🎾',
-                'futsal'    => '🥅',
-                'volleyball'=> '🏐',
-                default     => '🏟️',
-            };
+        $reviewModel = new StadiumReviewModel();
+        $stadiumIds  = array_map(static fn($x) => (int)($x['id'] ?? 0), $venueCards);
+        $summaries   = !empty($stadiumIds) ? $reviewModel->getSummariesForStadiumIds($stadiumIds) : [];
 
-            $venue['type_bg'] = match ($cat) {
-                'football'   => 'bg-green-50 text-green-700',
-                'basketball' => 'bg-orange-50 text-orange-700',
-                'badminton'  => 'bg-purple-50 text-purple-700',
-                'tennis'     => 'bg-lime-50 text-lime-700',
-                'futsal'     => 'bg-blue-50 text-blue-700',
-                'volleyball' => 'bg-pink-50 text-pink-700',
-                default      => 'bg-gray-50 text-gray-700',
-            };
+        $fieldModel = new StadiumFieldModel();
+        $allFields = [];
+        if (!empty($stadiumIds)) {
+            $allFields = $fieldModel
+                ->select('stadium_id, price, price_daily')
+                ->whereIn('stadium_id', $stadiumIds)
+                ->findAll();
         }
-        unset($venue);
+
+        $stadiumPrices = [];
+        foreach ($allFields as $f) {
+            $sid = $f['stadium_id'];
+            if (!isset($stadiumPrices[$sid])) {
+                $stadiumPrices[$sid] = ['hourly' => [], 'daily'  => []];
+            }
+            if (!empty($f['price']) && $f['price'] > 0) $stadiumPrices[$sid]['hourly'][] = (float)$f['price'];
+            if (!empty($f['price_daily']) && $f['price_daily'] > 0) $stadiumPrices[$sid]['daily'][] = (float)$f['price_daily'];
+        }
+
+        // -------------------------
+        // Data enrichment loop
+        // -------------------------
+        foreach ($venueCards as &$v) {
+            // Category Icon & Label (from DB)
+            $v['type_icon'] = !empty($v['category_emoji']) ? $v['category_emoji'] : '🏟️';
+            $v['type_label'] = $v['category_name'] ?? 'สนามกีฬา';
+
+            // Rating
+            $sid = (int) ($v['id'] ?? 0);
+            $summary = $summaries[$sid] ?? ['avg' => 0.0, 'count' => 0];
+            $v['avg_rating'] = round((float)$summary['avg'], 1);
+            $v['review_count'] = (int)$summary['count'];
+            
+            // Price Range HTML
+            $prices = $stadiumPrices[$sid] ?? ['hourly' => [], 'daily' => []];
+            $priceHtmlParts = [];
+            if (!empty($prices['hourly'])) {
+                $minH = min($prices['hourly']); $maxH = max($prices['hourly']);
+                if (count($prices['hourly']) > 1 && $minH !== $maxH) {
+                    $priceHtmlParts[] = '<div class="text-right"><div class="text-xs text-gray-500">รายชั่วโมง</div><div class="font-bold text-[var(--primary)]">' . number_format($minH) . ' ~ ' . number_format($maxH) . ' ฿</div></div>';
+                } else {
+                    $priceHtmlParts[] = '<div class="text-right"><div class="text-xs text-gray-500">รายชั่วโมง</div><div class="font-bold text-[var(--primary)]">' . number_format($minH) . ' ฿</div></div>';
+                }
+            }
+            if (!empty($prices['daily'])) {
+                $minD = min($prices['daily']); $maxD = max($prices['daily']);
+                if (count($prices['daily']) > 1 && $minD !== $maxD) {
+                    $priceHtmlParts[] = '<div class="text-right"><div class="text-xs text-gray-500">รายวัน</div><div class="font-bold text-orange-600">' . number_format($minD) . ' ~ ' . number_format($maxD) . ' ฿</div></div>';
+                } else {
+                    $priceHtmlParts[] = '<div class="text-right"><div class="text-xs text-gray-500">รายวัน</div><div class="font-bold text-orange-600">' . number_format($minD) . ' ฿</div></div>';
+                }
+            }
+            if (empty($priceHtmlParts)) {
+                $v['price_range_html'] = '<span class="text-xs text-gray-400">ยังไม่มีราคา</span>';
+            } else {
+                $v['price_range_html'] = implode('<div class="h-2"></div>', $priceHtmlParts);
+            }
+        }
+        unset($v);
+
+        // Favorites map
+        $favoriteMap = [];
+        if (session()->get('customer_logged_in')) {
+            $favModel = new CustomerFavoriteModel();
+            $favIds   = $favModel->getFavoriteStadiumIds((int) session('customer_id'));
+            $favoriteMap = array_fill_keys($favIds, true);
+        }
 
         $categories = $categoryModel->orderBy('name', 'ASC')->findAll();
 
         $filters = [
-            'mode'       => $mode,
-            'q'          => $q,
-            'date'       => $date,
-            'start_time' => $startTime,
-            'end_time'   => $endTime,
-            'start_date' => $startDate,
-            'end_date'   => $endDate,
+            'mode'       => $mode, 'q'          => $q,
+            'date'       => $date, 'start_time' => $startTime, 'end_time'   => $endTime,
+            'start_date' => $startDate, 'end_date'   => $endDate,
         ];
 
         return view('public/view', [
-            'venueCards' => $venueCards,
-            'categories' => $categories,
-            'filters'    => $filters,
+            'venueCards'  => $venueCards,
+            'categories'  => $categories,
+            'filters'     => $filters,
+            'favoriteMap' => $favoriteMap,
         ]);
     }
 

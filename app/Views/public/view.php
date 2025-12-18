@@ -50,6 +50,7 @@
             type="text"
             name="q"
             value="<?= esc($qVal) ?>"
+            autocomplete="off"
             class="w-full rounded-full border border-[var(--line)] bg-gray-50/60 pl-10 pr-4 py-2.5 text-sm
                    text-[var(--text)]
                    focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]
@@ -67,11 +68,9 @@
                    bg-white px-4 py-2.5 text-sm font-medium text-[var(--primary)]
                    shadow-sm hover:bg-[var(--primary)] hover:text-white transition"
           >
-            <!-- Heroicons: Adjustments Horizontal -->
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
-                 viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round"
-                    d="M3 7h12m4 0h2M6 7v10m9-4h6M3 17h2m4 0h8m-4-4V5" />
+            <!-- Heroicons: Funnel -->
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.572a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z" />
             </svg>
             <span>ฟิลเตอร์</span>
           </button>
@@ -275,32 +274,41 @@
         <ul id="allVenueList" class="grid grid-cols-1 gap-4">
           <?php foreach ($venueCards as $idx => $v): ?>
             <?php
-              $name    = $v['name'] ?? 'ชื่อสนาม';
-              $price   = isset($v['price']) ? (float) $v['price'] : 0;
-
+              // --- Block copy-pasted from home.php with adjustments ---
+              $id = $v['id'] ?? null;
+              $detailUrl = $id ? site_url('sport/fields/' . $id) : null;
+              $name = $v['name'] ?? 'ชื่อสนาม';
+              
               $addressFull = trim(($v['address'] ?? '') . ' ' . ($v['province'] ?? ''));
               $address     = $addressFull !== '' ? $addressFull : 'ยังไม่ระบุที่อยู่';
 
-              $open  = $v['open_time']  ?? null;
+              $open = $v['open_time'] ?? null;
               $close = $v['close_time'] ?? null;
-              if ($open  !== null && strlen($open)  >= 5) $open  = substr($open, 0, 5);
+              if ($open !== null && strlen($open) >= 5) $open = substr($open, 0, 5);
               if ($close !== null && strlen($close) >= 5) $close = substr($close, 0, 5);
               $timeLabel = ($open && $close) ? ($open . ' – ' . $close) : 'ยังไม่ระบุเวลา';
 
-              $typeIcon  = $v['type_icon']  ?? '🏟️';
-              $typeLabel = $v['type_label'] ?? ($v['category_name'] ?? 'สนามกีฬา');
+              $typeIcon = $v['type_icon'] ?? '🏟️';
+              $typeLabel = $v['type_label'] ?? 'สนามกีฬา';
 
-              $cover    = $v['cover_image'] ?? null;
-              $coverUrl = $cover
-                ? base_url('assets/uploads/stadiums/' . $cover)
-                : base_url('assets/uploads/home/1.jpg');
+              $cover = null;
+              if (!empty($v['outside_images'])) {
+                  $decoded = json_decode($v['outside_images'], true);
+                  if (is_array($decoded) && !empty($decoded[0])) {
+                      $cover = $decoded[0];
+                  }
+              }
+              $coverUrl = $cover ? base_url('assets/uploads/stadiums/' . $cover) : base_url('assets/uploads/home/1.jpg');
+              
+              $lat = $v['lat'] ?? null;
+              $lng = $v['lng'] ?? null;
+              
+              $avgRating   = (float) ($v['avg_rating'] ?? 0);
+              $reviewCount = (int) ($v['review_count'] ?? 0);
 
-              $categoryId = $v['category_id'] ?? '';
-              $lat        = $v['lat'] ?? null;
-              $lng        = $v['lng'] ?? null;
-
-              $id        = $v['id'] ?? null;
-              $detailUrl = $id ? site_url('sport/show/' . $id) : null;
+              // Favorite button data
+              $sid = (int) ($v['id'] ?? 0);
+              $isFav = !empty($favoriteMap[$sid]);
 
               // tag ทำเลแบบง่ายจาก address / province
               $areaTag = 'suburb';
@@ -311,77 +319,99 @@
                   $areaTag = 'near-city';
               }
             ?>
-            <li
-              class="venue-item relative flex items-center gap-4 bg-white rounded-2xl
-                     border border-gray-200 shadow-sm hover:shadow-md
-                     transition-shadow duration-200 overflow-hidden"
-              data-index="<?= $idx ?>"
-              data-name="<?= esc($name) ?>"
-              data-address="<?= esc($addressFull) ?>"
-              data-category-id="<?= esc($categoryId) ?>"
-              data-price="<?= esc($price) ?>"
-              data-lat="<?= esc($lat) ?>"
-              data-lng="<?= esc($lng) ?>"
-              data-area="<?= esc($areaTag) ?>"
-            >
-              <?php if (!empty($detailUrl)): ?>
-                <a href="<?= esc($detailUrl) ?>" class="absolute inset-0 z-[5]" aria-label="ดูรายละเอียดสนาม <?= esc($name) ?>">
-                  <span class="sr-only">ดูรายละเอียดสนาม</span>
-                </a>
-              <?php endif; ?>
-              <img
-                src="<?= esc($coverUrl) ?>"
-                alt="<?= esc($name) ?>"
-                class="h-24 w-24 rounded-2xl object-cover flex-shrink-0"
-              >
+            <li class="venue-item relative bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-200 overflow-hidden"
+                data-index="<?= $idx ?>"
+                data-name="<?= esc($name) ?>"
+                data-address="<?= esc($addressFull) ?>"
+                data-category-id="<?= esc($v['category_id'] ?? '') ?>"
+                data-price-hourly="<?= $v['price'] ?? 0 ?>"
+                data-lat="<?= esc($lat) ?>"
+                data-lng="<?= esc($lng) ?>"
+                data-area="<?= esc($areaTag) ?>"
+                data-rating="<?= $avgRating ?>">
 
-              <div class="flex-1 min-w-0">
-                <div class="flex items-center gap-2">
-                  <h2 class="text-base font-extrabold text-[color:var(--ink)] truncate">
-                    <?= esc($name) ?>
-                  </h2>
-                  <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px]
-                               bg-white text-[var(--primary)] border border-[var(--primary)]
-                               shadow-sm">
-                    <span><?= esc($typeIcon) ?></span>
-                    <span class="truncate max-w-[120px]"><?= esc($typeLabel) ?></span>
-                  </span>
+                <div class="flex flex-col md:flex-row">
+                    <!-- Image Section -->
+                    <div class="relative w-full md:w-80 h-56 flex-shrink-0">
+                        <?php if (!empty($detailUrl)): ?>
+                        <a href="<?= esc($detailUrl) ?>" class="absolute inset-0 z-[5]">
+                            <span class="sr-only">ดูรายละเอียดสนาม</span>
+                        </a>
+                        <?php endif; ?>
+                        <img src="<?= esc($coverUrl) ?>" class="w-full h-full object-cover"
+                            alt="<?= esc($name) ?>">
+
+                        <!-- Sport Type Badge -->
+                        <div
+                            class="absolute bottom-3 left-3 z-[6] inline-flex items-center gap-1 text-[var(--primary)] text-xs font-semibold px-3 py-1.5 rounded-full bg-white/90 shadow-md backdrop-blur-sm border border-white/60">
+                            <span class="text-sm"><?= esc($typeIcon) ?></span>
+                            <span><?= esc($typeLabel) ?></span>
+                        </div>
+
+                        <!-- Heart Icon (Favorite) -->
+                        <button type="button"
+                            class="js-fav-toggle absolute top-3 right-3 z-[6] w-10 h-10 rounded-full flex items-center justify-center shadow-md transition-colors <?= $isFav ? 'bg-rose-50 ring-2 ring-rose-200' : 'bg-white/90 hover:bg-white' ?>"
+                            data-stadium-id="<?= $sid ?>" data-favorited="<?= $isFav ? '1' : '0' ?>"
+                            title="<?= $isFav ? 'ลบออกจากรายการโปรด' : 'เพิ่มในรายการโปรด' ?>">
+                            <svg xmlns="http://www.w3.org/2000/svg"
+                                class="h-5 w-5 transition <?= $isFav ? 'text-rose-600' : 'text-gray-600' ?>"
+                                fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                            </svg>
+                        </button>
+                    </div>
+                    <!-- Content Section -->
+                    <div class="flex-1 p-5 md:p-6">
+                        <h3 class="text-xl font-bold text-gray-900 mb-2 line-clamp-2">
+                            <?= esc($name) ?>
+                        </h3>
+
+                        <div class="flex items-center gap-2 text-sm text-gray-600 mb-3">
+                            <span class="inline-flex items-center gap-1">
+                                ⭐ <strong class="text-gray-900"><?= $reviewCount > 0 ? number_format($avgRating, 1) : '0.0' ?></strong>
+                                <?php if ($reviewCount > 0): ?>
+                                    <span class="text-gray-500">(<?= $reviewCount ?> รีวิว)</span>
+                                <?php else: ?>
+                                    <span class="text-gray-400">(ยังไม่มีรีวิว)</span>
+                                <?php endif; ?>
+                            </span>
+                            <span class="text-gray-400">•</span>
+                            <span class="inline-flex items-center gap-1 dist-badge">
+                                📍 <span>-- km.</span>
+                            </span>
+                        </div>
+                        <p class="text-sm text-gray-600 mb-3 line-clamp-1">
+                            <?= esc($address) ?>
+                        </p>
+                        <div class="flex flex-wrap items-center gap-2 text-sm">
+                            <span
+                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full border border-gray-200 text-gray-600">
+                                ⏰ <?= esc($timeLabel) ?>
+                            </span>
+                        </div>
+                    </div>
+                    <!-- CTA Section -->
+                    <div
+                        class="flex flex-col items-end justify-between p-5 md:p-6 md:w-60 bg-gray-50/70 border-t md:border-t-0 md:border-l border-gray-100">
+
+                        <!-- Price Range -->
+                        <div class="w-full flex flex-col items-end mt-1 mb-4">
+                            <?= $v['price_range_html'] ?? '' ?>
+                        </div>
+
+                        <?php if (!empty($detailUrl)): ?>
+                        <a href="<?= esc($detailUrl) ?>"
+                            class="relative z-[6] w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[var(--primary)] text-white font-semibold hover:bg-emerald-600 transition-colors shadow-md whitespace-nowrap">
+                            <span>ดูรายละเอียด</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                            </svg>
+                        </a>
+                        <?php endif; ?>
+                    </div>
                 </div>
-
-                <div class="mt-1 flex flex-wrap items-center gap-2 text-sm">
-                  <span class="inline-flex items-center gap-1 rounded-full dist-badge px-2.5 py-0.5">
-                    📍 <span>-- km.</span>
-                  </span>
-                  <span class="text-gray-500 truncate"><?= esc($address) ?></span>
-                </div>
-
-                <div class="mt-2 flex flex-wrap items-center gap-2 text-sm">
-                  <span>⭐ <strong>0</strong></span>
-                  <span class="inline-flex items-center gap-1 rounded-full border border-gray-200 px-2.5 py-0.5 text-gray-600">
-                    ⏰ <?= esc($timeLabel) ?>
-                  </span>
-                  <span class="text-[var(--primary)] font-semibold">
-                    ฿<?= number_format($price, 0) ?>/hr.
-                  </span>
-                </div>
-              </div>
-
-              <!-- ปุ่มดูรายละเอียด -->
-              <?php if (!empty($detailUrl)): ?>
-              <a
-                href="<?= esc($detailUrl) ?>"
-                class="absolute right-3 top-1/2 -translate-y-1/2 z-[10]
-                       h-9 w-9 rounded-full flex items-center justify-center
-                       bg-white text-[var(--primary)]
-                       border border-[var(--primary)]
-                       shadow-md shadow-black/10
-                       hover:bg-[var(--primary)] hover:text-white
-                       transition-colors"
-              >
-                &rsaquo;
-              </a>
-              <?php endif; ?>
-
             </li>
           <?php endforeach; ?>
         </ul>

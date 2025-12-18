@@ -253,6 +253,16 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
+  // Handle form submission for the main search button
+  const searchForm = document.querySelector('form[method="get"]');
+  if (searchForm) {
+    searchForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      searchTerm = searchInput ? searchInput.value.trim().toLowerCase() : '';
+      applyFilters();
+    });
+  }
+
   // geolocation + ระยะห่าง
   function haversine(lat1, lon1, lat2, lon2) {
     const toRad = deg => deg * Math.PI / 180;
