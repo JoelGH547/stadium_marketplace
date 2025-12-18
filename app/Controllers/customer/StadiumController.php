@@ -12,7 +12,7 @@ use App\Models\CustomerFavoriteModel;
 
 class StadiumController extends BaseController
 {
-        public function view()
+    public function view()
     {
         $stadiumModel  = new StadiumModel();
         $categoryModel = new CategoryModel();
@@ -40,45 +40,25 @@ class StadiumController extends BaseController
         // -------------------------
         // Normalize / validate times (for availability check)
         // -------------------------
-        $reqStart = null; // DATETIME string
-        $reqEnd   = null; // DATETIME string (exclusive end)
-        $reqStartTime = null; // TIME string (for open/close check)
-        $reqEndTime   = null; // TIME string (for open/close check)
-
-        $isValidDate = function ($d) {
-            return is_string($d) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $d);
-        };
-
-        $isValidTime = function ($t) {
-            // allow 00:00 .. 23:59 + special 24:00
-            return is_string($t) && preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d$/', $t) || $t === '24:00';
-        };
+        $reqStart = null; $reqEnd = null; $reqStartTime = null; $reqEndTime = null;
+        $isValidDate = fn ($d) => is_string($d) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $d);
+        $isValidTime = fn ($t) => is_string($t) && (preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d$/', $t) || $t === '24:00');
 
         if ($mode === 'hourly' && $isValidDate($date) && $isValidTime($startTime) && $isValidTime($endTime)) {
-            // cannot choose past date
             if ($date >= $today) {
-                // end must be after start; allow end=24:00
                 $startMin = ($startTime === '24:00') ? 1440 : (intval(substr($startTime, 0, 2)) * 60 + intval(substr($startTime, 3, 2)));
                 $endMin   = ($endTime === '24:00') ? 1440 : (intval(substr($endTime, 0, 2)) * 60 + intval(substr($endTime, 3, 2)));
-
                 if ($startMin < $endMin && $startMin < 1440) {
                     $reqStartTime = $startTime . ':00';
                     $reqEndTime   = ($endTime === '24:00') ? '24:00:00' : ($endTime . ':00');
-
                     $reqStart = $date . ' ' . $startTime . ':00';
-
-                    if ($endTime === '24:00') {
-                        $reqEnd = date('Y-m-d', strtotime($date . ' +1 day')) . ' 00:00:00';
-                    } else {
-                        $reqEnd = $date . ' ' . $endTime . ':00';
-                    }
+                    $reqEnd   = ($endTime === '24:00') ? date('Y-m-d', strtotime($date . ' +1 day')) . ' 00:00:00' : $date . ' ' . $endTime . ':00';
                 }
             }
         }
 
         if ($mode === 'daily' && $isValidDate($startDate) && $isValidDate($endDate)) {
             if ($startDate >= $today && $endDate >= $startDate) {
-                // Daily: treat as [startDate 00:00, endDate+1 00:00)
                 $reqStart = $startDate . ' 00:00:00';
                 $reqEnd   = date('Y-m-d', strtotime($endDate . ' +1 day')) . ' 00:00:00';
             }
@@ -97,157 +77,107 @@ class StadiumController extends BaseController
         }
 
         // -------------------------
-        // Availability filter (bookings overlap) + rent support (price column)
-        // - Apply only when user selects mode (hourly/daily)
-        // - If time/date not provided, still filter by "supports rent" (price > 0)
+        // Availability filter
         // -------------------------
         if ($mode !== '') {
             $priceCol = ($mode === 'daily') ? 'price_daily' : 'price';
-
-            $sql = "EXISTS (
-                SELECT 1
-                FROM stadium_fields sf
-                WHERE sf.stadium_id = stadiums.id
-                  AND sf.$priceCol IS NOT NULL
-                  AND sf.$priceCol > 0";
-
+            $sql = "EXISTS (SELECT 1 FROM stadium_fields sf WHERE sf.stadium_id = stadiums.id AND sf.$priceCol IS NOT NULL AND sf.$priceCol > 0";
             if ($reqStart && $reqEnd) {
                 $reqStartEsc = $db->escape($reqStart);
                 $reqEndEsc   = $db->escape($reqEnd);
-
-                $sql .= " AND NOT EXISTS (
-                    SELECT 1
-                    FROM bookings b
-                    WHERE b.field_id = sf.id
-                      AND b.status IN ('pending','confirmed')
-                      AND b.booking_start_time < $reqEndEsc
-                      AND b.booking_end_time   > $reqStartEsc
-                )";
+                $sql .= " AND NOT EXISTS (SELECT 1 FROM bookings b WHERE b.field_id = sf.id AND b.status IN ('pending','confirmed') AND b.booking_start_time < $reqEndEsc AND b.booking_end_time > $reqStartEsc)";
             }
-
             $sql .= ")";
-
             $builder->where($sql, null, false);
         }
 
         $venueCards = $builder->get()->getResultArray();
 
         // -------------------------
-        // Extra real-world constraint: stadium open/close hours must cover requested time
-        // (Only for hourly + when time filter is present)
+        // Extra: Time-based filtering
         // -------------------------
         $timeToMinutes = function (?string $time) {
             if (! $time) return null;
-            // TIME from DB may be "HH:MM:SS" or "HH:MM"
-            if (preg_match('/^(\d{1,3}):(\d{2})(?::(\d{2}))?$/', $time, $m)) {
-                $h = (int) $m[1];
-                $mi = (int) $m[2];
-                // ignore seconds
-                return $h * 60 + $mi;
-            }
+            if (preg_match('/^(\d{1,3}):(\d{2})(?::(\d{2}))?$/', $time, $m)) { return (int) $m[1] * 60 + (int) $m[2]; }
             return null;
         };
 
         if ($mode === 'hourly' && $reqStartTime && $reqEndTime) {
             $reqStartMin = $timeToMinutes($reqStartTime);
             $reqEndMin   = ($reqEndTime === '24:00:00') ? 1440 : $timeToMinutes($reqEndTime);
-
             if ($reqStartMin !== null && $reqEndMin !== null) {
                 $venueCards = array_values(array_filter($venueCards, function ($v) use ($timeToMinutes, $reqStartMin, $reqEndMin) {
-                    $open  = $v['open_time']  ?? null;
-                    $close = $v['close_time'] ?? null;
-
-                    $openMin  = $timeToMinutes($open);
-                    $closeMin = $timeToMinutes($close);
-
-                    // If missing hours info, do not exclude
-                    if ($openMin === null || $closeMin === null) {
-                        return true;
-                    }
-
-                    // Normal same-day window
-                    if ($closeMin >= $openMin) {
-                        return ($reqStartMin >= $openMin) && ($reqEndMin <= $closeMin);
-                    }
-
-                    // Overnight window (e.g., 18:00 -> 02:00)
-                    // Accept requests that fall in [open, 24:00] OR [00:00, close]
-                    if ($reqStartMin >= $openMin) {
-                        return true;
-                    }
-                    return ($reqEndMin <= $closeMin);
+                    $openMin  = $timeToMinutes($v['open_time'] ?? null);
+                    $closeMin = $timeToMinutes($v['close_time'] ?? null);
+                    if ($openMin === null || $closeMin === null) return true;
+                    if ($closeMin >= $openMin) return ($reqStartMin >= $openMin) && ($reqEndMin <= $closeMin);
+                    return ($reqStartMin >= $openMin) || ($reqEndMin <= $closeMin);
                 }));
             }
         }
         
         // -------------------------
-        // ADDED: Get ratings and prices
+        // Data Enrichment
         // -------------------------
+        $stadiumIds = array_column($venueCards, 'id');
+
+        // 1. Ratings
         $reviewModel = new StadiumReviewModel();
-        $stadiumIds  = array_map(static fn($x) => (int)($x['id'] ?? 0), $venueCards);
-        $summaries   = !empty($stadiumIds) ? $reviewModel->getSummariesForStadiumIds($stadiumIds) : [];
+        $summaries = !empty($stadiumIds) ? $reviewModel->getSummariesForStadiumIds($stadiumIds) : [];
 
+        // 2. Prices
         $fieldModel = new StadiumFieldModel();
-        $allFields = [];
-        if (!empty($stadiumIds)) {
-            $allFields = $fieldModel
-                ->select('stadium_id, price, price_daily')
-                ->whereIn('stadium_id', $stadiumIds)
-                ->findAll();
-        }
-
+        $allFields = !empty($stadiumIds) ? $fieldModel->select('stadium_id, price, price_daily')->whereIn('stadium_id', $stadiumIds)->findAll() : [];
         $stadiumPrices = [];
         foreach ($allFields as $f) {
-            $sid = $f['stadium_id'];
-            if (!isset($stadiumPrices[$sid])) {
-                $stadiumPrices[$sid] = ['hourly' => [], 'daily'  => []];
-            }
-            if (!empty($f['price']) && $f['price'] > 0) $stadiumPrices[$sid]['hourly'][] = (float)$f['price'];
-            if (!empty($f['price_daily']) && $f['price_daily'] > 0) $stadiumPrices[$sid]['daily'][] = (float)$f['price_daily'];
+            if (!isset($stadiumPrices[$f['stadium_id']])) $stadiumPrices[$f['stadium_id']] = ['hourly' => [], 'daily'  => []];
+            if (!empty($f['price']) && $f['price'] > 0) $stadiumPrices[$f['stadium_id']]['hourly'][] = (float)$f['price'];
+            if (!empty($f['price_daily']) && $f['price_daily'] > 0) $stadiumPrices[$f['stadium_id']]['daily'][] = (float)$f['price_daily'];
         }
 
-        // -------------------------
-        // Data enrichment loop
-        // -------------------------
+        // 3. Facilities
+        $stadiumFacilityMap = [];
+        if (!empty($stadiumIds)) {
+            $stadiumFacilities = $db->table('stadium_facilities sf')
+                ->select('sfields.stadium_id, sf.facility_type_id')
+                ->join('stadium_fields sfields', 'sfields.id = sf.field_id')
+                ->whereIn('sfields.stadium_id', $stadiumIds)
+                ->distinct()->get()->getResultArray();
+            foreach ($stadiumFacilities as $sf) {
+                if (!isset($stadiumFacilityMap[$sf['stadium_id']])) $stadiumFacilityMap[$sf['stadium_id']] = [];
+                $stadiumFacilityMap[$sf['stadium_id']][] = $sf['facility_type_id'];
+            }
+        }
+
+        // 4. Loop to apply enrichment
         foreach ($venueCards as &$v) {
-            // Category Icon & Label (from DB)
+            $sid = (int) ($v['id'] ?? 0);
             $v['type_icon'] = !empty($v['category_emoji']) ? $v['category_emoji'] : '🏟️';
             $v['type_label'] = $v['category_name'] ?? 'สนามกีฬา';
 
-            // Rating
-            $sid = (int) ($v['id'] ?? 0);
             $summary = $summaries[$sid] ?? ['avg' => 0.0, 'count' => 0];
             $v['avg_rating'] = round((float)$summary['avg'], 1);
             $v['review_count'] = (int)$summary['count'];
             
-            // Price Range HTML
             $prices = $stadiumPrices[$sid] ?? ['hourly' => [], 'daily' => []];
             $priceHtmlParts = [];
             if (!empty($prices['hourly'])) {
                 $minH = min($prices['hourly']); $maxH = max($prices['hourly']);
-                if (count($prices['hourly']) > 1 && $minH !== $maxH) {
-                    $priceHtmlParts[] = '<div class="text-right"><div class="text-xs text-gray-500">รายชั่วโมง</div><div class="font-bold text-[var(--primary)]">' . number_format($minH) . ' ~ ' . number_format($maxH) . ' ฿</div></div>';
-                } else {
-                    $priceHtmlParts[] = '<div class="text-right"><div class="text-xs text-gray-500">รายชั่วโมง</div><div class="font-bold text-[var(--primary)]">' . number_format($minH) . ' ฿</div></div>';
-                }
+                $priceHtmlParts[] = '<div class="text-right"><div class="text-xs text-gray-500">รายชั่วโมง</div><div class="font-bold text-[var(--primary)]">' . ($minH !== $maxH ? number_format($minH) . ' ~ ' . number_format($maxH) : number_format($minH)) . ' ฿</div></div>';
             }
             if (!empty($prices['daily'])) {
                 $minD = min($prices['daily']); $maxD = max($prices['daily']);
-                if (count($prices['daily']) > 1 && $minD !== $maxD) {
-                    $priceHtmlParts[] = '<div class="text-right"><div class="text-xs text-gray-500">รายวัน</div><div class="font-bold text-orange-600">' . number_format($minD) . ' ~ ' . number_format($maxD) . ' ฿</div></div>';
-                } else {
-                    $priceHtmlParts[] = '<div class="text-right"><div class="text-xs text-gray-500">รายวัน</div><div class="font-bold text-orange-600">' . number_format($minD) . ' ฿</div></div>';
-                }
+                $priceHtmlParts[] = '<div class="text-right"><div class="text-xs text-gray-500">รายวัน</div><div class="font-bold text-orange-600">' . ($minD !== $maxD ? number_format($minD) . ' ~ ' . number_format($maxD) : number_format($minD)) . ' ฿</div></div>';
             }
-            if (empty($priceHtmlParts)) {
-                $v['price_range_html'] = '<span class="text-xs text-gray-400">ยังไม่มีราคา</span>';
-            } else {
-                $v['price_range_html'] = implode('<div class="h-2"></div>', $priceHtmlParts);
-            }
+            $v['price_range_html'] = empty($priceHtmlParts) ? '<span class="text-xs text-gray-400">ยังไม่มีราคา</span>' : implode('<div class="h-2"></div>', $priceHtmlParts);
+            
+            $v['facility_ids'] = $stadiumFacilityMap[$sid] ?? [];
         }
         unset($v);
 
-        // Favorites map
+        // -------------------------
+        // Prepare data for view
+        // -------------------------
         $favoriteMap = [];
         if (session()->get('customer_logged_in')) {
             $favModel = new CustomerFavoriteModel();
@@ -255,17 +185,19 @@ class StadiumController extends BaseController
             $favoriteMap = array_fill_keys($favIds, true);
         }
 
+        $facilityTypeModel = new \App\Models\FacilityTypeModel();
+        $facilityTypes = $facilityTypeModel->orderBy('name', 'ASC')->findAll();
         $categories = $categoryModel->orderBy('name', 'ASC')->findAll();
 
         $filters = [
-            'mode'       => $mode, 'q'          => $q,
-            'date'       => $date, 'start_time' => $startTime, 'end_time'   => $endTime,
-            'start_date' => $startDate, 'end_date'   => $endDate,
+            'mode' => $mode, 'q' => $q, 'date' => $date, 'start_time' => $startTime, 
+            'end_time' => $endTime, 'start_date' => $startDate, 'end_date' => $endDate,
         ];
 
         return view('public/view', [
             'venueCards'  => $venueCards,
             'categories'  => $categories,
+            'facilityTypes' => $facilityTypes,
             'filters'     => $filters,
             'favoriteMap' => $favoriteMap,
         ]);

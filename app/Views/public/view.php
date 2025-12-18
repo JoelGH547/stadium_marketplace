@@ -145,113 +145,84 @@
           </p>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <!-- ประเภทกีฬา ดึงจาก categories -->
-          <div>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-x-6 gap-y-4">
+          <!-- ประเภทกีฬา (Sport Type) -->
+          <div class="md:col-span-2">
             <p class="font-semibold text-[var(--primary)] mb-2">ประเภทกีฬา</p>
-            <?php
-              /** @var array $categories */
-              $categories = $categories ?? [];
-            ?>
-            <div class="flex flex-wrap gap-2">
-              <!-- ปุ่มทั้งหมด -->
-              <button
-                type="button"
-                class="filter-chip inline-flex items-center gap-1 rounded-full border border-gray-300
-                       bg-white px-3 py-1.5 text-xs font-medium text-gray-700
-                       hover:border-[var(--primary)] hover:text-[var(--primary)] hover:bg-[var(--primary)]/5
-                       transition"
-                data-filter-type="sport"
-                data-filter-value="all"
-              >
-                <span>⭐</span>
-                <span>ทั้งหมด</span>
-              </button>
-
-              <!-- loop หมวดหมู่จาก DB -->
+            <div class="flex flex-wrap gap-2" id="sport-filter-group">
+              <button type="button" class="filter-chip" data-filter="sport" data-value="all">⭐ ทั้งหมด</button>
               <?php foreach ($categories as $cat): ?>
-                <?php
-                  $label = $cat['name']  ?? 'ประเภทกีฬา';
-                  $emoji = $cat['emoji'] ?? '🏟️';
-                  $id    = $cat['id']    ?? '';
-                ?>
-                <button
-                  type="button"
-                  class="filter-chip inline-flex items-center gap-1 rounded-full border border-gray-300
-                         bg-white px-3 py-1.5 text-xs font-medium text-gray-700
-                         hover:border-[var(--primary)] hover:text-[var(--primary)] hover:bg-[var(--primary)]/5
-                         transition"
-                  data-filter-type="sport"
-                  data-filter-value="<?= esc($id) ?>"
-                >
-                  <span><?= esc($emoji) ?></span>
-                  <span><?= esc($label) ?></span>
+                <button type="button" class="filter-chip" data-filter="sport" data-value="<?= $cat['id'] ?>">
+                  <?= esc($cat['emoji'] . ' ' . $cat['name']) ?>
                 </button>
               <?php endforeach; ?>
             </div>
           </div>
 
-          <!-- ทำเล (คำนวณ tag แบบง่ายจาก address/province) -->
+          <!-- เรียงลำดับ (Sort) -->
           <div>
-            <p class="font-semibold text-[var(--primary)] mb-2">ทำเล</p>
+            <p class="font-semibold text-[var(--primary)] mb-2">เรียงลำดับ</p>
+            <div class="flex flex-wrap gap-2" id="sort-group">
+                <button type="button" class="sort-chip" data-sort="popular">ยอดนิยม</button>
+                <button type="button" class="sort-chip" data-sort="rating">คะแนนรีวิว</button>
+                <button type="button" class="sort-chip" data-sort="price">ราคาถูกสุด</button>
+                <button type="button" class="sort-chip" data-sort="nearby">ใกล้ตัวฉัน</button>
+            </div>
+          </div>
+
+          <!-- ระดับดาว (Star Rating) -->
+          <div>
+            <p class="font-semibold text-[var(--primary)] mb-2">ระดับดาว (ขั้นต่ำ)</p>
+            <div class="space-y-2" id="star-filter-group">
+              <?php for ($i = 4; $i >= 1; $i--): ?>
+                <label class="flex items-center gap-2 text-gray-700 hover:text-black cursor-pointer">
+                  <input type="radio" name="star_rating" class="filter-rb" data-filter="star" value="<?= $i ?>">
+                  <span class="flex items-center gap-1">
+                    <?php for ($s = 0; $s < 5; $s++): ?>
+                      <svg class="h-4 w-4 <?= $s < $i ? 'text-yellow-400' : 'text-gray-300' ?>" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
+                    <?php endfor; ?>
+                  </span>
+                </label>
+              <?php endfor; ?>
+            </div>
+          </div>
+          
+          <!-- ยอดรีวิว (Review Count) -->
+          <div id="review-filter-group">
+            <p class="font-semibold text-[var(--primary)] mb-2">ยอดรีวิว (ขั้นต่ำ)</p>
             <div class="space-y-2">
-              <label class="flex items-center gap-2 text-xs sm:text-sm text-gray-700">
-                <input type="checkbox" class="area-filter rounded border-gray-300 text-[var(--primary)]"
-                       data-filter-type="area" value="near-city">
-                <span>ใกล้ตัวเมือง</span>
+              <label class="flex items-center gap-2 text-gray-700 hover:text-black cursor-pointer">
+                <input type="radio" name="review_count" class="filter-rb" data-filter="review" value="50"> <span>50+ รีวิว</span>
               </label>
-              <label class="flex items-center gap-2 text-xs sm:text-sm text-gray-700">
-                <input type="checkbox" class="area-filter rounded border-gray-300 text-[var(--primary)]"
-                       data-filter-type="area" value="suburb">
-                <span>ชานเมือง</span>
+              <label class="flex items-center gap-2 text-gray-700 hover:text-black cursor-pointer">
+                <input type="radio" name="review_count" class="filter-rb" data-filter="review" value="20"> <span>20+ รีวิว</span>
               </label>
-              <label class="flex items-center gap-2 text-xs sm:text-sm text-gray-700">
-                <input type="checkbox" class="area-filter rounded border-gray-300 text-[var(--primary)]"
-                       data-filter-type="area" value="near-school">
-                <span>ใกล้โรงเรียน / มหาวิทยาลัย</span>
+              <label class="flex items-center gap-2 text-gray-700 hover:text-black cursor-pointer">
+                <input type="radio" name="review_count" class="filter-rb" data-filter="review" value="10"> <span>10+ รีวิว</span>
+              </label>
+              <label class="flex items-center gap-2 text-gray-700 hover:text-black cursor-pointer">
+                <input type="radio" name="review_count" class="filter-rb" data-filter="review" value="1"> <span>1+ รีวิว</span>
               </label>
             </div>
           </div>
 
-          <!-- เรียงลำดับ -->
-          <div>
-            <p class="font-semibold text-[var(--primary)] mb-2">เรียงลำดับ</p>
-            <div class="grid grid-cols-1 gap-2">
-              <button
-                type="button"
-                class="sort-chip inline-flex items-center justify-between rounded-full border border-gray-300
-                       bg-white px-3 py-1.5 text-xs sm:text-sm text-gray-700
-                       hover:border-[var(--primary)] hover:text-[var(--primary)] hover:bg-[var(--primary)]/5
-                       transition"
-                data-sort="popular"
-              >
-                <span>ยอดนิยม</span>
-                <span class="text-[10px] uppercase tracking-wide text-gray-400">default</span>
-              </button>
-              <button
-                type="button"
-                class="sort-chip inline-flex items-center justify-between rounded-full border border-gray-300
-                       bg-white px-3 py-1.5 text-xs sm:text-sm text-gray-700
-                       hover:border-[var(--primary)] hover:text-[var(--primary)] hover:bg-[var(--primary)]/5
-                       transition"
-                data-sort="price"
-              >
-                <span>ราคาถูกสุด</span>
-                <span class="text-[10px] uppercase tracking-wide text-gray-400">฿ → ฿฿฿</span>
-              </button>
-              <button
-                type="button"
-                class="sort-chip inline-flex items-center justify-between rounded-full border border-gray-300
-                       bg-white px-3 py-1.5 text-xs sm:text-sm text-gray-700
-                       hover:border-[var(--primary)] hover:text-[var(--primary)] hover:bg-[var(--primary)]/5
-                       transition"
-                data-sort="nearby"
-              >
-                <span>ใกล้ตัวฉัน</span>
-                <span class="text-[10px] uppercase tracking-wide text-gray-400">📍</span>
-              </button>
+          <!-- หมวดหมู่ไอเทม (Facilities) -->
+          <div class="md:col-span-4" id="facility-filter-group">
+            <p class="font-semibold text-[var(--primary)] mb-2">สิ่งอำนวยความสะดวก</p>
+            <div class="flex flex-wrap gap-2">
+              <?php
+                /** @var array $facilityTypes */
+                $facilityTypes = $facilityTypes ?? [];
+              ?>
+              <?php foreach ($facilityTypes as $fac): ?>
+                <label class="flex items-center gap-1.5 text-gray-700 hover:text-black cursor-pointer border rounded-full px-2.5 py-1 text-xs bg-white">
+                  <input type="checkbox" class="filter-cb" data-filter="facility" value="<?= $fac['id'] ?>">
+                  <span><?= esc($fac['name']) ?></span>
+                </label>
+              <?php endforeach; ?>
             </div>
           </div>
+
         </div>
       </div>
     </div>
@@ -274,7 +245,6 @@
         <ul id="allVenueList" class="grid grid-cols-1 gap-4">
           <?php foreach ($venueCards as $idx => $v): ?>
             <?php
-              // --- Block copy-pasted from home.php with adjustments ---
               $id = $v['id'] ?? null;
               $detailUrl = $id ? site_url('sport/fields/' . $id) : null;
               $name = $v['name'] ?? 'ชื่อสนาม';
@@ -305,30 +275,22 @@
               
               $avgRating   = (float) ($v['avg_rating'] ?? 0);
               $reviewCount = (int) ($v['review_count'] ?? 0);
+              $facilityIds = implode(',', $v['facility_ids'] ?? []);
 
               // Favorite button data
               $sid = (int) ($v['id'] ?? 0);
               $isFav = !empty($favoriteMap[$sid]);
-
-              // tag ทำเลแบบง่ายจาก address / province
-              $areaTag = 'suburb';
-              $addrLower = mb_strtolower($addressFull, 'UTF-8');
-              if (mb_stripos($addrLower, 'มหาวิทยาลัย') !== false || mb_stripos($addrLower, 'โรงเรียน') !== false) {
-                  $areaTag = 'near-school';
-              } elseif (mb_stripos($addrLower, 'อำเภอเมือง') !== false || mb_stripos($addrLower, 'เทศบาล') !== false || mb_stripos($addrLower, 'เขต') !== false) {
-                  $areaTag = 'near-city';
-              }
             ?>
             <li class="venue-item relative bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-200 overflow-hidden"
                 data-index="<?= $idx ?>"
                 data-name="<?= esc($name) ?>"
-                data-address="<?= esc($addressFull) ?>"
                 data-category-id="<?= esc($v['category_id'] ?? '') ?>"
-                data-price-hourly="<?= $v['price'] ?? 0 ?>"
+                data-price-hourly="<?= esc($v['price'] ?? 0) ?>"
                 data-lat="<?= esc($lat) ?>"
                 data-lng="<?= esc($lng) ?>"
-                data-area="<?= esc($areaTag) ?>"
-                data-rating="<?= $avgRating ?>">
+                data-rating="<?= $avgRating ?>"
+                data-review-count="<?= $reviewCount ?>"
+                data-facility-ids="<?= esc($facilityIds) ?>">
 
                 <div class="flex flex-col md:flex-row">
                     <!-- Image Section -->
