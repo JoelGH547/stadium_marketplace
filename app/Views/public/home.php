@@ -594,7 +594,12 @@
                                     </div>
                                     <!-- CTA Section -->
                                     <div
-                                        class="flex flex-col items-end justify-end p-5 md:p-6 md:w-48 bg-gray-50 border-t md:border-t-0 md:border-l border-gray-100">
+                                        class="flex flex-col items-end justify-between p-5 md:p-6 md:w-48 bg-gray-50 border-t md:border-t-0 md:border-l border-gray-100">
+
+                                        <!-- Price Range -->
+                                        <div class="w-full flex flex-col items-end mt-1 mb-4">
+                                            <?= $v['price_range_html'] ?? '' ?>
+                                        </div>
 
                                         <?php if (!empty($detailUrl)): ?>
                                         <a href="<?= esc($detailUrl) ?>"

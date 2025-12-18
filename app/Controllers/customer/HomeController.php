@@ -27,6 +27,37 @@ class HomeController extends BaseController
         $stadiumIds  = array_map(static fn($x) => (int)($x['id'] ?? 0), $venueCards);
         $summaries   = $reviewModel->getSummariesForStadiumIds($stadiumIds);
 
+        // ดึงราคาจาก StadiumFieldModel
+        $fieldModel = new StadiumFieldModel();
+        // หา field ทั้งหมดที่อยู่ใน stadiumIds นี้
+        $allFields = [];
+        if (!empty($stadiumIds)) {
+            $allFields = $fieldModel
+                ->select('stadium_id, price, price_daily')
+                ->whereIn('stadium_id', $stadiumIds)
+                ->findAll();
+        }
+
+        // Group fields by stadium_id
+        $stadiumPrices = [];
+        foreach ($allFields as $f) {
+            $sid = $f['stadium_id'];
+            if (!isset($stadiumPrices[$sid])) {
+                $stadiumPrices[$sid] = [
+                    'hourly' => [],
+                    'daily'  => []
+                ];
+            }
+            // เก็บราคา hourly
+            if (!empty($f['price']) && $f['price'] > 0) {
+                $stadiumPrices[$sid]['hourly'][] = (float)$f['price'];
+            }
+            // เก็บราคา daily
+            if (!empty($f['price_daily']) && $f['price_daily'] > 0) {
+                $stadiumPrices[$sid]['daily'][] = (float)$f['price_daily'];
+            }
+        }
+
         foreach ($venueCards as &$v) {
             // ชื่อประเภท
             $catName  = (string)($v['category_name']  ?? '');
@@ -52,6 +83,42 @@ class HomeController extends BaseController
                 }
             }
             $v['cover_image'] = $cover;
+
+            // Logic คำนวณราคา (Display Range)
+            $prices = $stadiumPrices[$sid] ?? ['hourly' => [], 'daily' => []];
+
+            $priceHtmlParts = [];
+
+            // 1. Hourly
+            if (!empty($prices['hourly'])) {
+                $minH = min($prices['hourly']);
+                $maxH = max($prices['hourly']);
+                if (count($prices['hourly']) > 1 && $minH !== $maxH) {
+                    // range
+                    $priceHtmlParts[] = '<div class="text-right"><div class="text-xs text-gray-500">รายชั่วโมง</div><div class="font-bold text-[var(--primary)]">' . number_format($minH) . ' ~ ' . number_format($maxH) . ' ฿</div></div>';
+                } else {
+                    // single
+                    $priceHtmlParts[] = '<div class="text-right"><div class="text-xs text-gray-500">รายชั่วโมง</div><div class="font-bold text-[var(--primary)]">' . number_format($minH) . ' ฿</div></div>';
+                }
+            }
+
+            // 2. Daily
+            if (!empty($prices['daily'])) {
+                $minD = min($prices['daily']);
+                $maxD = max($prices['daily']);
+                if (count($prices['daily']) > 1 && $minD !== $maxD) {
+                    $priceHtmlParts[] = '<div class="text-right"><div class="text-xs text-gray-500">รายวัน</div><div class="font-bold text-orange-600">' . number_format($minD) . ' ~ ' . number_format($maxD) . ' ฿</div></div>';
+                } else {
+                    $priceHtmlParts[] = '<div class="text-right"><div class="text-xs text-gray-500">รายวัน</div><div class="font-bold text-orange-600">' . number_format($minD) . ' ฿</div></div>';
+                }
+            }
+
+            if (empty($priceHtmlParts)) {
+                $v['price_range_html'] = '<span class="text-xs text-gray-400">ยังไม่มีราคา</span>';
+            } else {
+                // เชื่อมด้วย gap เล็กน้อย
+                $v['price_range_html'] = implode('<div class="h-2"></div>', $priceHtmlParts);
+            }
         }
         unset($v);
 
