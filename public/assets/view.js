@@ -17,6 +17,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const viewEndTime = document.getElementById('viewEndTime');
   const viewStartDate = document.getElementById('viewStartDate');
   const viewEndDate = document.getElementById('viewEndDate');
+  const viewCategoryId = document.getElementById('viewCategoryId');
 
   // Client-side filter elements
   const sportChips = Array.from(document.querySelectorAll('#sport-filter-group .filter-chip'));
@@ -73,10 +74,10 @@ document.addEventListener('DOMContentLoaded', function () {
       const { name, categoryId, rating, reviewCount, facilityIds } = item.dataset;
       const itemFacilities = (facilityIds || '').split(',').filter(id => id);
 
-      const matchSearch = !searchTerm || name.toLowerCase().includes(searchTerm);
+      const matchSearch = !searchTerm || (name || '').toLowerCase().includes(searchTerm);
       const matchSport = activeSport === 'all' || categoryId === activeSport;
-      const matchStar = activeStar === 0 || Math.floor(parseFloat(rating)) === activeStar;
-      const matchReview = parseInt(reviewCount, 10) >= activeReview;
+      const matchStar = activeStar === 0 || Math.floor(parseFloat(rating || '0')) === activeStar;
+      const matchReview = parseInt(reviewCount || '0', 10) >= activeReview;
       const matchFacilities = activeFacilities.size === 0 || [...activeFacilities].every(facId => itemFacilities.includes(facId));
 
       const show = matchSearch && matchSport && matchStar && matchReview && matchFacilities;
@@ -130,6 +131,7 @@ document.addEventListener('DOMContentLoaded', function () {
     chip.addEventListener('click', () => {
       setActiveChip(sportChips, chip);
       activeSport = chip.dataset.value || 'all';
+      if (viewCategoryId) viewCategoryId.value = (activeSport === 'all' ? '' : activeSport);
       applyFiltersAndSort();
     });
   });
@@ -182,7 +184,22 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   venueItems.forEach((item, idx) => item.dataset.index = idx.toString());
-  setActiveChip(sportChips, sportChips.find(c => c.dataset.value === 'all'));
+  // Init sport chip from server-side query (category_id)
+  const initialCat = (viewCategoryId?.value || '').trim();
+  // Check if this category actually exists in chips (or is 'all')
+  const isValidCat = sportChips.some(c => c.dataset.value === initialCat);
+
+  if (initialCat && isValidCat && initialCat !== 'all') {
+    activeSport = initialCat;
+    setActiveChip(sportChips, sportChips.find(c => c.dataset.value === initialCat));
+  } else {
+    activeSport = 'all';
+    setActiveChip(sportChips, sportChips.find(c => c.dataset.value === 'all'));
+    // Ensure hidden input is reset if it had an invalid value
+    if (viewCategoryId) viewCategoryId.value = '';
+  }
+
+  // Re-sync sort chip in case it was missed (though standard is popular)
   setActiveChip(sortChips, sortChips.find(c => c.dataset.sort === 'popular'));
 
   applyFiltersAndSort(); // Initial filter call

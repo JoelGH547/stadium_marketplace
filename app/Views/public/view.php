@@ -5,6 +5,7 @@
   $filters = $filters ?? [];
   $mode = (string)($filters['mode'] ?? '');
   $qVal = (string)($filters['q'] ?? '');
+  $categoryIdVal = (string)($filters['category_id'] ?? ($filters['category'] ?? ''));
   $dateVal = (string)($filters['date'] ?? '');
   $startTimeVal = (string)($filters['start_time'] ?? '');
   $endTimeVal = (string)($filters['end_time'] ?? '');
@@ -35,6 +36,7 @@
   <section class="bg-white border-b border-gray-200 sticky top-0 z-40 shadow-sm">
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-3">
       <form method="get" action="<?= site_url('sport/view') ?>">
+        <input type="hidden" name="category_id" id="viewCategoryId" value="<?= esc($categoryIdVal) ?>">
         <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
           <!-- Search -->
           <div class="relative flex-1 group">

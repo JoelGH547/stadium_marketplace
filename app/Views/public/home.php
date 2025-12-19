@@ -55,13 +55,12 @@
                                     <div class="flex flex-col gap-2">
                                         <label
                                             class="text-xs font-semibold uppercase tracking-wide text-gray-500">ประเภทกีฬา</label>
-                                        <select name="category"
+                                        <select name="category_id"
                                             class="w-full rounded-xl border border-gray-200 px-3 py-3 text-sm sm:text-base bg-white focus:outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)]">
                                             <option value="">ทั้งหมด</option>
-                                            <option value="football">ฟุตบอล / ฟุตซอล</option>
-                                            <option value="badminton">แบดมินตัน</option>
-                                            <option value="tennis">เทนนิส</option>
-                                            <option value="basketball">บาสเกตบอล</option>
+                                            <?php foreach (($categories ?? []) as $cat): ?>
+                                              <option value="<?= esc($cat['id']) ?>"><?= esc(($cat['emoji'] ?? '') . ' ' . ($cat['name'] ?? '')) ?></option>
+                                            <?php endforeach; ?>
                                         </select>
                                     </div>
                                     <div class="flex flex-col gap-2">
@@ -108,13 +107,12 @@
                                     <div class="flex flex-col gap-2">
                                         <label
                                             class="text-xs font-semibold uppercase tracking-wide text-gray-500">ประเภทกีฬา</label>
-                                        <select name="category"
+                                        <select name="category_id"
                                             class="w-full rounded-xl border border-gray-200 px-3 py-3 text-sm sm:text-base bg-white focus:outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)]">
                                             <option value="">ทั้งหมด</option>
-                                            <option value="football">ฟุตบอล / ฟุตซอล</option>
-                                            <option value="badminton">แบดมินตัน</option>
-                                            <option value="tennis">เทนนิส</option>
-                                            <option value="basketball">บาสเกตบอล</option>
+                                            <?php foreach (($categories ?? []) as $cat): ?>
+                                              <option value="<?= esc($cat['id']) ?>"><?= esc(($cat['emoji'] ?? '') . ' ' . ($cat['name'] ?? '')) ?></option>
+                                            <?php endforeach; ?>
                                         </select>
                                     </div>
                                     <div class="flex flex-col gap-2">

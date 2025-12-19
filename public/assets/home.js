@@ -272,36 +272,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  function shouldGoPlainView(form) {
-    try {
-      const fd = new FormData(form);
-      const q = String(fd.get('q') || '').trim();
-      const cat = String(fd.get('category') || '').trim();
-
-      const date = String(fd.get('date') || '').trim();
-      const st = String(fd.get('start_time') || '').trim();
-      const et = String(fd.get('end_time') || '').trim();
-
-      const sd = String(fd.get('start_date') || '').trim();
-      const ed = String(fd.get('end_date') || '').trim();
-
-      return !q && !cat && !date && !st && !et && !sd && !ed;
-    } catch (e) {
-      return false;
-    }
-  }
-
-  // If user doesn't fill anything, go /sport/view (no query)
-  [formHourly, formDaily].forEach((f) => {
-    if (!f) return;
-    f.addEventListener('submit', (e) => {
-      if (shouldGoPlainView(f)) {
-        e.preventDefault();
-        window.location.href = (f && f.action) ? f.action.split('?')[0] : (window.location.origin + '/sport/view');
-      }
-    });
-  });
-
   // Init if back with date
   if (hourlyDateInput && hourlyDateInput.value) {
     buildHomeStartOptions(hourlyDateInput.value);
@@ -684,17 +654,53 @@ document.addEventListener('DOMContentLoaded', () => {
   const mainSearchBtn = document.getElementById('mainSearchBtn');
 
   if (!tabHourly || !tabDaily || !formHourly || !formDaily) return;
+  function shouldGoPlainView(form) {
+    try {
+      const fd = new FormData(form);
+      const q = String(fd.get('q') || '').trim();
+      const cat = String(fd.get('category_id') || fd.get('category') || '').trim();
 
+      const date = String(fd.get('date') || '').trim();
+      const st = String(fd.get('start_time') || '').trim();
+      const et = String(fd.get('end_time') || '').trim();
+
+      const sd = String(fd.get('start_date') || '').trim();
+      const ed = String(fd.get('end_date') || '').trim();
+
+      return !q && !cat && !date && !st && !et && !sd && !ed;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  const goPlainView = (form) => {
+    const url = (form && form.action) ? form.action.split('?')[0] : (window.location.origin + '/sport/view');
+    window.location.href = url;
+  };
+
+  // Handle clicking the main search button
   if (mainSearchBtn) {
     mainSearchBtn.addEventListener('click', () => {
-      // Check which form is visible and submit it
-      if (!formHourly.classList.contains('hidden')) {
-        formHourly.submit();
-      } else if (!formDaily.classList.contains('hidden')) {
-        formDaily.submit();
+      const activeForm = !formHourly.classList.contains('hidden') ? formHourly : formDaily;
+      if (!activeForm) return;
+      if (shouldGoPlainView(activeForm)) {
+        goPlainView(activeForm);
+        return;
       }
+      activeForm.submit();
     });
   }
+
+  // Handle pressing Enter inside the form (submit event)
+  [formHourly, formDaily].forEach((f) => {
+    if (!f) return;
+    f.addEventListener('submit', (e) => {
+      if (shouldGoPlainView(f)) {
+        e.preventDefault();
+        goPlainView(f);
+      }
+    });
+  });
 
   function switchTab(mode) {
     const currentForm = mode === 'hourly' ? formDaily : formHourly;
