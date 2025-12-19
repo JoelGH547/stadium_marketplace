@@ -480,15 +480,15 @@
                             <div class="w-px h-8 bg-gray-200"></div>
                             <button
                                 class="sort-btn flex-1 py-3 text-center text-sm font-semibold text-gray-700 hover:text-[var(--primary)] hover:bg-[var(--primary)]/10"
-                                data-sort="price" aria-selected="false">ราคาถูกสุด</button>
+                                data-sort="price_low" aria-selected="false">ราคาถูกสุด</button>
                             <div class="w-px h-8 bg-gray-200"></div>
                             <button
                                 class="sort-btn flex-1 py-3 text-center text-sm font-semibold text-gray-700 hover:text-[var(--primary)] hover:bg-[var(--primary)]/10"
-                                data-sort="nearby" aria-selected="false">ราคาสุดหรู</button>
+                                data-sort="price_high" aria-selected="false">ราคาสุดหรู</button>
                             <div class="w-px h-8 bg-gray-200"></div>
                             <button
                                 class="sort-btn flex-1 py-3 text-center text-sm font-semibold text-gray-700 hover:text-[var(--primary)] hover:bg-[var(--primary)]/10"
-                                data-sort="rating" aria-selected="false">ได้ยอดรีวิวสูง</button>
+                                data-sort="reviews" aria-selected="false">ได้ยอดรีวิวสูง</button>
                         </div>
                     </div>
                     <!-- Venue List -->
@@ -502,8 +502,8 @@
                             <div class="text-center py-10 text-gray-500">ไม่พบสนามที่ค้นหา</div>
                             <?php else: ?>
                                                             <?php
-                                                            $limitedVenues = array_slice($venueCards, 0, 20);
-                                                            foreach ($limitedVenues as $idx => $v):
+                                                            $limitedVenues = $venueCards;
+foreach ($limitedVenues as $idx => $v):
                                                                 $id = $v['id'] ?? null;
                                                                 $detailUrl = $id ? site_url('sport/fields/' . $id) : site_url('sport/fields');
                                                                 $name = $v['name'] ?? 'ชื่อสนาม';
@@ -525,7 +525,7 @@
                                                                 $reviewCount = (int) ($v['review_count'] ?? 0);
                                                             ?>
                                                         <li class="relative bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-200 overflow-hidden"
-                                                            data-distance-km="" data-rating="<?= $avgRating ?>" data-popular="<?= 100 - (int) $idx ?>"
+                                                            data-distance-km="" data-rating="<?= $avgRating ?>" data-review-count="<?= (int) $reviewCount ?>" data-price="<?= esc($v['min_price'] ?? 0) ?>" data-popular="<?= (int) ($v['booking_count'] ?? 0) ?>"
                                                             <?php if (!empty($lat) && !empty($lng)): ?> data-lat="<?= esc($lat) ?>"
                                                             data-lng="<?= esc($lng) ?>" <?php endif; ?>>
                             

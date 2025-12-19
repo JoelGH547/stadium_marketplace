@@ -8,6 +8,7 @@ use App\Models\CategoryModel;
 use App\Models\StadiumFieldModel;
 use App\Models\StadiumReviewModel;
 use App\Models\CustomerFavoriteModel;
+use App\Models\BookingModel;
 
 class HomeController extends BaseController
 {
@@ -27,6 +28,22 @@ class HomeController extends BaseController
         $reviewModel = new StadiumReviewModel();
         $stadiumIds  = array_map(static fn($x) => (int)($x['id'] ?? 0), $venueCards);
         $summaries   = $reviewModel->getSummariesForStadiumIds($stadiumIds);
+
+
+        // Booking counts (for popularity sort)
+        $bookingCountMap = [];
+        if (!empty($stadiumIds)) {
+            $bookingModel = new BookingModel();
+            $bookingCountsRows = $bookingModel->select('stadium_id, COUNT(*) as booking_count')
+                ->whereIn('stadium_id', $stadiumIds)
+                ->whereIn('status', ['approved', 'paid', 'confirmed'])
+                ->groupBy('stadium_id')
+                ->findAll();
+
+            foreach ($bookingCountsRows as $r) {
+                $bookingCountMap[(int)$r['stadium_id']] = (int)($r['booking_count'] ?? 0);
+            }
+        }
 
         // ดึงราคาจาก StadiumFieldModel
         $fieldModel = new StadiumFieldModel();
@@ -87,6 +104,20 @@ class HomeController extends BaseController
 
             // Logic คำนวณราคา (Display Range)
             $prices = $stadiumPrices[$sid] ?? ['hourly' => [], 'daily' => []];
+
+            // ใช้ค่าน้อยสุด (รวม hourly + daily) สำหรับการ sort "ราคาถูกสุด/สุดหรู"
+            $allAvailablePrices = [];
+            if (!empty($prices['hourly'])) {
+                $allAvailablePrices = array_merge($allAvailablePrices, $prices['hourly']);
+            }
+            if (!empty($prices['daily'])) {
+                $allAvailablePrices = array_merge($allAvailablePrices, $prices['daily']);
+            }
+            $v['min_price'] = !empty($allAvailablePrices) ? min($allAvailablePrices) : 0;
+
+            // ยอดนิยม: จำนวนการจองของสนามหลัก
+            $v['booking_count'] = (int) ($bookingCountMap[$sid] ?? 0);
+
 
             $priceHtmlParts = [];
 

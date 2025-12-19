@@ -311,79 +311,88 @@ document.addEventListener('DOMContentLoaded', () => {
     btn.setAttribute('aria-selected', 'true');
   }
 
-  function sortListBy(sortKey) {
+  function num(v) {
+    const n = parseFloat(v || '0');
+    return Number.isFinite(n) ? n : 0;
+  }
+
+  function sortListBy(key) {
     const items = Array.from(listEl.querySelectorAll('li'));
+
+    // decorate with stable index for tie-break
+    items.forEach((li, i) => {
+      if (!li.dataset.__idx) li.dataset.__idx = String(i);
+    });
+
     const sorted = items.slice();
 
-    if (sortKey === 'price') {
-      // ราคาถูกสุด
+    if (key === 'popular') {
+      // ยอดนิยม: booking_count มากสุด
       sorted.sort((a, b) => {
-        const pa = parseFloat(a.dataset.price || '0');
-        const pb = parseFloat(b.dataset.price || '0');
-        return pa - pb;
+        const da = num(a.dataset.popular);
+        const db = num(b.dataset.popular);
+        if (db !== da) return db - da;
+        return num(a.dataset.__idx) - num(b.dataset.__idx);
       });
-    } else if (sortKey === 'nearby') {
-      // ใช้ปุ่มนี้เป็น "ราคาสุดหรู" (แพงสุดก่อน) — เปลี่ยนแค่ข้อความใน home.php อย่าเปลี่ยน data-sort
+    } else if (key === 'price_low') {
+      // ราคาถูกสุด: min_price น้อยสุด (0 / ไม่มีราคา -> ไปท้าย)
       sorted.sort((a, b) => {
-        const pa = parseFloat(a.dataset.price || '0');
-        const pb = parseFloat(b.dataset.price || '0');
-        return pb - pa;
+        const pa = num(a.dataset.price);
+        const pb = num(b.dataset.price);
+        const na = pa > 0 ? pa : Number.POSITIVE_INFINITY;
+        const nb = pb > 0 ? pb : Number.POSITIVE_INFINITY;
+        if (na !== nb) return na - nb;
+        return num(a.dataset.__idx) - num(b.dataset.__idx);
       });
-    } else if (sortKey === 'rating') {
-      // ได้คะแนนรีวิวสูง — ตอนนี้ rating ยัง 0 หมด เลยจะเรียงเหมือนเดิม
+    } else if (key === 'price_high') {
+      // ราคาสุดหรู: min_price มากสุด (0 / ไม่มีราคา -> ไปท้าย)
       sorted.sort((a, b) => {
-        const ra = parseFloat(a.dataset.rating || '0');
-        const rb = parseFloat(b.dataset.rating || '0');
-        if (rb !== ra) return rb - ra; // สูง → ต่ำ
-        const ia = parseInt(a.dataset.originalIndex || '0', 10);
-        const ib = parseInt(b.dataset.originalIndex || '0', 10);
-        return ia - ib;
+        const pa = num(a.dataset.price);
+        const pb = num(b.dataset.price);
+        const na = pa > 0 ? pa : Number.NEGATIVE_INFINITY;
+        const nb = pb > 0 ? pb : Number.NEGATIVE_INFINITY;
+        if (nb !== na) return nb - na;
+        return num(a.dataset.__idx) - num(b.dataset.__idx);
+      });
+    } else if (key === 'reviews') {
+      // ได้ยอดรีวิวสูง: จำนวนรีวิวมากสุด
+      sorted.sort((a, b) => {
+        const ra = num(a.dataset.reviewCount);
+        const rb = num(b.dataset.reviewCount);
+        if (rb !== ra) return rb - ra;
+        return num(a.dataset.__idx) - num(b.dataset.__idx);
       });
     } else {
-      // ยอดนิยม (หรือค่าอื่น ๆ) = ลำดับเดิมตาม originalIndex
-      sorted.sort((a, b) => {
-        const ia = parseInt(a.dataset.originalIndex || '0', 10);
-        const ib = parseInt(b.dataset.originalIndex || '0', 10);
-        return ia - ib;
-      });
+      // fallback: ไม่ทำอะไร
+      return;
     }
 
-    // จัด DOM ใหม่ตามลำดับที่เรียงแล้ว
+    // Apply new DOM order
     sorted.forEach(li => listEl.appendChild(li));
 
-    // แจ้งให้ระบบ overlay (ดูเพิ่มเติม) รู้ว่ามีการเรียงใหม่ → มันจะ re-apply 4 แถว + แถว 5 เบลอให้อัตโนมัติ
+    // Notify overlay system to re-apply preview/expand state after sorting
     try {
-      window.dispatchEvent(new CustomEvent('sort-change', { detail: { key: sortKey } }));
+      window.dispatchEvent(new CustomEvent('sort-change', { detail: { key } }));
     } catch (_) {
       const e = document.createEvent('CustomEvent');
-      e.initCustomEvent('sort-change', true, true, { key: sortKey });
+      e.initCustomEvent('sort-change', true, true, { key });
       window.dispatchEvent(e);
     }
   }
 
-  // ตั้งค่าตอนเริ่มต้นตาม aria-selected (ปุ่มยอดนิยมเป็น true อยู่แล้ว)
+  // initial
   const initial = buttons.find(b => b.getAttribute('aria-selected') === 'true') || buttons[0];
   if (initial) {
     setActive(initial);
     sortListBy(initial.dataset.sort || 'popular');
   }
 
-  // คลิกปุ่มเมนู
-  sortMenu.addEventListener('click', (ev) => {
-    const btn = ev.target.closest('button.sort-btn');
-    if (!btn || !sortMenu.contains(btn)) return;
-    setActive(btn);
-    sortListBy(btn.dataset.sort || 'popular');
-  });
-
-  // รองรับกด Enter / Spacebar บนปุ่ม
-  sortMenu.addEventListener('keydown', (ev) => {
-    if (ev.key !== 'Enter' && ev.key !== ' ') return;
-    const btn = ev.target.closest('button.sort-btn');
-    if (!btn || !sortMenu.contains(btn)) return;
-    ev.preventDefault();
-    setActive(btn);
-    sortListBy(btn.dataset.sort || 'popular');
+  buttons.forEach(btn => {
+    btn.addEventListener('click', (ev) => {
+      ev.preventDefault();
+      setActive(btn);
+      sortListBy(btn.dataset.sort || 'popular');
+    });
   });
 });
 
