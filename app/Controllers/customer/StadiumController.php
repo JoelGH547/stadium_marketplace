@@ -99,7 +99,7 @@ class StadiumController extends BaseController
             $bookingCheckSql = " AND NOT EXISTS (SELECT 1 FROM bookings b WHERE b.field_id = sf.id AND b.status IN ('pending','confirmed') AND b.booking_start_time < $reqEndEsc AND b.booking_end_time > $reqStartEsc)";
         }
         
-        $finalSql = "EXISTS (SELECT 1 FROM stadium_fields sf WHERE sf.stadium_id = stadiums.id AND ($priceFilterSql) $bookingCheckSql)";
+        $finalSql = "EXISTS (SELECT 1 FROM stadium_fields sf WHERE sf.stadium_id = stadiums.id AND sf.status = 'active' AND ($priceFilterSql) $bookingCheckSql)";
         $builder->where($finalSql, null, false);
 
         $venueCards = $builder->get()->getResultArray();
@@ -138,7 +138,7 @@ class StadiumController extends BaseController
 
         // 2. Prices
         $fieldModel = new StadiumFieldModel();
-        $allFields = !empty($stadiumIds) ? $fieldModel->select('stadium_id, price, price_daily')->whereIn('stadium_id', $stadiumIds)->findAll() : [];
+        $allFields = !empty($stadiumIds) ? $fieldModel->select('stadium_id, price, price_daily')->whereIn('stadium_id', $stadiumIds)->where('status', 'active')->findAll() : [];
         $stadiumPrices = [];
         foreach ($allFields as $f) {
             if (!isset($stadiumPrices[$f['stadium_id']])) $stadiumPrices[$f['stadium_id']] = ['hourly' => [], 'daily'  => []];
@@ -153,6 +153,7 @@ class StadiumController extends BaseController
                 ->select('sfields.stadium_id, sf.facility_type_id')
                 ->join('stadium_fields sfields', 'sfields.id = sf.field_id')
                 ->whereIn('sfields.stadium_id', $stadiumIds)
+                ->where('sfields.status', 'active')
                 ->distinct()->get()->getResultArray();
             foreach ($stadiumFacilities as $sf) {
                 if (!isset($stadiumFacilityMap[$sf['stadium_id']])) $stadiumFacilityMap[$sf['stadium_id']] = [];
