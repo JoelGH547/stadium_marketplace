@@ -86,138 +86,158 @@
         </div>
       </div>
 
-      <!-- Filter dropdown -->
-      <div
-        id="filterPanel"
-        class="mt-3 hidden rounded-2xl border border-gray-200 bg-gray-50/80 p-4 text-sm"
-      >
-        <!-- Search Filter: Mode + Date/Time -->
-        <div class="mb-4 rounded-2xl border border-gray-200 bg-white p-4">
-          <div class="grid grid-cols-1 md:grid-cols-6 gap-3">
-            <div class="md:col-span-2">
-              <label class="block text-[11px] font-semibold uppercase tracking-wide text-gray-600 mb-1">รูปแบบการจอง</label>
-              <select name="mode" id="viewMode"
-                class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary)]">
-                <option value="" <?= $mode === '' ? 'selected' : '' ?>>ทั้งหมด</option>
-                <option value="hourly" <?= $mode === 'hourly' ? 'selected' : '' ?>>รายชั่วโมง</option>
-                <option value="daily"  <?= $mode === 'daily'  ? 'selected' : '' ?>>รายวัน</option>
+  <!-- Filter dropdown -->
+  <div id="filterPanel" class="hidden mt-4">
+    <div class="rounded-3xl border border-gray-200 bg-white shadow-lg overflow-hidden">
+      
+      <!-- Top Section: Booking Date/Time (Light Background) -->
+      <div class="bg-gray-50/50 p-6 border-b border-gray-100">
+        <h3 class="text-sm font-bold text-gray-900 uppercase tracking-wide mb-4 flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-[var(--primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          ข้อมูลการจอง
+        </h3>
+        
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+          <!-- Booking Mode -->
+          <div class="md:col-span-3">
+            <label class="block text-xs font-semibold text-gray-500 mb-2">รูปแบบ</label>
+            <select name="mode" id="viewMode"
+              class="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary)] transition-shadow">
+              <option value="" <?= $mode === '' ? 'selected' : '' ?>>ทั้งหมด</option>
+              <option value="hourly" <?= $mode === 'hourly' ? 'selected' : '' ?>>รายชั่วโมง</option>
+              <option value="daily"  <?= $mode === 'daily'  ? 'selected' : '' ?>>รายวัน</option>
+            </select>
+          </div>
+
+          <!-- Hourly Controls -->
+          <div id="viewHourlyBox" class="md:col-span-9 grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-gray-500 mb-2">วันที่</label>
+              <input type="date" id="viewDate" name="date" min="<?= date('Y-m-d') ?>" value="<?= esc($dateVal) ?>"
+                class="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary)]" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-gray-500 mb-2">เวลาเริ่ม</label>
+              <select id="viewStartTime" name="start_time" data-selected="<?= esc($startTimeVal) ?>"
+                class="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary)]">
+                <option value="">— เริ่มต้น —</option>
               </select>
             </div>
-
-            <div id="viewHourlyBox" class="md:col-span-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div>
-                <label class="block text-[11px] font-semibold uppercase tracking-wide text-gray-600 mb-1">วันที่</label>
-                <input type="date" id="viewDate" name="date" min="<?= date('Y-m-d') ?>" value="<?= esc($dateVal) ?>"
-                  class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary)]" />
-              </div>
-              <div>
-                <label class="block text-[11px] font-semibold uppercase tracking-wide text-gray-600 mb-1">เวลาเริ่มต้น</label>
-                <select id="viewStartTime" name="start_time" data-selected="<?= esc($startTimeVal) ?>"
-                  class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary)]">
-                  <option value="">— เลือกเวลาเริ่มต้น —</option>
-                </select>
-              </div>
-              <div>
-                <label class="block text-[11px] font-semibold uppercase tracking-wide text-gray-600 mb-1">เวลาสิ้นสุด</label>
-                <select id="viewEndTime" name="end_time" data-selected="<?= esc($endTimeVal) ?>"
-                  class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary)]" disabled>
-                  <option value="">— เลือกเวลาสิ้นสุด —</option>
-                </select>
-              </div>
-            </div>
-
-            <div id="viewDailyBox" class="md:col-span-4 grid grid-cols-1 sm:grid-cols-2 gap-3 hidden">
-              <div>
-                <label class="block text-[11px] font-semibold uppercase tracking-wide text-gray-600 mb-1">วันที่เริ่มต้น</label>
-                <input type="date" id="viewStartDate" name="start_date" min="<?= date('Y-m-d') ?>" value="<?= esc($startDateVal) ?>"
-                  class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary)]" />
-              </div>
-              <div>
-                <label class="block text-[11px] font-semibold uppercase tracking-wide text-gray-600 mb-1">วันที่สิ้นสุด</label>
-                <input type="date" id="viewEndDate" name="end_date" min="<?= date('Y-m-d') ?>" value="<?= esc($endDateVal) ?>"
-                  class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary)]" />
-              </div>
+            <div>
+              <label class="block text-xs font-semibold text-gray-500 mb-2">เวลาสิ้นสุด</label>
+              <select id="viewEndTime" name="end_time" data-selected="<?= esc($endTimeVal) ?>"
+                class="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary)]" disabled>
+                <option value="">— สิ้นสุด —</option>
+              </select>
             </div>
           </div>
 
-          <p class="mt-3 text-xs text-gray-500">
-            * ถ้าเลือกเวลารายชั่วโมง ระบบจะกรองเฉพาะสนามที่ “คิวว่าง” และ “เวลาเปิด-ปิด” ครอบคลุมช่วงเวลาที่เลือก
-          </p>
+          <!-- Daily Controls -->
+          <div id="viewDailyBox" class="md:col-span-9 grid grid-cols-1 sm:grid-cols-2 gap-4 hidden">
+            <div>
+              <label class="block text-xs font-semibold text-gray-500 mb-2">เริ่มวันที่</label>
+              <input type="date" id="viewStartDate" name="start_date" min="<?= date('Y-m-d') ?>" value="<?= esc($startDateVal) ?>"
+                class="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary)]" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-gray-500 mb-2">ถึงวันที่</label>
+              <input type="date" id="viewEndDate" name="end_date" min="<?= date('Y-m-d') ?>" value="<?= esc($endDateVal) ?>"
+                class="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary)]" />
+            </div>
+          </div>
         </div>
+      </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-x-6 gap-y-4">
-          <!-- ประเภทกีฬา (Sport Type) -->
-          <div class="md:col-span-2">
-            <p class="font-semibold text-[var(--primary)] mb-2">ประเภทกีฬา</p>
+      <!-- Bottom Section: Attributes Filters -->
+      <div class="p-6 grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <!-- Left Column: Primary Filters (Sport & Sort) -->
+        <div class="lg:col-span-7 space-y-8">
+          
+          <!-- Sport Category -->
+          <div>
+            <h3 class="text-sm font-bold text-gray-900 uppercase tracking-wide mb-3">ประเภทกีฬา</h3>
             <div class="flex flex-wrap gap-2" id="sport-filter-group">
-              <button type="button" class="filter-chip" data-filter="sport" data-value="all">⭐ ทั้งหมด</button>
+              <button type="button" 
+                class="filter-chip px-4 py-2 rounded-full border border-gray-200 bg-white text-gray-600 text-sm font-medium hover:bg-gray-50 hover:border-gray-300 transition-all [&.active]:bg-[var(--primary)] [&.active]:text-white [&.active]:border-[var(--primary)] [&.active]:shadow-sm"
+                data-filter="sport" data-value="all">
+                ⭐ ทั้งหมด
+              </button>
               <?php foreach ($categories as $cat): ?>
-                <button type="button" class="filter-chip" data-filter="sport" data-value="<?= $cat['id'] ?>">
+                <button type="button" 
+                  class="filter-chip px-4 py-2 rounded-full border border-gray-200 bg-white text-gray-600 text-sm font-medium hover:bg-gray-50 hover:border-gray-300 transition-all [&.active]:bg-[var(--primary)] [&.active]:text-white [&.active]:border-[var(--primary)] [&.active]:shadow-sm"
+                  data-filter="sport" data-value="<?= $cat['id'] ?>">
                   <?= esc($cat['emoji'] . ' ' . $cat['name']) ?>
                 </button>
               <?php endforeach; ?>
             </div>
           </div>
 
-          <!-- เรียงลำดับ (Sort) -->
+          <!-- Sort -->
           <div>
-            <p class="font-semibold text-[var(--primary)] mb-2">เรียงลำดับ</p>
+            <h3 class="text-sm font-bold text-gray-900 uppercase tracking-wide mb-3">เรียงลำดับ</h3>
             <div class="flex flex-wrap gap-2" id="sort-group">
-                <button type="button" class="sort-chip" data-sort="popular">ยอดนิยม</button>
-                <button type="button" class="sort-chip" data-sort="rating">คะแนนรีวิว</button>
-                <button type="button" class="sort-chip" data-sort="price">ราคาถูกสุด</button>
-                <button type="button" class="sort-chip" data-sort="nearby">ใกล้ตัวฉัน</button>
+              <button type="button" class="sort-chip px-4 py-2 rounded-full border border-gray-200 bg-white text-gray-600 text-sm font-medium hover:bg-gray-50 hover:border-gray-300 transition-all [&.active]:bg-[var(--primary)] [&.active]:text-white [&.active]:border-[var(--primary)] [&.active]:shadow-sm" data-sort="popular">ยอดนิยม</button>
+              <button type="button" class="sort-chip px-4 py-2 rounded-full border border-gray-200 bg-white text-gray-600 text-sm font-medium hover:bg-gray-50 hover:border-gray-300 transition-all [&.active]:bg-[var(--primary)] [&.active]:text-white [&.active]:border-[var(--primary)] [&.active]:shadow-sm" data-sort="rating">คะแนนรีวิว</button>
+              <button type="button" class="sort-chip px-4 py-2 rounded-full border border-gray-200 bg-white text-gray-600 text-sm font-medium hover:bg-gray-50 hover:border-gray-300 transition-all [&.active]:bg-[var(--primary)] [&.active]:text-white [&.active]:border-[var(--primary)] [&.active]:shadow-sm" data-sort="price">ราคาถูกสุด</button>
+              <button type="button" class="sort-chip px-4 py-2 rounded-full border border-gray-200 bg-white text-gray-600 text-sm font-medium hover:bg-gray-50 hover:border-gray-300 transition-all [&.active]:bg-[var(--primary)] [&.active]:text-white [&.active]:border-[var(--primary)] [&.active]:shadow-sm" data-sort="nearby">ใกล้ตัวฉัน</button>
             </div>
           </div>
+        </div>
 
-          <!-- ระดับดาว (Star Rating) -->
-          <div>
-            <p class="font-semibold text-[var(--primary)] mb-2">ระดับดาว (ขั้นต่ำ)</p>
-            <div class="space-y-2" id="star-filter-group">
-              <?php for ($i = 4; $i >= 1; $i--): ?>
-                <label class="flex items-center gap-2 text-gray-700 hover:text-black cursor-pointer">
-                  <input type="radio" name="star_rating" class="filter-rb" data-filter="star" value="<?= $i ?>">
-                  <span class="flex items-center gap-1">
-                    <?php for ($s = 0; $s < 5; $s++): ?>
-                      <svg class="h-4 w-4 <?= $s < $i ? 'text-yellow-400' : 'text-gray-300' ?>" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
-                    <?php endfor; ?>
-                  </span>
-                </label>
-              <?php endfor; ?>
-            </div>
-          </div>
+        <!-- Right Column: Secondary Filters -->
+        <div class="lg:col-span-5 space-y-8">
           
-          <!-- ยอดรีวิว (Review Count) -->
-          <div id="review-filter-group">
-            <p class="font-semibold text-[var(--primary)] mb-2">ยอดรีวิว (ขั้นต่ำ)</p>
-            <div class="space-y-2">
-              <label class="flex items-center gap-2 text-gray-700 hover:text-black cursor-pointer">
-                <input type="radio" name="review_count" class="filter-rb" data-filter="review" value="50"> <span>50+ รีวิว</span>
-              </label>
-              <label class="flex items-center gap-2 text-gray-700 hover:text-black cursor-pointer">
-                <input type="radio" name="review_count" class="filter-rb" data-filter="review" value="20"> <span>20+ รีวิว</span>
-              </label>
-              <label class="flex items-center gap-2 text-gray-700 hover:text-black cursor-pointer">
-                <input type="radio" name="review_count" class="filter-rb" data-filter="review" value="10"> <span>10+ รีวิว</span>
-              </label>
-              <label class="flex items-center gap-2 text-gray-700 hover:text-black cursor-pointer">
-                <input type="radio" name="review_count" class="filter-rb" data-filter="review" value="1"> <span>1+ รีวิว</span>
-              </label>
+          <!-- Rating & Reviews (Grid) -->
+          <div class="grid grid-cols-2 gap-6">
+            <!-- Stars -->
+            <div>
+              <h3 class="text-sm font-bold text-gray-900 uppercase tracking-wide mb-3">ระดับดาว</h3>
+              <div class="flex flex-col gap-2" id="star-filter-group">
+                <?php for ($i = 4; $i >= 1; $i--): ?>
+                  <label class="cursor-pointer group">
+                    <input type="radio" name="star_rating" class="filter-rb peer hidden" data-filter="star" value="<?= $i ?>">
+                    <div class="px-4 py-2 rounded-full border border-gray-200 bg-white text-gray-600 text-sm font-medium group-hover:bg-gray-50 group-hover:border-gray-300 peer-checked:bg-[var(--primary)] peer-checked:text-white peer-checked:border-[var(--primary)] peer-checked:shadow-sm transition-all flex items-center justify-center gap-1">
+                      <span><?= $i ?>+</span>
+                      <svg class="h-4 w-4 mb-0.5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
+                    </div>
+                  </label>
+                <?php endfor; ?>
+              </div>
+            </div>
+
+            <!-- Reviews -->
+            <div id="review-filter-group">
+              <h3 class="text-sm font-bold text-gray-900 uppercase tracking-wide mb-3">ยอดรีวิว</h3>
+              <div class="flex flex-col gap-2">
+                <?php foreach([50, 20, 10, 1] as $rCount): ?>
+                <label class="cursor-pointer group">
+                  <input type="radio" name="review_count" class="filter-rb peer hidden" data-filter="review" value="<?= $rCount ?>">
+                  <div class="px-4 py-2 rounded-full border border-gray-200 bg-white text-gray-600 text-sm font-medium group-hover:bg-gray-50 group-hover:border-gray-300 peer-checked:bg-[var(--primary)] peer-checked:text-white peer-checked:border-[var(--primary)] peer-checked:shadow-sm transition-all text-center">
+                    <?= $rCount ?>+ รีวิว
+                  </div>
+                </label>
+                <?php endforeach; ?>
+              </div>
             </div>
           </div>
 
-          <!-- หมวดหมู่ไอเทม (Facilities) -->
-          <div class="md:col-span-4" id="facility-filter-group">
-            <p class="font-semibold text-[var(--primary)] mb-2">สิ่งอำนวยความสะดวก</p>
+          <!-- Facilities -->
+          <div id="facility-filter-group">
+            <h3 class="text-sm font-bold text-gray-900 uppercase tracking-wide mb-3">สิ่งอำนวยความสะดวก</h3>
             <div class="flex flex-wrap gap-2">
               <?php
                 /** @var array $facilityTypes */
                 $facilityTypes = $facilityTypes ?? [];
               ?>
               <?php foreach ($facilityTypes as $fac): ?>
-                <label class="flex items-center gap-1.5 text-gray-700 hover:text-black cursor-pointer border rounded-full px-2.5 py-1 text-xs bg-white">
-                  <input type="checkbox" class="filter-cb" data-filter="facility" value="<?= $fac['id'] ?>">
-                  <span><?= esc($fac['name']) ?></span>
+                <label class="cursor-pointer group">
+                  <input type="checkbox" class="filter-cb peer hidden" data-filter="facility" value="<?= $fac['id'] ?>">
+                  <div class="px-3 py-1.5 rounded-full border border-gray-200 bg-white text-gray-600 text-xs font-medium group-hover:bg-gray-50 group-hover:border-gray-300 peer-checked:bg-[var(--primary)] peer-checked:text-white peer-checked:border-[var(--primary)] peer-checked:shadow-sm transition-all">
+                    <?= esc($fac['name']) ?>
+                  </div>
                 </label>
               <?php endforeach; ?>
             </div>
@@ -226,7 +246,7 @@
         </div>
       </div>
     </div>
-  </section>
+  </div>
 
   <!-- List -->
   <section class="py-6 bg-gray-50">
