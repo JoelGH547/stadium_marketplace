@@ -32,221 +32,272 @@
 </section>
 
   <!-- Search + Filter bar -->
-  <section class="bg-white border-b border-gray-200">
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4">
-      <form method="get" action="<?= site_url('sport/view') ?>" class="flex flex-col gap-3 sm:flex-row sm:items-center">
-        <!-- Search -->
-        <div class="relative flex-1">
-          <span class="pointer-events-none absolute inset-y-0 left-3 inline-flex items-center text-gray-400">
-            <!-- Heroicons: Magnifying Glass -->
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
-                 viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round"
-                    d="M21 21l-4.35-4.35M11 18a7 7 0 1 1 0-14 7 7 0 0 1 0 14z" />
-            </svg>
-          </span>
-          <input
-            id="venueSearch"
-            type="text"
-            name="q"
-            value="<?= esc($qVal) ?>"
-            autocomplete="off"
-            class="w-full rounded-full border border-[var(--line)] bg-gray-50/60 pl-10 pr-4 py-2.5 text-sm
-                   text-[var(--text)]
-                   focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]
-                   placeholder:text-gray-400"
-            placeholder="ค้นหาชื่อสนาม พื้นที่ หรือประเภทกีฬา..."
-          >
+  <section class="bg-white border-b border-gray-200 sticky top-0 z-40 shadow-sm">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-3">
+      <form method="get" action="<?= site_url('sport/view') ?>">
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <!-- Search -->
+          <div class="relative flex-1 group">
+            <span class="pointer-events-none absolute inset-y-0 left-3 inline-flex items-center text-gray-400 group-focus-within:text-[var(--primary)] transition-colors">
+              <!-- Heroicons: Magnifying Glass -->
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
+                  viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                      d="M21 21l-4.35-4.35M11 18a7 7 0 1 1 0-14 7 7 0 0 1 0 14z" />
+              </svg>
+            </span>
+            <input
+              id="venueSearch"
+              type="text"
+              name="q"
+              value="<?= esc($qVal) ?>"
+              autocomplete="off"
+              class="w-full rounded-full border border-gray-200 bg-gray-50 pl-10 pr-4 py-2.5 text-sm
+                    text-gray-900
+                    focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent focus:bg-white
+                    placeholder:text-gray-400 transition-all shadow-sm"
+              placeholder="ค้นหาชื่อสนาม, ทำเล หรือประเภทกีฬา..."
+            >
+          </div>
+
+          <!-- Filter menu button -->
+          <div class="flex items-center gap-2">
+            <button
+              id="filterToggle"
+              type="button"
+              class="inline-flex items-center gap-2 rounded-full border border-gray-200
+                    bg-white px-5 py-2.5 text-sm font-medium text-gray-700
+                    shadow-sm hover:bg-gray-50 hover:text-[var(--primary)] hover:border-[var(--primary)] transition-all active:scale-95"
+            >
+              <!-- Heroicons: Adjustments -->
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75" />
+              </svg>
+              <span>ตัวกรอง</span>
+            </button>
+
+            <!-- Divider -->
+            <div class="h-8 w-px bg-gray-200 mx-1 hidden sm:block"></div>
+
+            <button type="submit"
+              class="inline-flex items-center rounded-full bg-[var(--primary)] px-6 py-2.5 text-sm font-semibold text-white
+                    shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all"
+            >ค้นหา</button>
+            
+            <a href="<?= site_url('sport/view') ?>"
+              class="inline-flex items-center justify-center rounded-full border border-transparent w-10 h-10 text-gray-400
+                      hover:text-gray-600 hover:bg-gray-100 transition-all"
+              title="ล้างการค้นหา"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </a>
+          </div>
         </div>
-
-        <!-- Filter menu button -->
-        <div class="flex items-center gap-2">
-          <button
-            id="filterToggle"
-            type="button"
-            class="inline-flex items-center gap-2 rounded-full border border-[var(--primary)]
-                   bg-white px-4 py-2.5 text-sm font-medium text-[var(--primary)]
-                   shadow-sm hover:bg-[var(--primary)] hover:text-white transition"
-          >
-            <!-- Heroicons: Funnel -->
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.572a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z" />
-            </svg>
-            <span>ฟิลเตอร์</span>
-          </button>
-
-          <button type="submit"
-            class="inline-flex items-center rounded-full bg-[var(--primary)] px-5 py-2.5 text-sm font-semibold text-white
-                   shadow-sm hover:opacity-95 transition"
-          >ค้นหา</button>
-          <a href="<?= site_url('sport/view') ?>"
-             class="inline-flex items-center rounded-full border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700
-                    hover:bg-gray-50 transition"
-          >ล้าง</a>
-        </div>
-      </div>
-
-  <!-- Filter dropdown -->
-  <div id="filterPanel" class="hidden mt-4">
-    <div class="rounded-3xl border border-gray-200 bg-white shadow-lg overflow-hidden">
-      
-      <!-- Top Section: Booking Date/Time (Light Background) -->
-      <div class="bg-gray-50/50 p-6 border-b border-gray-100">
-        <h3 class="text-sm font-bold text-gray-900 uppercase tracking-wide mb-4 flex items-center gap-2">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-[var(--primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-          </svg>
-          ข้อมูลการจอง
-        </h3>
         
-        <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
-          <!-- Booking Mode -->
-          <div class="md:col-span-3">
-            <label class="block text-xs font-semibold text-gray-500 mb-2">รูปแบบ</label>
-            <select name="mode" id="viewMode"
-              class="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary)] transition-shadow">
-              <option value="" <?= $mode === '' ? 'selected' : '' ?>>ทั้งหมด</option>
-              <option value="hourly" <?= $mode === 'hourly' ? 'selected' : '' ?>>รายชั่วโมง</option>
-              <option value="daily"  <?= $mode === 'daily'  ? 'selected' : '' ?>>รายวัน</option>
-            </select>
-          </div>
+        <!-- Filter dropdown -->
+        <div id="filterPanel" class="hidden mt-4 animate-in fade-in slide-in-from-top-2 duration-200">
+          <div class="rounded-2xl border border-gray-200 bg-white shadow-xl overflow-hidden ring-1 ring-black/5">
+            
+            <!-- Top Section: Booking Date/Time (Light Brand Background) -->
+            <div class="bg-gradient-to-r from-gray-50 to-white p-6 border-b border-gray-100">
+              <div class="flex items-center gap-2 mb-4">
+                  <div class="p-1.5 rounded-lg bg-[var(--primary)]/10 text-[var(--primary)]">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                  <h3 class="text-base font-bold text-gray-900">ค้นหาตามวัน-เวลา</h3>
+                  <span class="text-xs text-gray-400 font-normal ml-auto hidden sm:block">เลือกวันเวลาที่ต้องการเพื่อดูสนามที่ว่าง</span>
+              </div>
+              
+              <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+                <!-- Booking Mode -->
+                <div class="md:col-span-3">
+                  <label class="block text-xs font-semibold text-gray-600 mb-1.5 ml-1">รูปแบบการจอง</label>
+                  <div class="relative">
+                      <select name="mode" id="viewMode"
+                        class="w-full appearance-none rounded-xl border border-gray-200 bg-white pl-4 pr-10 py-2.5 text-sm text-gray-700
+                              focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent cursor-pointer hover:border-gray-300 transition-colors">
+                        <option value="" <?= $mode === '' ? 'selected' : '' ?>>ทั้งหมด</option>
+                        <option value="hourly" <?= $mode === 'hourly' ? 'selected' : '' ?>>รายชั่วโมง (Hourly)</option>
+                        <option value="daily"  <?= $mode === 'daily'  ? 'selected' : '' ?>>รายวัน (Daily)</option>
+                      </select>
+                      <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
+                          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                      </div>
+                  </div>
+                </div>
 
-          <!-- Hourly Controls -->
-          <div id="viewHourlyBox" class="md:col-span-9 grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div>
-              <label class="block text-xs font-semibold text-gray-500 mb-2">วันที่</label>
-              <input type="date" id="viewDate" name="date" min="<?= date('Y-m-d') ?>" value="<?= esc($dateVal) ?>"
-                class="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary)]" />
-            </div>
-            <div>
-              <label class="block text-xs font-semibold text-gray-500 mb-2">เวลาเริ่ม</label>
-              <select id="viewStartTime" name="start_time" data-selected="<?= esc($startTimeVal) ?>"
-                class="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary)]">
-                <option value="">— เริ่มต้น —</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-xs font-semibold text-gray-500 mb-2">เวลาสิ้นสุด</label>
-              <select id="viewEndTime" name="end_time" data-selected="<?= esc($endTimeVal) ?>"
-                class="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary)]" disabled>
-                <option value="">— สิ้นสุด —</option>
-              </select>
-            </div>
-          </div>
-
-          <!-- Daily Controls -->
-          <div id="viewDailyBox" class="md:col-span-9 grid grid-cols-1 sm:grid-cols-2 gap-4 hidden">
-            <div>
-              <label class="block text-xs font-semibold text-gray-500 mb-2">เริ่มวันที่</label>
-              <input type="date" id="viewStartDate" name="start_date" min="<?= date('Y-m-d') ?>" value="<?= esc($startDateVal) ?>"
-                class="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary)]" />
-            </div>
-            <div>
-              <label class="block text-xs font-semibold text-gray-500 mb-2">ถึงวันที่</label>
-              <input type="date" id="viewEndDate" name="end_date" min="<?= date('Y-m-d') ?>" value="<?= esc($endDateVal) ?>"
-                class="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary)]" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Bottom Section: Attributes Filters -->
-      <div class="p-6 grid grid-cols-1 lg:grid-cols-12 gap-8">
-        
-        <!-- Left Column: Primary Filters (Sport & Sort) -->
-        <div class="lg:col-span-7 space-y-8">
-          
-          <!-- Sport Category -->
-          <div>
-            <h3 class="text-sm font-bold text-gray-900 uppercase tracking-wide mb-3">ประเภทกีฬา</h3>
-            <div class="flex flex-wrap gap-2" id="sport-filter-group">
-              <button type="button" 
-                class="filter-chip px-4 py-2 rounded-full border border-gray-200 bg-white text-gray-600 text-sm font-medium hover:bg-gray-50 hover:border-gray-300 transition-all [&.active]:bg-[var(--primary)] [&.active]:text-white [&.active]:border-[var(--primary)] [&.active]:shadow-sm"
-                data-filter="sport" data-value="all">
-                ⭐ ทั้งหมด
-              </button>
-              <?php foreach ($categories as $cat): ?>
-                <button type="button" 
-                  class="filter-chip px-4 py-2 rounded-full border border-gray-200 bg-white text-gray-600 text-sm font-medium hover:bg-gray-50 hover:border-gray-300 transition-all [&.active]:bg-[var(--primary)] [&.active]:text-white [&.active]:border-[var(--primary)] [&.active]:shadow-sm"
-                  data-filter="sport" data-value="<?= $cat['id'] ?>">
-                  <?= esc($cat['emoji'] . ' ' . $cat['name']) ?>
-                </button>
-              <?php endforeach; ?>
-            </div>
-          </div>
-
-          <!-- Sort -->
-          <div>
-            <h3 class="text-sm font-bold text-gray-900 uppercase tracking-wide mb-3">เรียงลำดับ</h3>
-            <div class="flex flex-wrap gap-2" id="sort-group">
-              <button type="button" class="sort-chip px-4 py-2 rounded-full border border-gray-200 bg-white text-gray-600 text-sm font-medium hover:bg-gray-50 hover:border-gray-300 transition-all [&.active]:bg-[var(--primary)] [&.active]:text-white [&.active]:border-[var(--primary)] [&.active]:shadow-sm" data-sort="popular">ยอดนิยม</button>
-              <button type="button" class="sort-chip px-4 py-2 rounded-full border border-gray-200 bg-white text-gray-600 text-sm font-medium hover:bg-gray-50 hover:border-gray-300 transition-all [&.active]:bg-[var(--primary)] [&.active]:text-white [&.active]:border-[var(--primary)] [&.active]:shadow-sm" data-sort="rating">คะแนนรีวิว</button>
-              <button type="button" class="sort-chip px-4 py-2 rounded-full border border-gray-200 bg-white text-gray-600 text-sm font-medium hover:bg-gray-50 hover:border-gray-300 transition-all [&.active]:bg-[var(--primary)] [&.active]:text-white [&.active]:border-[var(--primary)] [&.active]:shadow-sm" data-sort="price">ราคาถูกสุด</button>
-              <button type="button" class="sort-chip px-4 py-2 rounded-full border border-gray-200 bg-white text-gray-600 text-sm font-medium hover:bg-gray-50 hover:border-gray-300 transition-all [&.active]:bg-[var(--primary)] [&.active]:text-white [&.active]:border-[var(--primary)] [&.active]:shadow-sm" data-sort="nearby">ใกล้ตัวฉัน</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Right Column: Secondary Filters -->
-        <div class="lg:col-span-5 space-y-8">
-          
-          <!-- Rating & Reviews (Grid) -->
-          <div class="grid grid-cols-2 gap-6">
-            <!-- Stars -->
-            <div>
-              <h3 class="text-sm font-bold text-gray-900 uppercase tracking-wide mb-3">ระดับดาว</h3>
-              <div class="flex flex-col gap-2" id="star-filter-group">
-                <?php for ($i = 4; $i >= 1; $i--): ?>
-                  <label class="cursor-pointer group">
-                    <input type="radio" name="star_rating" class="filter-rb peer hidden" data-filter="star" value="<?= $i ?>">
-                    <div class="px-4 py-2 rounded-full border border-gray-200 bg-white text-gray-600 text-sm font-medium group-hover:bg-gray-50 group-hover:border-gray-300 peer-checked:bg-[var(--primary)] peer-checked:text-white peer-checked:border-[var(--primary)] peer-checked:shadow-sm transition-all flex items-center justify-center gap-1">
-                      <span><?= $i ?>+</span>
-                      <svg class="h-4 w-4 mb-0.5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
+                <!-- Hourly Controls -->
+                <div id="viewHourlyBox" class="md:col-span-9 grid grid-cols-1 sm:grid-cols-3 gap-4 w-full">
+                  <div class="relative">
+                    <label class="block text-xs font-semibold text-gray-600 mb-1.5 ml-1">วันที่</label>
+                    <input type="date" id="viewDate" name="date" min="<?= date('Y-m-d') ?>" value="<?= esc($dateVal) ?>"
+                      class="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] hover:border-gray-300 transition-colors" />
+                  </div>
+                  <div class="relative">
+                    <label class="block text-xs font-semibold text-gray-600 mb-1.5 ml-1">เวลาเริ่ม</label>
+                    <div class="relative">
+                      <select id="viewStartTime" name="start_time" data-selected="<?= esc($startTimeVal) ?>"
+                          class="w-full appearance-none rounded-xl border border-gray-200 bg-white pl-4 pr-10 py-2.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] hover:border-gray-300 transition-colors cursor-pointer">
+                          <option value="">— เริ่มต้น —</option>
+                      </select>
+                      <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
+                          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                      </div>
                     </div>
-                  </label>
-                <?php endfor; ?>
+                  </div>
+                  <div class="relative">
+                    <label class="block text-xs font-semibold text-gray-600 mb-1.5 ml-1">เวลาสิ้นสุด</label>
+                    <div class="relative">
+                      <select id="viewEndTime" name="end_time" data-selected="<?= esc($endTimeVal) ?>"
+                          class="w-full appearance-none rounded-xl border border-gray-200 bg-white pl-4 pr-10 py-2.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] hover:border-gray-300 transition-colors disabled:bg-gray-50 disabled:text-gray-400 cursor-pointer" disabled>
+                          <option value="">— สิ้นสุด —</option>
+                      </select>
+                      <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
+                          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Daily Controls -->
+                <div id="viewDailyBox" class="md:col-span-9 grid grid-cols-1 sm:grid-cols-2 gap-4 hidden w-full">
+                  <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1.5 ml-1">เริ่มวันที่</label>
+                    <input type="date" id="viewStartDate" name="start_date" min="<?= date('Y-m-d') ?>" value="<?= esc($startDateVal) ?>"
+                      class="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] hover:border-gray-300 transition-colors" />
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1.5 ml-1">ถึงวันที่</label>
+                    <input type="date" id="viewEndDate" name="end_date" min="<?= date('Y-m-d') ?>" value="<?= esc($endDateVal) ?>"
+                      class="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] hover:border-gray-300 transition-colors" />
+                  </div>
+                </div>
               </div>
             </div>
 
-            <!-- Reviews -->
-            <div id="review-filter-group">
-              <h3 class="text-sm font-bold text-gray-900 uppercase tracking-wide mb-3">ยอดรีวิว</h3>
-              <div class="flex flex-col gap-2">
-                <?php foreach([50, 20, 10, 1] as $rCount): ?>
-                <label class="cursor-pointer group">
-                  <input type="radio" name="review_count" class="filter-rb peer hidden" data-filter="review" value="<?= $rCount ?>">
-                  <div class="px-4 py-2 rounded-full border border-gray-200 bg-white text-gray-600 text-sm font-medium group-hover:bg-gray-50 group-hover:border-gray-300 peer-checked:bg-[var(--primary)] peer-checked:text-white peer-checked:border-[var(--primary)] peer-checked:shadow-sm transition-all text-center">
-                    <?= $rCount ?>+ รีวิว
+            <!-- Bottom Section: Attributes Filters -->
+            <div class="p-6 grid grid-cols-1 lg:grid-cols-12 gap-8 divide-y lg:divide-y-0 lg:divide-x divide-gray-100">
+              
+              <!-- Left Column: Primary Filters (Sport & Sort) -->
+              <div class="lg:col-span-7 space-y-8 pr-0 lg:pr-8">
+                
+                <!-- Sport Category -->
+                <div>
+                  <h3 class="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
+                      <span class="w-1 h-4 bg-[var(--primary)] rounded-full"></span>
+                      ประเภทกีฬา
+                  </h3>
+                  <div class="flex flex-wrap gap-2.5" id="sport-filter-group">
+                    <button type="button" 
+                      class="filter-chip px-4 py-2 rounded-full border border-gray-200 bg-white text-gray-600 text-sm font-medium hover:bg-gray-50 hover:border-gray-300 transition-all active:scale-95 [&.active]:bg-gray-900 [&.active]:text-white [&.active]:border-gray-900 [&.active]:shadow-md"
+                      data-filter="sport" data-value="all">
+                      ทั้งหมด
+                    </button>
+                    <?php foreach ($categories as $cat): ?>
+                      <button type="button" 
+                        class="filter-chip px-4 py-2 rounded-full border border-gray-200 bg-white text-gray-600 text-sm font-medium hover:bg-gray-50 hover:border-gray-300 transition-all active:scale-95 [&.active]:bg-[var(--primary)] [&.active]:text-white [&.active]:border-[var(--primary)] [&.active]:shadow-md"
+                        data-filter="sport" data-value="<?= $cat['id'] ?>">
+                        <?= esc($cat['emoji'] . ' ' . $cat['name']) ?>
+                      </button>
+                    <?php endforeach; ?>
                   </div>
-                </label>
-                <?php endforeach; ?>
+                </div>
+
+                <!-- Sort -->
+                <div>
+                  <h3 class="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
+                      <span class="w-1 h-4 bg-orange-400 rounded-full"></span>
+                      เรียงลำดับ
+                  </h3>
+                  <div class="flex flex-wrap gap-2.5" id="sort-group">
+                    <button type="button" class="sort-chip px-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-600 text-sm font-medium hover:bg-gray-50 hover:border-gray-300 transition-all active:scale-95 [&.active]:bg-orange-50 [&.active]:text-orange-700 [&.active]:border-orange-200 [&.active]:ring-1 [&.active]:ring-orange-200" data-sort="popular">🔥 ยอดนิยม</button>
+                    <button type="button" class="sort-chip px-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-600 text-sm font-medium hover:bg-gray-50 hover:border-gray-300 transition-all active:scale-95 [&.active]:bg-orange-50 [&.active]:text-orange-700 [&.active]:border-orange-200 [&.active]:ring-1 [&.active]:ring-orange-200" data-sort="rating">⭐ คะแนนรีวิว</button>
+                    <button type="button" class="sort-chip px-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-600 text-sm font-medium hover:bg-gray-50 hover:border-gray-300 transition-all active:scale-95 [&.active]:bg-orange-50 [&.active]:text-orange-700 [&.active]:border-orange-200 [&.active]:ring-1 [&.active]:ring-orange-200" data-sort="price">💰 ราคาถูกสุด</button>
+                    <button type="button" class="sort-chip px-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-600 text-sm font-medium hover:bg-gray-50 hover:border-gray-300 transition-all active:scale-95 [&.active]:bg-orange-50 [&.active]:text-orange-700 [&.active]:border-orange-200 [&.active]:ring-1 [&.active]:ring-orange-200" data-sort="nearby">📍 ใกล้ตัวฉัน</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Right Column: Secondary Filters -->
+              <div class="lg:col-span-5 space-y-8 pl-0 lg:pl-8 pt-8 lg:pt-0">
+                
+                <!-- Rating & Reviews -->
+                <div class="space-y-6">
+                  <!-- Stars -->
+                  <div>
+                    <h3 class="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
+                      <span class="w-1 h-4 bg-yellow-400 rounded-full"></span>
+                      ระดับดาว
+                    </h3>
+                    <div class="flex flex-wrap gap-2" id="star-filter-group">
+                      <?php for ($i = 4; $i >= 1; $i--): ?>
+                        <label class="cursor-pointer group">
+                          <input type="radio" name="star_rating" class="filter-rb peer hidden" data-filter="star" value="<?= $i ?>">
+                          <div class="px-3 py-1.5 rounded-md border border-gray-200 bg-white text-gray-500 text-sm font-medium group-hover:bg-gray-50 peer-checked:bg-yellow-50 peer-checked:text-yellow-700 peer-checked:border-yellow-200 peer-checked:ring-1 peer-checked:ring-yellow-200 transition-all flex items-center gap-1">
+                            <span class="text-yellow-400">★</span>
+                            <span><?= $i ?></span>
+                          </div>
+                        </label>
+                      <?php endfor; ?>
+                    </div>
+                  </div>
+                  
+                  <!-- Reviews -->
+                  <div id="review-filter-group">
+                    <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2 mt-4 opacity-75">จำนวนรีวิว (ขั้นต่ำ)</h3>
+                    <div class="flex flex-wrap gap-2">
+                      <?php foreach([50, 20, 10, 1] as $rCount): ?>
+                      <label class="cursor-pointer group">
+                        <input type="radio" name="review_count" class="filter-rb peer hidden" data-filter="review" value="<?= $rCount ?>">
+                        <div class="px-3 py-1.5 rounded-md border border-gray-200 bg-white text-gray-500 text-xs font-medium group-hover:bg-gray-50 peer-checked:bg-gray-100 peer-checked:text-gray-900 peer-checked:border-gray-400 transition-all">
+                          <?= $rCount ?>+ รีวิว
+                        </div>
+                      </label>
+                      <?php endforeach; ?>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Facilities -->
+                <div id="facility-filter-group">
+                  <h3 class="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
+                      <span class="w-1 h-4 bg-blue-400 rounded-full"></span>
+                      สิ่งอำนวยความสะดวก
+                  </h3>
+                  <div class="flex flex-wrap gap-2">
+                    <?php
+                      /** @var array $facilityTypes */
+                      $facilityTypes = $facilityTypes ?? [];
+                    ?>
+                    <?php foreach ($facilityTypes as $fac): ?>
+                      <label class="cursor-pointer group relative">
+                        <input type="checkbox" class="filter-cb peer hidden" data-filter="facility" value="<?= $fac['id'] ?>">
+                        <div class="px-3 py-1.5 rounded-full border border-gray-200 bg-white text-gray-600 text-xs font-medium 
+                                    peer-checked:bg-blue-50 peer-checked:text-blue-700 peer-checked:border-blue-200 
+                                    hover:bg-gray-50 transition-all select-none">
+                          <?= esc($fac['name']) ?>
+                        </div>
+                      </label>
+                    <?php endforeach; ?>
+                  </div>
+                </div>
+
               </div>
             </div>
-          </div>
-
-          <!-- Facilities -->
-          <div id="facility-filter-group">
-            <h3 class="text-sm font-bold text-gray-900 uppercase tracking-wide mb-3">สิ่งอำนวยความสะดวก</h3>
-            <div class="flex flex-wrap gap-2">
-              <?php
-                /** @var array $facilityTypes */
-                $facilityTypes = $facilityTypes ?? [];
-              ?>
-              <?php foreach ($facilityTypes as $fac): ?>
-                <label class="cursor-pointer group">
-                  <input type="checkbox" class="filter-cb peer hidden" data-filter="facility" value="<?= $fac['id'] ?>">
-                  <div class="px-3 py-1.5 rounded-full border border-gray-200 bg-white text-gray-600 text-xs font-medium group-hover:bg-gray-50 group-hover:border-gray-300 peer-checked:bg-[var(--primary)] peer-checked:text-white peer-checked:border-[var(--primary)] peer-checked:shadow-sm transition-all">
-                    <?= esc($fac['name']) ?>
-                  </div>
-                </label>
-              <?php endforeach; ?>
+            
+            <!-- Footer Actions -->
+            <div class="bg-gray-50 px-6 py-4 border-t border-gray-100 flex justify-end gap-3 text-sm">
+              <button type="button" onclick="document.getElementById('filterToggle').click()" class="text-gray-500 hover:text-gray-700 hover:underline px-2">ปิดหน้าต่าง</button>
             </div>
           </div>
-
         </div>
-      </div>
+      </form>
     </div>
-  </div>
+  </section>
 
   <!-- List -->
   <section class="py-6 bg-gray-50">
@@ -305,7 +356,7 @@
                 data-index="<?= $idx ?>"
                 data-name="<?= esc($name) ?>"
                 data-category-id="<?= esc($v['category_id'] ?? '') ?>"
-                data-price-hourly="<?= esc($v['price'] ?? 0) ?>"
+                data-price="<?= esc($v['min_price'] ?? 0) ?>"
                 data-lat="<?= esc($lat) ?>"
                 data-lng="<?= esc($lng) ?>"
                 data-rating="<?= $avgRating ?>"

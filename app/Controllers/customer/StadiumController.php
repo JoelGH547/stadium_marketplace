@@ -79,17 +79,28 @@ class StadiumController extends BaseController
         // -------------------------
         // Availability filter
         // -------------------------
-        if ($mode !== '') {
-            $priceCol = ($mode === 'daily') ? 'price_daily' : 'price';
-            $sql = "EXISTS (SELECT 1 FROM stadium_fields sf WHERE sf.stadium_id = stadiums.id AND sf.$priceCol IS NOT NULL AND sf.$priceCol > 0";
-            if ($reqStart && $reqEnd) {
-                $reqStartEsc = $db->escape($reqStart);
-                $reqEndEsc   = $db->escape($reqEnd);
-                $sql .= " AND NOT EXISTS (SELECT 1 FROM bookings b WHERE b.field_id = sf.id AND b.status IN ('pending','confirmed') AND b.booking_start_time < $reqEndEsc AND b.booking_end_time > $reqStartEsc)";
-            }
-            $sql .= ")";
-            $builder->where($sql, null, false);
+        // -------------------------
+        // Availability filter
+        // -------------------------
+        $priceFilterSql = '';
+        if ($mode === 'daily') {
+            $priceFilterSql = 'sf.price_daily IS NOT NULL AND sf.price_daily > 0';
+        } elseif ($mode === 'hourly') {
+            $priceFilterSql = 'sf.price IS NOT NULL AND sf.price > 0';
+        } else { // 'All' mode or empty
+            $priceFilterSql = '((sf.price IS NOT NULL AND sf.price > 0) OR (sf.price_daily IS NOT NULL AND sf.price_daily > 0))';
         }
+
+        // The time availability check only happens if a specific mode and time is chosen
+        $bookingCheckSql = '';
+        if ($mode !== '' && $reqStart && $reqEnd) {
+            $reqStartEsc = $db->escape($reqStart);
+            $reqEndEsc   = $db->escape($reqEnd);
+            $bookingCheckSql = " AND NOT EXISTS (SELECT 1 FROM bookings b WHERE b.field_id = sf.id AND b.status IN ('pending','confirmed') AND b.booking_start_time < $reqEndEsc AND b.booking_end_time > $reqStartEsc)";
+        }
+        
+        $finalSql = "EXISTS (SELECT 1 FROM stadium_fields sf WHERE sf.stadium_id = stadiums.id AND ($priceFilterSql) $bookingCheckSql)";
+        $builder->where($finalSql, null, false);
 
         $venueCards = $builder->get()->getResultArray();
 
@@ -160,6 +171,19 @@ class StadiumController extends BaseController
             $v['review_count'] = (int)$summary['count'];
             
             $prices = $stadiumPrices[$sid] ?? ['hourly' => [], 'daily' => []];
+            
+            // --- Logic to find the absolute minimum price for sorting ---
+            $allAvailablePrices = [];
+            if (!empty($prices['hourly'])) {
+                $allAvailablePrices = array_merge($allAvailablePrices, $prices['hourly']);
+            }
+            if (!empty($prices['daily'])) {
+                $allAvailablePrices = array_merge($allAvailablePrices, $prices['daily']);
+            }
+            $v['min_price'] = !empty($allAvailablePrices) ? min($allAvailablePrices) : 0;
+            unset($v['price']); // Unset original price from stadium table to avoid confusion
+
+            // --- Logic to create HTML for display ---
             $priceHtmlParts = [];
             if (!empty($prices['hourly'])) {
                 $minH = min($prices['hourly']); $maxH = max($prices['hourly']);

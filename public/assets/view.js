@@ -3,34 +3,34 @@ document.addEventListener('DOMContentLoaded', function () {
   // ===== 1. ELEMENT SELECTORS ====
   // ===============================
   const filterToggle = document.getElementById('filterToggle');
-  const filterPanel  = document.getElementById('filterPanel');
-  const searchInput  = document.getElementById('venueSearch');
-  const listEl       = document.getElementById('allVenueList');
-  const venueItems   = Array.from(document.querySelectorAll('.venue-item'));
+  const filterPanel = document.getElementById('filterPanel');
+  const searchInput = document.getElementById('venueSearch');
+  const listEl = document.getElementById('allVenueList');
+  const venueItems = Array.from(document.querySelectorAll('.venue-item'));
 
   // Server-side search filter elements
-  const viewMode      = document.getElementById('viewMode');
+  const viewMode = document.getElementById('viewMode');
   const viewHourlyBox = document.getElementById('viewHourlyBox');
-  const viewDailyBox  = document.getElementById('viewDailyBox');
-  const viewDate      = document.getElementById('viewDate');
+  const viewDailyBox = document.getElementById('viewDailyBox');
+  const viewDate = document.getElementById('viewDate');
   const viewStartTime = document.getElementById('viewStartTime');
-  const viewEndTime   = document.getElementById('viewEndTime');
+  const viewEndTime = document.getElementById('viewEndTime');
   const viewStartDate = document.getElementById('viewStartDate');
-  const viewEndDate   = document.getElementById('viewEndDate');
+  const viewEndDate = document.getElementById('viewEndDate');
 
   // Client-side filter elements
-  const sportChips   = Array.from(document.querySelectorAll('#sport-filter-group .filter-chip'));
-  const sortChips    = Array.from(document.querySelectorAll('#sort-group .sort-chip'));
-  const starRadios   = Array.from(document.querySelectorAll('#star-filter-group .filter-rb'));
+  const sportChips = Array.from(document.querySelectorAll('#sport-filter-group .filter-chip'));
+  const sortChips = Array.from(document.querySelectorAll('#sort-group .sort-chip'));
+  const starRadios = Array.from(document.querySelectorAll('#star-filter-group .filter-rb'));
   const reviewRadios = Array.from(document.querySelectorAll('#review-filter-group .filter-rb'));
-  const facilityCbs  = Array.from(document.querySelectorAll('#facility-filter-group .filter-cb'));
+  const facilityCbs = Array.from(document.querySelectorAll('#facility-filter-group .filter-cb'));
 
   // ===============================
   // ===== 2. STATE MANAGEMENT =====
   // ===============================
   let activeSport = 'all';
-  let activeSort  = 'popular';
-  let searchTerm  = (searchInput?.value || '').trim().toLowerCase();
+  let activeSort = 'popular';
+  let searchTerm = (searchInput?.value || '').trim().toLowerCase();
   let activeStar = 0;
   let activeReview = 0;
   let activeFacilities = new Set();
@@ -75,7 +75,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
       const matchSearch = !searchTerm || name.toLowerCase().includes(searchTerm);
       const matchSport = activeSport === 'all' || categoryId === activeSport;
-      const matchStar = parseFloat(rating) >= activeStar;
+      const matchStar = activeStar === 0 || Math.floor(parseFloat(rating)) === activeStar;
       const matchReview = parseInt(reviewCount, 10) >= activeReview;
       const matchFacilities = activeFacilities.size === 0 || [...activeFacilities].every(facId => itemFacilities.includes(facId));
 
@@ -87,19 +87,19 @@ document.addEventListener('DOMContentLoaded', function () {
     let sorted = visible.slice();
     switch (activeSort) {
       case 'price':
-        sorted.sort((a, b) => parseFloat(a.dataset.priceHourly || '0') - parseFloat(b.dataset.priceHourly || '0'));
+        sorted.sort((a, b) => parseFloat(a.dataset.price || '0') - parseFloat(b.dataset.price || '0'));
         break;
       case 'rating':
-        sorted.sort((a, b) => parseFloat(b.dataset.rating || '0') - parseFloat(a.dataset.rating || '0'));
+        sorted.sort((a, b) => parseInt(b.dataset.reviewCount || '0', 10) - parseInt(a.dataset.reviewCount || '0', 10));
         break;
       case 'nearby':
         sorted.sort((a, b) => parseFloat(a.dataset.distance || Infinity) - parseFloat(b.dataset.distance || Infinity));
         break;
       default: // 'popular'
-        sorted.sort((a, b) => parseInt(a.dataset.index || '0', 10) - parseInt(b.dataset.index || '0', 10));
+        sorted.sort((a, b) => parseInt(b.dataset.reviewCount || '0', 10) - parseInt(a.dataset.reviewCount || '0', 10));
         break;
     }
-    
+
     sorted.forEach(item => listEl.appendChild(item));
   };
 
@@ -120,7 +120,7 @@ document.addEventListener('DOMContentLoaded', function () {
       }, 150);
     });
   }
-  
+
   document.querySelector('form[method="get"]')?.addEventListener('submit', (e) => {
     // Let the form submit normally for server-side filtering (date/time/mode)
     // Client-side search is handled by the 'input' event on the search box
@@ -184,7 +184,7 @@ document.addEventListener('DOMContentLoaded', function () {
   venueItems.forEach((item, idx) => item.dataset.index = idx.toString());
   setActiveChip(sportChips, sportChips.find(c => c.dataset.value === 'all'));
   setActiveChip(sortChips, sortChips.find(c => c.dataset.sort === 'popular'));
-  
+
   applyFiltersAndSort(); // Initial filter call
 
   // --- DATE/TIME PICKER LOGIC (unchanged) ---
@@ -210,8 +210,8 @@ document.addEventListener('DOMContentLoaded', function () {
   function applyModeUI() {
     if (!viewMode) return;
     const mode = viewMode.value || '';
-    if(viewHourlyBox) viewHourlyBox.classList.toggle('hidden', mode !== 'hourly');
-    if(viewDailyBox) viewDailyBox.classList.toggle('hidden', mode !== 'daily');
+    if (viewHourlyBox) viewHourlyBox.classList.toggle('hidden', mode !== 'hourly');
+    if (viewDailyBox) viewDailyBox.classList.toggle('hidden', mode !== 'daily');
   }
 
   function buildViewStartOptions(dateStr) {
