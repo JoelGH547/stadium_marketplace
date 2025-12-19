@@ -20,16 +20,131 @@
   });
 })();
 
-
-/* ============ Nearby distance + limit 8/20 ============ */
+/* ==========================================================================
+   MAIN HOME PAGE LOGIC (Sorting, Distance, Filters)
+   ========================================================================== */
 document.addEventListener('DOMContentLoaded', () => {
+  // --- Element References ---
   const nearScroller = document.getElementById('nearScroller');
   const listEl = document.getElementById('venueItems');
+  const sortMenu = document.getElementById('sortMenu');
+  const hourlyDateInput = document.getElementById('hourlyDate');
+  const homeStartTime = document.getElementById('homeStartTime');
+  const homeEndTime = document.getElementById('homeEndTime');
+  const dailyStartDate = document.getElementById('dailyStartDate');
+  const dailyEndDate = document.getElementById('dailyEndDate');
 
-  if (!nearScroller && !listEl) return;
-
+  if (!listEl && !nearScroller) {
+    console.log('Home script: No venue list or scroller found.');
+    return;
+  }
+  
   let userLocation = null;
 
+  // ===============================
+  // SORTING LOGIC
+  // ===============================
+  const buttons = sortMenu ? Array.from(sortMenu.querySelectorAll('button.sort-btn')) : [];
+
+  function setActive(btn) {
+    if (!btn) return;
+    buttons.forEach(b => {
+      b.classList.remove('bg-[var(--primary)]', 'text-white', 'font-semibold');
+      b.classList.add('text-gray-700', 'hover:text-[var(--primary)]', 'hover:bg-[var(--primary)]/10');
+      b.setAttribute('aria-selected', 'false');
+    });
+
+    btn.classList.remove('text-gray-700', 'hover:text-[var(--primary)]', 'hover:bg-[var(--primary)]/10');
+    btn.classList.add('bg-[var(--primary)]', 'text-white', 'font-semibold');
+    btn.setAttribute('aria-selected', 'true');
+  }
+
+  function num(v) {
+    const n = parseFloat(v || '0');
+    return Number.isFinite(n) ? n : 0;
+  }
+
+  function sortListBy(key) {
+    if (!listEl) return;
+    const items = Array.from(listEl.querySelectorAll('li'));
+
+    // decorate with stable index for tie-break
+    items.forEach((li, i) => {
+      if (!li.dataset.__idx) li.dataset.__idx = String(i);
+    });
+
+    const sorted = items.slice();
+
+    if (key === 'popular') {
+      sorted.sort((a, b) => {
+        const da = num(a.dataset.popular);
+        const db = num(b.dataset.popular);
+        if (db !== da) return db - da;
+        return num(a.dataset.__idx) - num(b.dataset.__idx);
+      });
+    } else if (key === 'price_low') {
+      sorted.sort((a, b) => {
+        const pa = num(a.dataset.price);
+        const pb = num(b.dataset.price);
+        const na = pa > 0 ? pa : Number.POSITIVE_INFINITY;
+        const nb = pb > 0 ? pb : Number.POSITIVE_INFINITY;
+        if (na !== nb) return na - nb;
+        return num(a.dataset.__idx) - num(b.dataset.__idx);
+      });
+    } else if (key === 'price_high') {
+      sorted.sort((a, b) => {
+        const pa = num(a.dataset.price);
+        const pb = num(b.dataset.price);
+        const na = pa > 0 ? pa : Number.NEGATIVE_INFINITY;
+        const nb = pb > 0 ? pb : Number.NEGATIVE_INFINITY;
+        if (nb !== na) return nb - na;
+        return num(a.dataset.__idx) - num(b.dataset.__idx);
+      });
+    } else if (key === 'reviews') {
+      sorted.sort((a, b) => {
+        const ra = num(a.dataset.reviewCount);
+        const rb = num(b.dataset.reviewCount);
+        if (rb !== ra) return rb - ra;
+        return num(a.dataset.__idx) - num(b.dataset.__idx);
+      });
+    } else if (key === 'distance') {
+      // this key is mainly for event dispatching, the sorting is done in applyRanking
+      // but we can add a fallback sort here just in case.
+      sorted.sort((a, b) => {
+        const da = num(a.dataset.distanceKm);
+        const db = num(b.dataset.distanceKm);
+        return da - db;
+      });
+    } else {
+      return; // Do nothing for unknown keys
+    }
+
+    // Apply new DOM order
+    sorted.forEach(li => listEl.appendChild(li));
+
+    // Notify other parts of the app (like the pager) that the sort order has changed
+    try {
+      window.dispatchEvent(new CustomEvent('sort-change', { detail: { key } }));
+    } catch (_) {
+      const e = document.createEvent('CustomEvent');
+      e.initCustomEvent('sort-change', true, true, { key });
+      window.dispatchEvent(e);
+    }
+  }
+  
+  // Set up click handlers for sort buttons
+  buttons.forEach(btn => {
+    btn.addEventListener('click', (ev) => {
+      ev.preventDefault();
+      const sortKey = btn.dataset.sort || 'popular';
+      setActive(btn);
+      sortListBy(sortKey);
+    });
+  });
+
+  // ===============================
+  // DISTANCE CALCULATION
+  // ===============================
   function haversine(lat1, lon1, lat2, lon2) {
     const toRad = (deg) => (deg * Math.PI) / 180;
     const R = 6371; // km
@@ -49,7 +164,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function applyRanking() {
-    // จัดการรายการหลักด้านล่าง
+    // Process main venue list
     if (listEl) {
       const items = Array.from(listEl.querySelectorAll('li'));
       items.forEach((li) => {
@@ -60,30 +175,16 @@ document.addEventListener('DOMContentLoaded', () => {
         if (userLocation && !isNaN(lat) && !isNaN(lng)) {
           dist = haversine(userLocation.lat, userLocation.lng, lat, lng);
         }
-
         li.dataset.distanceKm = dist.toString();
-        li.dataset.distance = dist.toString();
-
+        
         if (userLocation) {
           const badge = li.querySelector('.dist-badge span:last-child');
           if (badge) badge.textContent = formatDistance(dist);
         }
       });
-
-      const sorted = items.slice().sort((a, b) => {
-        const da = parseFloat(a.dataset.distanceKm || '999999');
-        const db = parseFloat(b.dataset.distanceKm || '999999');
-        return da - db;
-      });
-
-      sorted.forEach((li, idx) => {
-        listEl.appendChild(li);
-        if (idx < 20) li.classList.remove('hidden');
-        else li.classList.add('hidden');
-      });
     }
 
-    // จัดการ section สนามใกล้คุณ
+    // Process "nearby" scroller
     if (nearScroller) {
       const cards = Array.from(nearScroller.querySelectorAll('article'));
       cards.forEach((card) => {
@@ -94,9 +195,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (userLocation && !isNaN(lat) && !isNaN(lng)) {
           dist = haversine(userLocation.lat, userLocation.lng, lat, lng);
         }
-
         card.dataset.distanceKm = dist.toString();
-        card.dataset.distance = dist.toString();
 
         if (userLocation) {
           const badge = card.querySelector('.dist-badge span:last-child');
@@ -104,69 +203,66 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       });
 
+      // Sort "nearby" scroller by distance
       const sortedCards = cards.slice().sort((a, b) => {
         const da = parseFloat(a.dataset.distanceKm || '999999');
         const db = parseFloat(b.dataset.distanceKm || '999999');
         return da - db;
       });
 
-      sortedCards.forEach((card, idx) => {
-        nearScroller.appendChild(card);
-        if (idx < 12) card.classList.remove('hidden');
-        else card.classList.add('hidden');
-      });
+      sortedCards.forEach((card) => nearScroller.appendChild(card));
     }
-
-    // ✅ แจ้ง overlay/pager ว่า “ลำดับเปลี่ยนแล้วนะ”
-    try {
-      window.dispatchEvent(new CustomEvent('sort-change', { detail: { key: 'distance' } }));
-    } catch (_) {
-      const e = document.createEvent('CustomEvent');
-      e.initCustomEvent('sort-change', true, true, { key: 'distance' });
-      window.dispatchEvent(e);
+    
+    // *** FIX: Re-apply the initial/default sort AFTER distance has been calculated ***
+    if (sortMenu) {
+        const initialBtn = buttons.find(b => b.getAttribute('aria-selected') === 'true') || buttons[0];
+        if (initialBtn) {
+            const initialSortKey = initialBtn.dataset.sort || 'popular';
+            // No need to call setActive, it's already set in HTML
+            sortListBy(initialSortKey);
+        }
+    } else {
+        // Fallback if there's no sort menu, just notify that the list might have changed
+         try {
+          window.dispatchEvent(new CustomEvent('sort-change', { detail: { key: 'distance' } }));
+        } catch (_) {
+          const e = document.createEvent('CustomEvent');
+          e.initCustomEvent('sort-change', true, true, { key: 'distance' });
+          window.dispatchEvent(e);
+        }
     }
   }
+  
+  // Set original index for stable default sorting
+  if (listEl) {
+    const items = Array.from(listEl.querySelectorAll('li'));
+    items.forEach((li, idx) => {
+      if (!li.dataset.originalIndex) {
+        li.dataset.originalIndex = String(idx);
+      }
+    });
+  }
 
-
+  // --- Geolocation Initialization ---
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        userLocation = {
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude,
-        };
+        userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
         applyRanking();
       },
       (err) => {
         console.warn('Geolocation error on home:', err.message);
-        // ไม่มีตำแหน่ง: อย่างน้อยให้จำกัดจำนวน 8/20 ตามลำดับเดิม
-        applyRanking();
+        applyRanking(); // Apply default sort even if location fails
       },
-      {
-        enableHighAccuracy: false,
-        timeout: 8000,
-        maximumAge: 600000,
-      }
+      { enableHighAccuracy: false, timeout: 8000, maximumAge: 600000 }
     );
   } else {
-    // browser ไม่รองรับ geolocation: จำกัดจำนวน 8/20 ตามลำดับเดิม
-    applyRanking();
+    applyRanking(); // Apply default sort if geolocation is not supported
   }
 
-
   // ===============================
-  // Home Search Filters: Date/Time Slots (00:00-24:00) + Basic Validation
-  // - Prevent past dates via min attribute in HTML (server should still validate)
-  // - If date is today, hide past time slots (like show page)
-  // - End time must be > start time
-  // - If user doesn't set anything (q/category/date/time), go to /sport/view plain
+  // HOME SEARCH FILTERS (Date/Time)
   // ===============================
-  const hourlyDateInput = document.getElementById('hourlyDate');
-  const homeStartTime   = document.getElementById('homeStartTime');
-  const homeEndTime     = document.getElementById('homeEndTime');
-  const dailyStartDate  = document.getElementById('dailyStartDate');
-  const dailyEndDate    = document.getElementById('dailyEndDate');
-
   const pad2 = (n) => String(n).padStart(2, '0');
   const minutesToLabel = (m) => {
     if (m === 1440) return '24:00';
@@ -204,7 +300,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const todayStr = new Date().toISOString().split('T')[0];
     let startMin = 0;
 
-    // If selected date is today, start from next full hour
     if (dateStr === todayStr) {
       const now = new Date();
       const cur = now.getHours() * 60 + now.getMinutes();
@@ -224,28 +319,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function buildHomeEndOptions() {
     if (!homeStartTime || !homeEndTime) return;
-
     const startVal = homeStartTime.value;
     clearSelect(homeEndTime, '— เลือกเวลาสิ้นสุด —');
-
     if (!startVal) {
       homeEndTime.disabled = true;
       return;
     }
-
     const sMin = labelToMinutes(startVal);
     if (sMin === null || sMin >= 1440) {
       homeEndTime.disabled = true;
       return;
     }
-
     for (let m = sMin + 60; m <= 1440; m += 60) {
       const opt = document.createElement('option');
       opt.value = minutesToLabel(m);
       opt.textContent = minutesToLabel(m);
       homeEndTime.appendChild(opt);
     }
-
     homeEndTime.disabled = homeEndTime.options.length <= 1;
   }
 
@@ -262,7 +352,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Daily date basic constraint: end >= start
   if (dailyStartDate && dailyEndDate) {
     dailyStartDate.addEventListener('change', () => {
       if (dailyStartDate.value) dailyEndDate.min = dailyStartDate.value;
@@ -272,128 +361,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Init if back with date
   if (hourlyDateInput && hourlyDateInput.value) {
     buildHomeStartOptions(hourlyDateInput.value);
     if (homeStartTime && homeStartTime.value) buildHomeEndOptions();
   }
-});
-
-/* ============ เก็บลำดับเดิมของการ์ด (ใช้กับยอดนิยม/ดีฟอลต์) ============ */
-document.addEventListener('DOMContentLoaded', () => {
-  const listEl = document.getElementById('venueItems');
-  if (!listEl) return;
-
-  const items = Array.from(listEl.querySelectorAll('li'));
-  items.forEach((li, idx) => {
-    if (!li.dataset.originalIndex) {
-      li.dataset.originalIndex = String(idx); // ใช้เป็นลำดับ default
-    }
-  });
-});
-/* ============ เมนูเรียงลำดับด้านล่าง (home) ============ */
-document.addEventListener('DOMContentLoaded', () => {
-  const sortMenu = document.getElementById('sortMenu');
-  const listEl = document.getElementById('venueItems');
-  if (!sortMenu || !listEl) return;
-
-  const buttons = Array.from(sortMenu.querySelectorAll('button.sort-btn'));
-
-  function setActive(btn) {
-    buttons.forEach(b => {
-      b.classList.remove('bg-[var(--primary)]', 'text-white', 'font-semibold');
-      b.classList.add('text-gray-700', 'hover:text-[var(--primary)]', 'hover:bg-[var(--primary)]/10');
-      b.setAttribute('aria-selected', 'false');
-    });
-
-    btn.classList.remove('text-gray-700', 'hover:text-[var(--primary)]', 'hover:bg-[var(--primary)]/10');
-    btn.classList.add('bg-[var(--primary)]', 'text-white', 'font-semibold');
-    btn.setAttribute('aria-selected', 'true');
-  }
-
-  function num(v) {
-    const n = parseFloat(v || '0');
-    return Number.isFinite(n) ? n : 0;
-  }
-
-  function sortListBy(key) {
-    const items = Array.from(listEl.querySelectorAll('li'));
-
-    // decorate with stable index for tie-break
-    items.forEach((li, i) => {
-      if (!li.dataset.__idx) li.dataset.__idx = String(i);
-    });
-
-    const sorted = items.slice();
-
-    if (key === 'popular') {
-      // ยอดนิยม: booking_count มากสุด
-      sorted.sort((a, b) => {
-        const da = num(a.dataset.popular);
-        const db = num(b.dataset.popular);
-        if (db !== da) return db - da;
-        return num(a.dataset.__idx) - num(b.dataset.__idx);
-      });
-    } else if (key === 'price_low') {
-      // ราคาถูกสุด: min_price น้อยสุด (0 / ไม่มีราคา -> ไปท้าย)
-      sorted.sort((a, b) => {
-        const pa = num(a.dataset.price);
-        const pb = num(b.dataset.price);
-        const na = pa > 0 ? pa : Number.POSITIVE_INFINITY;
-        const nb = pb > 0 ? pb : Number.POSITIVE_INFINITY;
-        if (na !== nb) return na - nb;
-        return num(a.dataset.__idx) - num(b.dataset.__idx);
-      });
-    } else if (key === 'price_high') {
-      // ราคาสุดหรู: min_price มากสุด (0 / ไม่มีราคา -> ไปท้าย)
-      sorted.sort((a, b) => {
-        const pa = num(a.dataset.price);
-        const pb = num(b.dataset.price);
-        const na = pa > 0 ? pa : Number.NEGATIVE_INFINITY;
-        const nb = pb > 0 ? pb : Number.NEGATIVE_INFINITY;
-        if (nb !== na) return nb - na;
-        return num(a.dataset.__idx) - num(b.dataset.__idx);
-      });
-    } else if (key === 'reviews') {
-      // ได้ยอดรีวิวสูง: จำนวนรีวิวมากสุด
-      sorted.sort((a, b) => {
-        const ra = num(a.dataset.reviewCount);
-        const rb = num(b.dataset.reviewCount);
-        if (rb !== ra) return rb - ra;
-        return num(a.dataset.__idx) - num(b.dataset.__idx);
-      });
-    } else {
-      // fallback: ไม่ทำอะไร
-      return;
-    }
-
-    // Apply new DOM order
-    sorted.forEach(li => listEl.appendChild(li));
-
-    // Notify overlay system to re-apply preview/expand state after sorting
-    try {
-      window.dispatchEvent(new CustomEvent('sort-change', { detail: { key } }));
-    } catch (_) {
-      const e = document.createEvent('CustomEvent');
-      e.initCustomEvent('sort-change', true, true, { key });
-      window.dispatchEvent(e);
-    }
-  }
-
-  // initial
-  const initial = buttons.find(b => b.getAttribute('aria-selected') === 'true') || buttons[0];
-  if (initial) {
-    setActive(initial);
-    sortListBy(initial.dataset.sort || 'popular');
-  }
-
-  buttons.forEach(btn => {
-    btn.addEventListener('click', (ev) => {
-      ev.preventDefault();
-      setActive(btn);
-      sortListBy(btn.dataset.sort || 'popular');
-    });
-  });
 });
 
 /* ==================== Venue Pager Overlay ==================== */
