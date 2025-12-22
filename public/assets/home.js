@@ -45,6 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // SORTING LOGIC
   // ===============================
   const buttons = sortMenu ? Array.from(sortMenu.querySelectorAll('button.sort-btn')) : [];
+  let currentSortKey = (buttons.find(b => b.getAttribute('aria-selected') === 'true') || buttons[0])?.dataset?.sort || 'popular';
 
   function setActive(btn) {
     if (!btn) return;
@@ -64,9 +65,11 @@ document.addEventListener('DOMContentLoaded', () => {
     return Number.isFinite(n) ? n : 0;
   }
 
-  function sortListBy(key) {
+  function sortListBy(key, opt = { emitEvent: true }) {
     if (!listEl) return;
-    const items = Array.from(listEl.querySelectorAll('li'));
+    const itemsAll = Array.from(listEl.querySelectorAll('li'));
+    const items = itemsAll.filter(li => !li.classList.contains('is-filtered-out'));
+    const filteredOut = itemsAll.filter(li => li.classList.contains('is-filtered-out'));
 
     // decorate with stable index for tie-break
     items.forEach((li, i) => {
@@ -121,6 +124,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Apply new DOM order
     sorted.forEach(li => listEl.appendChild(li));
+    // Keep filtered-out items at the end (still hidden)
+    filteredOut.sort((a,b)=>num(a.dataset.__idx)-num(b.dataset.__idx)).forEach(li => listEl.appendChild(li));
+
+    if (opt && opt.emitEvent === false) return;
 
     // Notify other parts of the app (like the pager) that the sort order has changed
     try {
@@ -137,6 +144,8 @@ document.addEventListener('DOMContentLoaded', () => {
     btn.addEventListener('click', (ev) => {
       ev.preventDefault();
       const sortKey = btn.dataset.sort || 'popular';
+      currentSortKey = sortKey;
+      window.__homeCurrentSortKey = currentSortKey;
       setActive(btn);
       sortListBy(sortKey);
     });
@@ -166,7 +175,9 @@ document.addEventListener('DOMContentLoaded', () => {
   function applyRanking() {
     // Process main venue list
     if (listEl) {
-      const items = Array.from(listEl.querySelectorAll('li'));
+      const itemsAll = Array.from(listEl.querySelectorAll('li'));
+    const items = itemsAll.filter(li => !li.classList.contains('is-filtered-out'));
+    const filteredOut = itemsAll.filter(li => li.classList.contains('is-filtered-out'));
       items.forEach((li) => {
         const lat = parseFloat(li.dataset.lat || '');
         const lng = parseFloat(li.dataset.lng || '');
@@ -235,8 +246,10 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Set original index for stable default sorting
   if (listEl) {
-    const items = Array.from(listEl.querySelectorAll('li'));
-    items.forEach((li, idx) => {
+    const itemsAll = Array.from(listEl.querySelectorAll('li'));
+    const items = itemsAll.filter(li => !li.classList.contains('is-filtered-out'));
+    const filteredOut = itemsAll.filter(li => li.classList.contains('is-filtered-out'));
+    itemsAll.forEach((li, idx) => {
       if (!li.dataset.originalIndex) {
         li.dataset.originalIndex = String(idx);
       }
@@ -418,11 +431,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function applyPaging() {
     const items = Array.from(ul.children).filter(el => el.tagName === 'LI');
-    const total = items.length;
+    const activeItems = items.filter(li => !li.classList.contains('is-filtered-out'));
+    const total = activeItems.length;
 
     // reset ทั้งหมดก่อน
     items.forEach(li => {
-      li.classList.remove('vp-partial', 'hidden');
+      li.classList.remove('vp-partial');
+      // filtered-out items should stay hidden always
+      if (li.classList.contains('is-filtered-out')) {
+        li.classList.add('hidden');
+      } else {
+        li.classList.remove('hidden');
+      }
       li.style.removeProperty('maxHeight');
     });
 
@@ -437,8 +457,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (isExpanded) {
       const max = Math.min(EXPAND_LIMIT, total);
       for (let i = 0; i < total; i++) {
-        if (i < max) items[i].classList.remove('hidden', 'vp-partial');
-        else items[i].classList.add('hidden');
+        if (i < max) activeItems[i].classList.remove('hidden', 'vp-partial');
+        else activeItems[i].classList.add('hidden');
       }
       const btn = wrap.querySelector('#btnMoreOverlay');
       if (btn) btn.classList.add('hidden');
@@ -449,19 +469,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ซ่อนการ์ดเกินแถวที่ 10
     for (let i = EXPAND_LIMIT; i < total; i++) {
-      items[i].classList.add('hidden');
+      activeItems[i].classList.add('hidden');
     }
 
     // ทำแถวที่ 5 ให้เบลอ (ใบ index 8–9)
     const previewEnd = Math.min(PREVIEW_LIMIT, total);
     for (let i = INITIAL; i < previewEnd; i++) {
-      items[i].classList.add('vp-partial');
+      activeItems[i].classList.add('vp-partial');
     }
 
     // ซ่อนแถวที่ 6–10 (ใบ index 10–19)
     const expandEnd = Math.min(EXPAND_LIMIT, total);
     for (let i = PREVIEW_LIMIT; i < expandEnd; i++) {
-      items[i].classList.add('hidden');
+      activeItems[i].classList.add('hidden');
     }
 
     // สร้าง / แสดงปุ่ม "ดูเพิ่มเติม"
@@ -481,11 +501,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function expandToLimit() {
     const items = Array.from(ul.children).filter(el => el.tagName === 'LI');
-    const total = items.length;
+    const activeItems = items.filter(li => !li.classList.contains('is-filtered-out'));
+    const total = activeItems.length;
     const max = Math.min(EXPAND_LIMIT, total);
 
     for (let i = INITIAL; i < max; i++) {
-      items[i].classList.remove('hidden', 'vp-partial');
+      activeItems[i].classList.remove('hidden', 'vp-partial');
     }
 
     const btn = ul.parentElement.querySelector('#btnMoreOverlay');
@@ -495,6 +516,9 @@ document.addEventListener('DOMContentLoaded', () => {
     isExpanded = true;
   }
 
+  // expose for filters
+  window.__venueApplyPaging = applyPaging;
+
   // เรียกตอนโหลดครั้งแรก
   applyPaging();
 
@@ -502,6 +526,224 @@ document.addEventListener('DOMContentLoaded', () => {
   window.addEventListener('sort-change', () => {
     requestAnimationFrame(() => applyPaging());
   });
+});
+
+
+/* ==================== Home Venue Filters (aside) ==================== */
+document.addEventListener('DOMContentLoaded', () => {
+  const ul = document.getElementById('venueItems');
+  if (!ul) return;
+
+  const emptyState = document.getElementById('venueEmptyState');
+
+  // ----- Price filter -----
+  const btnHourly = document.getElementById('filterPriceHourly');
+  const btnDaily  = document.getElementById('filterPriceDaily');
+  const priceMinInput = document.getElementById('priceMin');
+  const priceMaxInput = document.getElementById('priceMax');
+  const priceSlider = document.getElementById('priceSlider');
+  const rangeMin = document.getElementById('priceRangeMin');
+  const rangeMax = document.getElementById('priceRangeMax');
+  const fill = document.getElementById('priceTrackFill');
+  const hMinEl = document.getElementById('priceHandleMin');
+  const hMaxEl = document.getElementById('priceHandleMax');
+
+  let priceMode = 'hourly';
+
+  function num(v){ const n = Number(v); return Number.isFinite(n) ? n : 0; }
+
+  function getBounds(mode){
+    if (!priceSlider) return {min:0,max:0};
+    const min = num(priceSlider.dataset[mode + 'Min']);
+    const max = num(priceSlider.dataset[mode + 'Max']);
+    return {min, max};
+  }
+
+  function setTabActive(mode){
+    priceMode = mode;
+    if (btnHourly && btnDaily){
+      if (mode === 'hourly'){
+        btnHourly.classList.add('bg-white','text-gray-900','shadow-sm');
+        btnHourly.classList.remove('text-gray-500');
+        btnDaily.classList.remove('bg-white','text-gray-900','shadow-sm');
+        btnDaily.classList.add('text-gray-500');
+      } else {
+        btnDaily.classList.add('bg-white','text-gray-900','shadow-sm');
+        btnDaily.classList.remove('text-gray-500');
+        btnHourly.classList.remove('bg-white','text-gray-900','shadow-sm');
+        btnHourly.classList.add('text-gray-500');
+      }
+    }
+  }
+
+  function clampRange(){
+    if (!rangeMin || !rangeMax) return;
+    const b = getBounds(priceMode);
+    let a = num(rangeMin.value);
+    let c = num(rangeMax.value);
+    if (a < b.min) a = b.min;
+    if (c > b.max) c = b.max;
+    if (a > c) a = c;
+    rangeMin.value = String(a);
+    rangeMax.value = String(c);
+    if (priceMinInput) priceMinInput.value = String(a);
+    if (priceMaxInput) priceMaxInput.value = String(c);
+    updateSliderUI();
+  }
+
+  function updateSliderUI(){
+    if (!priceSlider || !fill || !hMinEl || !hMaxEl || !rangeMin || !rangeMax) return;
+    const b = getBounds(priceMode);
+    const minV = num(rangeMin.value);
+    const maxV = num(rangeMax.value);
+    const span = Math.max(1, b.max - b.min);
+    const leftPct = ((minV - b.min) / span) * 100;
+    const rightPct = ((maxV - b.min) / span) * 100;
+    fill.style.left = leftPct + '%';
+    fill.style.right = (100 - rightPct) + '%';
+    hMinEl.style.left = leftPct + '%';
+    hMaxEl.style.left = rightPct + '%';
+  }
+
+  function syncBoundsToUI(mode, resetValues=true){
+    if (!rangeMin || !rangeMax) return;
+    const b = getBounds(mode);
+    rangeMin.min = String(b.min);
+    rangeMin.max = String(b.max);
+    rangeMax.min = String(b.min);
+    rangeMax.max = String(b.max);
+    if (resetValues){
+      rangeMin.value = String(b.min);
+      rangeMax.value = String(b.max);
+      if (priceMinInput) priceMinInput.value = String(b.min);
+      if (priceMaxInput) priceMaxInput.value = String(b.max);
+    } else {
+      // keep current but clamp
+      clampRange();
+    }
+    updateSliderUI();
+  }
+
+  // ----- Checkbox filters -----
+  function getCheckedValues(filterKey){
+    return Array.from(document.querySelectorAll('.filter-cb[data-filter="' + filterKey + '"]'))
+      .filter(el => el.checked)
+      .map(el => num(el.value))
+      .filter(v => v > 0);
+  }
+
+  function parseCsv(csv){
+    if (!csv) return [];
+    return String(csv).split(',').map(s => num(s.trim())).filter(v => v > 0);
+  }
+
+  function passesFilters(li){
+    // Star (threshold): if select 4+ and 3+ => use min => >=3
+    const stars = getCheckedValues('star');
+    if (stars.length){
+      const threshold = Math.min(...stars);
+      if (num(li.dataset.rating) < threshold) return false;
+    }
+
+    // Reviews (minimum count)
+    const rev = getCheckedValues('review');
+    if (rev.length){
+      const minCount = Math.min(...rev);
+      if (num(li.dataset.reviewCount) < minCount) return false;
+    }
+
+    // Category (OR)
+    const cats = getCheckedValues('category');
+    if (cats.length){
+      const cid = num(li.dataset.categoryId);
+      if (!cats.includes(cid)) return false;
+    }
+
+    // Facilities (AND: selected must be subset)
+    const facSel = getCheckedValues('facility');
+    if (facSel.length){
+      const have = new Set(parseCsv(li.dataset.facilityIds));
+      for (const f of facSel){
+        if (!have.has(f)) return false;
+      }
+    }
+
+    // Price (only apply when narrowed from full bounds)
+    if (priceSlider && rangeMin && rangeMax){
+      const b = getBounds(priceMode);
+      const minF = num(rangeMin.value);
+      const maxF = num(rangeMax.value);
+      const narrowed = (minF > b.min) || (maxF < b.max);
+
+      if (narrowed){
+        const key = priceMode === 'daily' ? 'dailyMin' : 'hourlyMin';
+        const stadiumMin = num(li.dataset[key] || li.dataset.price);
+        if (stadiumMin <= 0) return false;
+        if (stadiumMin < minF || stadiumMin > maxF) return false;
+      }
+    }
+
+    return true;
+  }
+
+  function updateEmptyState(){
+    if (!emptyState) return;
+    const active = Array.from(ul.querySelectorAll('li')).filter(li => !li.classList.contains('is-filtered-out'));
+    emptyState.classList.toggle('hidden', active.length > 0);
+  }
+
+  function applyFilters(){
+    const items = Array.from(ul.querySelectorAll('li'));
+    items.forEach(li => {
+      const ok = passesFilters(li);
+      li.classList.toggle('is-filtered-out', !ok);
+      if (!ok) li.classList.add('hidden');
+    });
+
+    // sort visible subset with current sort key (function is in outer scope)
+    if (typeof window.__homeSortListBy === 'function') {
+      window.__homeSortListBy(window.__homeCurrentSortKey || 'popular', { emitEvent: true });
+    } else {
+      // fallback: trigger paging refresh
+      if (typeof window.__venueApplyPaging === 'function') window.__venueApplyPaging();
+    }
+
+    if (typeof window.__venueApplyPaging === 'function') window.__venueApplyPaging();
+    updateEmptyState();
+  }
+
+  // Hook into existing sort function by exposing a wrapper (we inject below in sorting section)
+  // If wrapper not present yet, we still apply filters; it will update paging and empty state.
+  // Price events
+  if (btnHourly) btnHourly.addEventListener('click', () => { setTabActive('hourly'); syncBoundsToUI('hourly', false); applyFilters(); });
+  if (btnDaily)  btnDaily.addEventListener('click', () => { setTabActive('daily');  syncBoundsToUI('daily', false); applyFilters(); });
+
+  if (rangeMin) rangeMin.addEventListener('input', () => { clampRange(); applyFilters(); });
+  if (rangeMax) rangeMax.addEventListener('input', () => { clampRange(); applyFilters(); });
+
+  if (priceMinInput) priceMinInput.addEventListener('input', () => {
+    if (!rangeMin) return;
+    rangeMin.value = String(num(priceMinInput.value));
+    clampRange();
+    applyFilters();
+  });
+  if (priceMaxInput) priceMaxInput.addEventListener('input', () => {
+    if (!rangeMax) return;
+    rangeMax.value = String(num(priceMaxInput.value));
+    clampRange();
+    applyFilters();
+  });
+
+  // Checkbox events
+  document.querySelectorAll('.filter-cb').forEach(el => {
+    el.addEventListener('change', () => applyFilters());
+  });
+
+  // initial UI
+  setTabActive('hourly');
+  syncBoundsToUI('hourly', true);
+  updateSliderUI();
+  applyFilters();
 });
 
 /* ==================== Login Overlay สำหรับ guest ==================== */

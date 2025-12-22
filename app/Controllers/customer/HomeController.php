@@ -9,6 +9,7 @@ use App\Models\StadiumFieldModel;
 use App\Models\StadiumReviewModel;
 use App\Models\CustomerFavoriteModel;
 use App\Models\BookingModel;
+use App\Models\FacilityTypeModel;
 
 class HomeController extends BaseController
 {
@@ -28,6 +29,37 @@ class HomeController extends BaseController
         $reviewModel = new StadiumReviewModel();
         $stadiumIds  = array_map(static fn($x) => (int)($x['id'] ?? 0), $venueCards);
         $summaries   = $reviewModel->getSummariesForStadiumIds($stadiumIds);
+
+        // Facilities (map per stadium_id) + facility type list for sidebar filter
+        $facilityTypeModel = new FacilityTypeModel();
+        $facilityTypes = $facilityTypeModel->orderBy('name', 'ASC')->findAll();
+
+        $stadiumFacilityMap = [];
+        if (!empty($stadiumIds)) {
+            $db = db_connect();
+            $rows = $db->table('stadium_facilities sf')
+                ->select('sfields.stadium_id, sf.facility_type_id')
+                ->join('stadium_fields sfields', 'sfields.id = sf.field_id')
+                ->whereIn('sfields.stadium_id', $stadiumIds)
+                ->distinct()
+                ->get()
+                ->getResultArray();
+
+            foreach ($rows as $r) {
+                $sid = (int) ($r['stadium_id'] ?? 0);
+                $fid = (int) ($r['facility_type_id'] ?? 0);
+                if ($sid <= 0 || $fid <= 0) continue;
+                if (!isset($stadiumFacilityMap[$sid])) $stadiumFacilityMap[$sid] = [];
+                $stadiumFacilityMap[$sid][] = $fid;
+            }
+            // unique per stadium
+            foreach ($stadiumFacilityMap as $sid => $arr) {
+                $arr = array_values(array_unique(array_map('intval', $arr)));
+                sort($arr);
+                $stadiumFacilityMap[$sid] = $arr;
+            }
+        }
+
 
 
         // Booking counts (for popularity sort)
@@ -76,7 +108,18 @@ class HomeController extends BaseController
             }
         }
 
-        foreach ($venueCards as &$v) {
+        
+        // Price bounds for dual-range slider on home filter
+        $priceBounds = [
+            'hourly_min' => 0,
+            'hourly_max' => 0,
+            'daily_min'  => 0,
+            'daily_max'  => 0,
+        ];
+        $tmpHMin = INF; $tmpHMax = 0;
+        $tmpDMin = INF; $tmpDMax = 0;
+
+foreach ($venueCards as &$v) {
             // ชื่อประเภท
             $catName  = (string)($v['category_name']  ?? '');
             $catEmoji = (string)($v['category_emoji'] ?? '');
@@ -104,6 +147,29 @@ class HomeController extends BaseController
 
             // Logic คำนวณราคา (Display Range)
             $prices = $stadiumPrices[$sid] ?? ['hourly' => [], 'daily' => []];
+
+            // Store per-mode price range (for home filter)
+            $hourlyMin = !empty($prices['hourly']) ? (float) min($prices['hourly']) : 0;
+            $hourlyMax = !empty($prices['hourly']) ? (float) max($prices['hourly']) : 0;
+            $dailyMin  = !empty($prices['daily'])  ? (float) min($prices['daily'])  : 0;
+            $dailyMax  = !empty($prices['daily'])  ? (float) max($prices['daily'])  : 0;
+
+            $v['hourly_min'] = (int) round($hourlyMin);
+            $v['hourly_max'] = (int) round($hourlyMax);
+            $v['daily_min']  = (int) round($dailyMin);
+            $v['daily_max']  = (int) round($dailyMax);
+
+            // Update global bounds (ignore 0 = no price)
+            if ($hourlyMin > 0) $tmpHMin = min($tmpHMin, $hourlyMin);
+            if ($hourlyMax > 0) $tmpHMax = max($tmpHMax, $hourlyMax);
+            if ($dailyMin  > 0) $tmpDMin = min($tmpDMin, $dailyMin);
+            if ($dailyMax  > 0) $tmpDMax = max($tmpDMax, $dailyMax);
+
+            // Facilities (ids csv for dataset on venue card)
+            $facIds = $stadiumFacilityMap[$sid] ?? [];
+            $v['facility_ids'] = $facIds;
+            $v['facility_ids_csv'] = !empty($facIds) ? implode(',', $facIds) : '';
+
 
             // ใช้ค่าน้อยสุด (รวม hourly + daily) สำหรับการ sort "ราคาถูกสุด/สุดหรู"
             $allAvailablePrices = [];
@@ -155,7 +221,18 @@ class HomeController extends BaseController
         unset($v);
 
         
-        // Favorites map (for heart icon state)
+        
+        // Finalize price bounds
+        if (is_finite($tmpHMin) && $tmpHMax > 0) {
+            $priceBounds['hourly_min'] = (int) floor($tmpHMin);
+            $priceBounds['hourly_max'] = (int) ceil($tmpHMax);
+        }
+        if (is_finite($tmpDMin) && $tmpDMax > 0) {
+            $priceBounds['daily_min'] = (int) floor($tmpDMin);
+            $priceBounds['daily_max'] = (int) ceil($tmpDMax);
+        }
+
+// Favorites map (for heart icon state)
         $favoriteMap = [];
         if (session()->get('customer_logged_in')) {
             $favModel = new CustomerFavoriteModel();
@@ -172,6 +249,8 @@ class HomeController extends BaseController
             'venueCards' => $venueCards,
             'favoriteMap' => $favoriteMap,
             'categories' => $categories,
+            'facilityTypes' => $facilityTypes,
+            'priceBounds' => $priceBounds,
         ];
 
         return view('public/home', $data);

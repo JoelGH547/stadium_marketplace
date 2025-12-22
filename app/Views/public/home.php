@@ -352,17 +352,40 @@
                             <button type="button" id="filterPriceDaily"
                                 class="flex-1 py-1.5 text-sm font-medium text-gray-500 hover:text-gray-900 transition-all">รายวัน</button>
                         </div>
-                        <!-- Slider (Visual) -->
-                        <div class="relative h-1.5 bg-gray-200 rounded-full mb-6 mx-1">
-                            <div class="absolute left-0 right-0 top-0 bottom-0 bg-[var(--primary)] rounded-full"></div>
-                            <div
-                                class="absolute left-0 top-1/2 -translate-y-1/2 w-4 h-4 bg-white border-2 border-[var(--primary)] rounded-full shadow cursor-pointer hover:scale-110 transition-transform">
+                        <!-- Slider (Visual + Drag) -->
+                        <?php
+                            $pb = $priceBounds ?? ['hourly_min'=>0,'hourly_max'=>0,'daily_min'=>0,'daily_max'=>0];
+                            $hMin = (int)($pb['hourly_min'] ?? 0);
+                            $hMax = (int)($pb['hourly_max'] ?? 0);
+                            $dMin = (int)($pb['daily_min'] ?? 0);
+                            $dMax = (int)($pb['daily_max'] ?? 0);
+                            // Fallback ถ้าไม่มีราคาในระบบ
+                            if ($hMax <= 0) { $hMin = 0; $hMax = 5000; }
+                            if ($dMax <= 0) { $dMin = 0; $dMax = 5000; }
+                        ?>
+                        <div id="priceSlider"
+                            class="relative h-1.5 bg-gray-200 rounded-full mb-6 mx-1"
+                            data-hourly-min="<?= $hMin ?>" data-hourly-max="<?= $hMax ?>"
+                            data-daily-min="<?= $dMin ?>" data-daily-max="<?= $dMax ?>">
+                            <div id="priceTrackFill"
+                                class="absolute top-0 bottom-0 bg-[var(--primary)] rounded-full"></div>
+
+                            <div id="priceHandleMin"
+                                class="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white border-2 border-[var(--primary)] rounded-full shadow cursor-pointer hover:scale-110 transition-transform">
                             </div>
-                            <div
-                                class="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 bg-white border-2 border-[var(--primary)] rounded-full shadow cursor-pointer hover:scale-110 transition-transform">
+                            <div id="priceHandleMax"
+                                class="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white border-2 border-[var(--primary)] rounded-full shadow cursor-pointer hover:scale-110 transition-transform">
                             </div>
+
+                            <!-- Real range inputs (transparent) -->
+                            <input id="priceRangeMin" type="range"
+                                class="absolute inset-0 w-full opacity-0 cursor-pointer"
+                                min="<?= $hMin ?>" max="<?= $hMax ?>" value="<?= $hMin ?>" step="1">
+                            <input id="priceRangeMax" type="range"
+                                class="absolute inset-0 w-full opacity-0 cursor-pointer"
+                                min="<?= $hMin ?>" max="<?= $hMax ?>" value="<?= $hMax ?>" step="1">
                         </div>
-                        <!-- Inputs -->
+<!-- Inputs -->
                         <div class="flex items-center gap-3">
                             <div class="flex-1">
                                 <label class="text-xs text-gray-500 mb-1 block">ราคาเริ่มต้น</label>
@@ -370,7 +393,7 @@
                                     <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">฿</span>
                                     <input type="number" id="priceMin"
                                         class="w-full pl-6 pr-2 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)]"
-                                        value="0">
+                                        value="<?= $hMin ?>">
                                 </div>
                             </div>
                             <div class="text-gray-300 pt-5">-</div>
@@ -380,7 +403,7 @@
                                     <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">฿</span>
                                     <input type="number" id="priceMax"
                                         class="w-full pl-6 pr-2 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)]"
-                                        value="5000">
+                                        value="<?= $hMax ?>">
                                 </div>
                             </div>
                         </div>
@@ -392,80 +415,73 @@
                             <?php foreach ([4, 3, 2, 1] as $star): ?>
                             <label class="flex items-center gap-3 cursor-pointer group">
                                 <input type="checkbox"
-                                    class="w-5 h-5 rounded border-gray-300 text-[var(--primary)] focus:ring-[var(--primary)] transition">
+                                    class="filter-cb w-5 h-5 rounded border-gray-300 text-[var(--primary)] focus:ring-[var(--primary)] transition"
+                                    data-filter="star" value="<?= (int) $star ?>">
                                 <span class="text-gray-600 group-hover:text-[var(--primary)] text-sm"><?= $star ?>
                                     ดาว</span>
                             </label>
                             <?php endforeach; ?>
                         </div>
                     </div>
-                    <!-- Filter: Review Score -->
+                    <!-- Filter: Review Count -->
                     <div class="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
                         <h3 class="font-bold text-gray-900 mb-4">ยอดรีวิว</h3>
                         <div class="space-y-3">
-                            <?php
-                            $reviews = [
-                                'ยอดรีวิว 9+',
-                                'ยอดรีวิว 8+',
-                                'ยอดรีวิว 7+',
-                                'ยอดรีวิว 6+'
-                            ];
-                            foreach ($reviews as $review):
-                            ?>
+                            <?php foreach ([50, 20, 10, 1] as $rCount): ?>
                             <label class="flex items-center gap-3 cursor-pointer group">
                                 <input type="checkbox"
-                                    class="w-5 h-5 rounded border-gray-300 text-[var(--primary)] focus:ring-[var(--primary)] transition">
-                                <span
-                                    class="text-gray-600 group-hover:text-[var(--primary)] text-sm"><?= $review ?></span>
+                                    class="filter-cb w-5 h-5 rounded border-gray-300 text-[var(--primary)] focus:ring-[var(--primary)] transition"
+                                    data-filter="review" value="<?= (int) $rCount ?>">
+                                <span class="text-gray-600 group-hover:text-[var(--primary)] text-sm"><?= (int) $rCount ?>+ รีวิว</span>
                             </label>
                             <?php endforeach; ?>
                         </div>
                     </div>
-                    <!-- Filter: Sport Type -->
+<!-- Filter: Sport Type -->
                     <div class="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
                         <h3 class="font-bold text-gray-900 mb-4">ประเภทกีฬา</h3>
                         <div class="space-y-3">
-                            <?php
-                            $sports = [
-                                'ฟุตบอล / ฟุตซอล',
-                                'แบดมินตัน',
-                                'เทนนิส',
-                                'บาสเกตบอล',
-                                'ว่ายน้ำ'
-                            ];
-                            foreach ($sports as $sport):
-                            ?>
-                            <label class="flex items-center gap-3 cursor-pointer group">
-                                <input type="checkbox"
-                                    class="w-5 h-5 rounded border-gray-300 text-[var(--primary)] focus:ring-[var(--primary)] transition">
-                                <span
-                                    class="text-gray-600 group-hover:text-[var(--primary)] text-sm"><?= $sport ?></span>
-                            </label>
-                            <?php endforeach; ?>
+                            <?php $categories = $categories ?? []; ?>
+                            <?php if (empty($categories)): ?>
+                                <div class="text-sm text-gray-400">ยังไม่มีข้อมูลประเภทกีฬา</div>
+                            <?php else: ?>
+                                <?php foreach ($categories as $cat): ?>
+                                    <?php
+                                        $cid = (int) ($cat['id'] ?? 0);
+                                        $label = trim((string)($cat['emoji'] ?? '') . ' ' . (string)($cat['name'] ?? ''));
+                                        if ($label === '') $label = 'ประเภทกีฬา';
+                                    ?>
+                                    <label class="flex items-center gap-3 cursor-pointer group">
+                                        <input type="checkbox"
+                                            class="filter-cb w-5 h-5 rounded border-gray-300 text-[var(--primary)] focus:ring-[var(--primary)] transition"
+                                            data-filter="category" value="<?= $cid ?>">
+                                        <span class="text-gray-600 group-hover:text-[var(--primary)] text-sm"><?= esc($label) ?></span>
+                                    </label>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
                         </div>
                     </div>
-                    <!-- Filter: Facilities -->
+<!-- Filter: Facilities -->
                     <div class="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
                         <h3 class="font-bold text-gray-900 mb-4">สิ่งอำนวยความสะดวก</h3>
                         <div class="space-y-3">
-                            <?php
-                            $facilities = [
-                                'ที่จอดรถ',
-                                'ห้องอาบน้ำ',
-                                'Wi-Fi',
-                                'ร้านขายน้ำ/อาหาร',
-                                'อุปกรณ์ให้เช่า'
-                            ];
-                            foreach ($facilities as $fac):
-                            ?>
-                            <label class="flex items-center gap-3 cursor-pointer group">
-                                <input type="checkbox"
-                                    class="w-5 h-5 rounded border-gray-300 text-[var(--primary)] focus:ring-[var(--primary)] transition">
-                                <span class="text-gray-600 group-hover:text-[var(--primary)] text-sm"><?= $fac ?></span>
-                            </label>
-                            <?php endforeach; ?>
+                            <?php $facilityTypes = $facilityTypes ?? []; ?>
+                            <?php if (empty($facilityTypes)): ?>
+                                <div class="text-sm text-gray-400">ยังไม่มีข้อมูลหมวดหมู่ไอเทม</div>
+                            <?php else: ?>
+                                <?php foreach ($facilityTypes as $fac): ?>
+                                    <?php $fid = (int) ($fac['id'] ?? 0); $fname = (string) ($fac['name'] ?? ''); ?>
+                                    <label class="flex items-center gap-3 cursor-pointer group">
+                                        <input type="checkbox"
+                                            class="filter-cb w-5 h-5 rounded border-gray-300 text-[var(--primary)] focus:ring-[var(--primary)] transition"
+                                            data-filter="facility" value="<?= $fid ?>">
+                                        <span class="text-gray-600 group-hover:text-[var(--primary)] text-sm"><?= esc($fname) ?></span>
+                                    </label>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
                         </div>
                     </div>
+
                 </aside>
                 <!-- Main Content (Sort + List) -->
                 <div class="flex-1 min-w-0">
@@ -526,7 +542,7 @@ foreach ($limitedVenues as $idx => $v):
                                                             ?>
                                                         <li class="relative bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-200 overflow-hidden"
                                                             data-distance-km="" data-rating="<?= $avgRating ?>" data-review-count="<?= (int) $reviewCount ?>" data-price="<?= esc($v['min_price'] ?? 0) ?>" data-popular="<?= (int) ($v['booking_count'] ?? 0) ?>"
-                                                            <?php if (!empty($lat) && !empty($lng)): ?> data-lat="<?= esc($lat) ?>"
+                                                            data-category-id="<?= (int) ($v['category_id'] ?? 0) ?>" data-facility-ids="<?= esc($v['facility_ids_csv'] ?? '') ?>" data-hourly-min="<?= (int) ($v['hourly_min'] ?? 0) ?>" data-hourly-max="<?= (int) ($v['hourly_max'] ?? 0) ?>" data-daily-min="<?= (int) ($v['daily_min'] ?? 0) ?>" data-daily-max="<?= (int) ($v['daily_max'] ?? 0) ?>" <?php if (!empty($lat) && !empty($lng)): ?> data-lat="<?= esc($lat) ?>"
                                                             data-lng="<?= esc($lng) ?>" <?php endif; ?>>
                             
                                                             <div class="flex flex-col md:flex-row">
@@ -616,6 +632,10 @@ foreach ($limitedVenues as $idx => $v):
                             <?php endforeach; ?>
                             <?php endif; ?>
                         </ul>
+                        <div id="venueEmptyState" class="hidden text-center py-10 text-gray-500">
+                            ไม่พบสนามที่ตรงกับตัวกรอง
+                        </div>
+
                     </div>
                     <!-- See All Link -->
                     <div id="venueSeeAll" class="mt-6 flex justify-end">
