@@ -199,8 +199,20 @@ document.addEventListener('DOMContentLoaded', function () {
     if (viewCategoryId) viewCategoryId.value = '';
   }
 
-  // Re-sync sort chip in case it was missed (though standard is popular)
-  setActiveChip(sortChips, sortChips.find(c => c.dataset.sort === 'popular'));
+  // Initialize sort state from URL or default to 'popular'
+  const urlParams = new URLSearchParams(window.location.search);
+  const sortFromUrl = urlParams.get('sort');
+  
+  if (sortFromUrl && sortChips.some(c => c.dataset.sort === sortFromUrl)) {
+    activeSort = sortFromUrl;
+  } else {
+    // If no valid sort param, default to popular
+    activeSort = 'popular';
+  }
+  
+  // Sync UI to reflect the active sort
+  const activeSortChip = sortChips.find(c => c.dataset.sort === activeSort);
+  setActiveChip(sortChips, activeSortChip);
 
   applyFiltersAndSort(); // Initial filter call
 

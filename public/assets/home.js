@@ -26,6 +26,7 @@
 document.addEventListener('DOMContentLoaded', () => {
   // --- Element References ---
   const nearScroller = document.getElementById('nearScroller');
+  const nearbyViewAllBtn = document.getElementById('nearbyViewAllBtn');
   const listEl = document.getElementById('venueItems');
   const sortMenu = document.getElementById('sortMenu');
   const hourlyDateInput = document.getElementById('hourlyDate');
@@ -222,6 +223,9 @@ document.addEventListener('DOMContentLoaded', () => {
       });
 
       sortedCards.forEach((card) => nearScroller.appendChild(card));
+
+      // Reset scroll to start after sorting
+      nearScroller.scrollLeft = 0;
     }
     
     // *** FIX: Re-apply the initial/default sort AFTER distance has been calculated ***
@@ -262,6 +266,18 @@ document.addEventListener('DOMContentLoaded', () => {
       (pos) => {
         userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
         applyRanking();
+
+        if (nearbyViewAllBtn) {
+          try {
+            const url = new URL(nearbyViewAllBtn.href);
+            url.searchParams.set('sort', 'nearby');
+            url.searchParams.set('lat', userLocation.lat);
+            url.searchParams.set('lng', userLocation.lng);
+            nearbyViewAllBtn.href = url.toString();
+          } catch (e) {
+            console.error("Failed to update nearby view all link", e);
+          }
+        }
       },
       (err) => {
         console.warn('Geolocation error on home:', err.message);
@@ -548,12 +564,16 @@ document.addEventListener('DOMContentLoaded', () => {
   const hMinEl = document.getElementById('priceHandleMin');
   const hMaxEl = document.getElementById('priceHandleMax');
 
+  // Exit if essential elements are not found
+  if (!priceSlider || !rangeMin || !rangeMax || !fill || !hMinEl || !hMaxEl || !priceMinInput || !priceMaxInput) {
+    return;
+  }
+
   let priceMode = 'hourly';
 
   function num(v){ const n = Number(v); return Number.isFinite(n) ? n : 0; }
 
   function getBounds(mode){
-    if (!priceSlider) return {min:0,max:0};
     const min = num(priceSlider.dataset[mode + 'Min']);
     const max = num(priceSlider.dataset[mode + 'Max']);
     return {min, max};
@@ -561,70 +581,64 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function setTabActive(mode){
     priceMode = mode;
-    if (btnHourly && btnDaily){
-      if (mode === 'hourly'){
-        btnHourly.classList.add('bg-white','text-gray-900','shadow-sm');
-        btnHourly.classList.remove('text-gray-500');
-        btnDaily.classList.remove('bg-white','text-gray-900','shadow-sm');
-        btnDaily.classList.add('text-gray-500');
-      } else {
-        btnDaily.classList.add('bg-white','text-gray-900','shadow-sm');
-        btnDaily.classList.remove('text-gray-500');
-        btnHourly.classList.remove('bg-white','text-gray-900','shadow-sm');
-        btnHourly.classList.add('text-gray-500');
-      }
+    if (!btnHourly || !btnDaily) return;
+    
+    if (mode === 'hourly'){
+      btnHourly.classList.add('bg-white','text-gray-900','shadow-sm');
+      btnHourly.classList.remove('text-gray-500');
+      btnDaily.classList.remove('bg-white','text-gray-900','shadow-sm');
+      btnDaily.classList.add('text-gray-500');
+    } else {
+      btnDaily.classList.add('bg-white','text-gray-900','shadow-sm');
+      btnDaily.classList.remove('text-gray-500');
+      btnHourly.classList.remove('bg-white','text-gray-900','shadow-sm');
+      btnHourly.classList.add('text-gray-500');
     }
   }
 
-  function clampRange(){
-    if (!rangeMin || !rangeMax) return;
-    const b = getBounds(priceMode);
-    let a = num(rangeMin.value);
-    let c = num(rangeMax.value);
-    if (a < b.min) a = b.min;
-    if (c > b.max) c = b.max;
-    if (a > c) a = c;
-    rangeMin.value = String(a);
-    rangeMax.value = String(c);
-    if (priceMinInput) priceMinInput.value = String(a);
-    if (priceMaxInput) priceMaxInput.value = String(c);
-    updateSliderUI();
-  }
-
   function updateSliderUI(){
-    if (!priceSlider || !fill || !hMinEl || !hMaxEl || !rangeMin || !rangeMax) return;
     const b = getBounds(priceMode);
     const minV = num(rangeMin.value);
     const maxV = num(rangeMax.value);
     const span = Math.max(1, b.max - b.min);
     const leftPct = ((minV - b.min) / span) * 100;
     const rightPct = ((maxV - b.min) / span) * 100;
+    
     fill.style.left = leftPct + '%';
     fill.style.right = (100 - rightPct) + '%';
     hMinEl.style.left = leftPct + '%';
     hMaxEl.style.left = rightPct + '%';
   }
 
+  function syncValues() {
+    // Syncs range inputs with number inputs
+    priceMinInput.value = String(rangeMin.value);
+    priceMaxInput.value = String(rangeMax.value);
+    updateSliderUI();
+  }
+
   function syncBoundsToUI(mode, resetValues=true){
-    if (!rangeMin || !rangeMax) return;
     const b = getBounds(mode);
     rangeMin.min = String(b.min);
     rangeMin.max = String(b.max);
     rangeMax.min = String(b.min);
     rangeMax.max = String(b.max);
+    
     if (resetValues){
       rangeMin.value = String(b.min);
       rangeMax.value = String(b.max);
-      if (priceMinInput) priceMinInput.value = String(b.min);
-      if (priceMaxInput) priceMaxInput.value = String(b.max);
-    } else {
-      // keep current but clamp
-      clampRange();
     }
-    updateSliderUI();
+    
+    // Ensure values are within new bounds and sync everything
+    let minVal = Math.max(b.min, Math.min(b.max, num(rangeMin.value)));
+    let maxVal = Math.max(b.min, Math.min(b.max, num(rangeMax.value)));
+    rangeMin.value = String(minVal);
+    rangeMax.value = String(maxVal);
+
+    syncValues();
   }
 
-  // ----- Checkbox filters -----
+  // ----- Checkbox filters (unchanged) -----
   function getCheckedValues(filterKey){
     return Array.from(document.querySelectorAll('.filter-cb[data-filter="' + filterKey + '"]'))
       .filter(el => el.checked)
@@ -638,28 +652,21 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function passesFilters(li){
-    // Star (threshold): if select 4+ and 3+ => use min => >=3
     const stars = getCheckedValues('star');
     if (stars.length){
       const threshold = Math.min(...stars);
       if (num(li.dataset.rating) < threshold) return false;
     }
-
-    // Reviews (minimum count)
     const rev = getCheckedValues('review');
     if (rev.length){
       const minCount = Math.min(...rev);
       if (num(li.dataset.reviewCount) < minCount) return false;
     }
-
-    // Category (OR)
     const cats = getCheckedValues('category');
     if (cats.length){
       const cid = num(li.dataset.categoryId);
       if (!cats.includes(cid)) return false;
     }
-
-    // Facilities (AND: selected must be subset)
     const facSel = getCheckedValues('facility');
     if (facSel.length){
       const have = new Set(parseCsv(li.dataset.facilityIds));
@@ -667,22 +674,16 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!have.has(f)) return false;
       }
     }
-
-    // Price (only apply when narrowed from full bounds)
-    if (priceSlider && rangeMin && rangeMax){
-      const b = getBounds(priceMode);
-      const minF = num(rangeMin.value);
-      const maxF = num(rangeMax.value);
-      const narrowed = (minF > b.min) || (maxF < b.max);
-
-      if (narrowed){
-        const key = priceMode === 'daily' ? 'dailyMin' : 'hourlyMin';
-        const stadiumMin = num(li.dataset[key] || li.dataset.price);
-        if (stadiumMin <= 0) return false;
-        if (stadiumMin < minF || stadiumMin > maxF) return false;
-      }
+    const b = getBounds(priceMode);
+    const minF = num(rangeMin.value);
+    const maxF = num(rangeMax.value);
+    const narrowed = (minF > b.min) || (maxF < b.max);
+    if (narrowed){
+      const key = priceMode === 'daily' ? 'dailyMin' : 'hourlyMin';
+      const stadiumMin = num(li.dataset[key] || li.dataset.price);
+      if (stadiumMin <= 0) return false;
+      if (stadiumMin < minF || stadiumMin > maxF) return false;
     }
-
     return true;
   }
 
@@ -699,39 +700,110 @@ document.addEventListener('DOMContentLoaded', () => {
       li.classList.toggle('is-filtered-out', !ok);
       if (!ok) li.classList.add('hidden');
     });
-
-    // sort visible subset with current sort key (function is in outer scope)
     if (typeof window.__homeSortListBy === 'function') {
       window.__homeSortListBy(window.__homeCurrentSortKey || 'popular', { emitEvent: true });
-    } else {
-      // fallback: trigger paging refresh
-      if (typeof window.__venueApplyPaging === 'function') window.__venueApplyPaging();
+    } else if (typeof window.__venueApplyPaging === 'function') {
+      window.__venueApplyPaging();
     }
-
     if (typeof window.__venueApplyPaging === 'function') window.__venueApplyPaging();
     updateEmptyState();
   }
 
-  // Hook into existing sort function by exposing a wrapper (we inject below in sorting section)
-  // If wrapper not present yet, we still apply filters; it will update paging and empty state.
-  // Price events
+  // --- Event Listeners ---
   if (btnHourly) btnHourly.addEventListener('click', () => { setTabActive('hourly'); syncBoundsToUI('hourly', false); applyFilters(); });
   if (btnDaily)  btnDaily.addEventListener('click', () => { setTabActive('daily');  syncBoundsToUI('daily', false); applyFilters(); });
 
-  if (rangeMin) rangeMin.addEventListener('input', () => { clampRange(); applyFilters(); });
-  if (rangeMax) rangeMax.addEventListener('input', () => { clampRange(); applyFilters(); });
-
-  if (priceMinInput) priceMinInput.addEventListener('input', () => {
-    if (!rangeMin) return;
-    rangeMin.value = String(num(priceMinInput.value));
-    clampRange();
+  // This is the new, stable slider logic
+  rangeMin.addEventListener('input', () => {
+    if (num(rangeMin.value) > num(rangeMax.value)) {
+      rangeMax.value = rangeMin.value;
+    }
+    syncValues();
     applyFilters();
   });
-  if (priceMaxInput) priceMaxInput.addEventListener('input', () => {
-    if (!rangeMax) return;
-    rangeMax.value = String(num(priceMaxInput.value));
-    clampRange();
+
+  rangeMax.addEventListener('input', () => {
+    if (num(rangeMax.value) < num(rangeMin.value)) {
+      rangeMin.value = rangeMax.value;
+    }
+    syncValues();
     applyFilters();
+  });
+
+  // Make range inputs invisible to pointer events so the parent can handle them
+  rangeMin.style.pointerEvents = 'none';
+  rangeMax.style.pointerEvents = 'none';
+  
+  let activeThumb = null;
+
+  function onPointerMove(e) {
+    if (!activeThumb) return;
+    e.preventDefault();
+
+    const rect = priceSlider.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const pct = Math.max(0, Math.min(100, (x / rect.width) * 100));
+    
+    const b = getBounds(priceMode);
+    const span = b.max - b.min;
+    let value = b.min + (pct / 100) * span;
+    
+    const step = num(activeThumb.step) || 1;
+    value = Math.round(value / step) * step;
+
+    activeThumb.value = String(value);
+    
+    // Manually trigger the input event to run the logic
+    activeThumb.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+
+  function onPointerUp() {
+    document.removeEventListener('pointermove', onPointerMove);
+    document.removeEventListener('pointerup', onPointerUp);
+    activeThumb = null;
+  }
+
+  priceSlider.addEventListener('pointerdown', (e) => {
+    // Ignore right-clicks
+    if (e.button !== 0) return;
+
+    const rect = priceSlider.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const pct = (x / rect.width) * 100;
+
+    const b = getBounds(priceMode);
+    const span = b.max - b.min;
+    const clickValue = b.min + (pct / 100) * span;
+
+    const distMin = Math.abs(clickValue - num(rangeMin.value));
+    const distMax = Math.abs(clickValue - num(rangeMax.value));
+
+    // Activate the thumb that is closer to the click
+    activeThumb = distMin <= distMax ? rangeMin : rangeMax;
+    
+    // Also handle clicks on the track to move the nearest thumb
+    onPointerMove(e);
+
+    document.addEventListener('pointermove', onPointerMove);
+    document.addEventListener('pointerup', onPointerUp);
+  });
+
+  // Sync from number inputs
+  priceMinInput.addEventListener('change', () => {
+    let val = num(priceMinInput.value);
+    if (val > num(rangeMax.value)) {
+        val = num(rangeMax.value);
+    }
+    rangeMin.value = String(val);
+    rangeMin.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+  priceMaxInput.addEventListener('change', () => {
+    let val = num(priceMaxInput.value);
+    if (val < num(rangeMin.value)) {
+        val = num(rangeMin.value);
+    }
+    rangeMax.value = String(val);
+    rangeMax.dispatchEvent(new Event('input', { bubbles: true }));
   });
 
   // Checkbox events
@@ -739,10 +811,9 @@ document.addEventListener('DOMContentLoaded', () => {
     el.addEventListener('change', () => applyFilters());
   });
 
-  // initial UI
+  // Initial UI setup
   setTabActive('hourly');
   syncBoundsToUI('hourly', true);
-  updateSliderUI();
   applyFilters();
 });
 
