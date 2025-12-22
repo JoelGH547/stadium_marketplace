@@ -3,11 +3,11 @@
 
 <?php
 $colName   = 'ชื่อสนาม';
-$emptyText = 'ยังไม่มีข้อมูลสนามย่อย';
+$emptyText = 'ยังไม่มีข้อมูลพื้นที่สนาม';
 ?>
 
 <?php
-// เตรียมข้อมูล mapping สำหรับสิ่งอำนวยความสะดวกและสินค้าในสนามย่อย
+// เตรียมข้อมูล mapping สำหรับสิ่งอำนวยความสะดวกและสินค้าในพื้นที่สนาม
 $fieldFacilities = $fieldFacilities ?? [];
 $fieldProducts   = $fieldProducts ?? [];
 $facilityTypes   = $facilityTypes ?? [];
@@ -18,9 +18,12 @@ foreach ($facilityTypes as $ft) {
 }
 ?>
 
+<!-- FullCalendar CDN -->
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js'></script>
+
 <style>
     .field-actions-wrapper {
-        position: relative;
+        position: relative; 
         gap: 0.25rem;
     }
 
@@ -65,12 +68,18 @@ foreach ($facilityTypes as $ft) {
                 class="text-muted text-decoration-none small">
                 <i class="fas fa-arrow-left"></i> กลับไปหน้ารายละเอียด
             </a>
+            <a href="<?= base_url('admin/stadiums') ?>" class="text-muted ms-4" style="text-decoration: none;">
+            <i class="fas fa-home"></i> กลับไปหน้าหลัก
+        </a>
+    </div>
+
+
             <h3 class="h3 mt-2 text-gray-800 font-weight-bold">
-                จัดการสนามย่อย <span class="text-primary">(<?= esc($stadium['name']) ?>)</span>
+                จัดการพื้นที่สนาม <span class="text-primary">(<?= esc($stadium['name']) ?>)</span>
             </h3>
         </div>
         <button class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#addFieldModal">
-            <i class="fas fa-plus-circle me-1"></i> เพิ่มสนามย่อยใหม่
+            <i class="fas fa-plus-circle me-1"></i> เพิ่มพื้นที่สนามใหม่
         </button>
     </div>
 
@@ -121,8 +130,11 @@ foreach ($facilityTypes as $ft) {
                                     <td class="text-muted small text-truncate" style="max-width: 150px;">
                                         <?= esc($field['description']) ?></td>
                                     <td class="text-center">
-                                        <div class="text-success fw-bold small">HR: ฿<?= number_format($field['price']) ?></div>
-                                        <?php if (!empty($field['price_daily'])): ?>
+                                        <?php if (!empty($field['price']) && $field['price'] > 0): ?>
+                                            <div class="text-success fw-bold small">HR: ฿<?= number_format($field['price']) ?></div>
+                                        <?php endif; ?>
+                                        
+                                        <?php if (!empty($field['price_daily']) && $field['price_daily'] > 0): ?>
                                             <div class="text-info small">Day: ฿<?= number_format($field['price_daily']) ?></div>
                                         <?php endif; ?>
                                     </td>
@@ -141,6 +153,14 @@ foreach ($facilityTypes as $ft) {
                                                 data-bs-target="#fieldFacilitiesModal_<?= $field['id'] ?>"
                                                 title="จัดการหมวดหมู่และสินค้า">
                                                 <i class="fas fa-box"></i>
+                                            </button>
+
+                                            <button type="button" 
+                                                class="btn btn-outline-primary btn-sm shadow-sm me-1 btn-calendar"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#fieldCalendarModal_<?= $field['id'] ?>"
+                                                title="ตารางจอง">
+                                                <i class="fas fa-calendar-alt"></i>
                                             </button>
 
                                             <button class="btn btn-warning btn-sm btn-edit shadow-sm text-dark me-1"
@@ -199,7 +219,7 @@ foreach ($facilityTypes as $ft) {
 
                     <div class="modal-body">
                         <div class="mb-3">
-                            <h6 class="fw-bold mb-2">เลือกหมวดหมู่สำหรับสนามย่อยนี้</h6>
+                            <h6 class="fw-bold mb-2">เลือกหมวดหมู่สำหรับพื้นที่สนามนี้</h6>
                             <div class="border rounded p-2 bg-light">
                                 <?php if (!empty($facilityTypes)): ?>
                                     <?php foreach ($facilityTypes as $ft): ?>
@@ -283,13 +303,34 @@ foreach ($facilityTypes as $ft) {
                             </div>
                             <div class="mt-1 text-muted small">
                                 <i class="fas fa-info-circle"></i>
-                                การติ๊กจะผูกหมวดหมู่กับสนามย่อยนี้ผ่านตาราง stadium_facilities
+                                การติ๊กจะผูกหมวดหมู่กับพื้นที่สนามนี้ผ่านตาราง stadium_facilities
                             </div>
                         </div>
                     </div>
 
                     <div class="modal-footer">
                         <button type="button" class="btn btn-light" data-bs-dismiss="modal">ปิดหน้าต่าง</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="fieldCalendarModal_<?= $field['id'] ?>" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-xl modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title">
+                            <i class="fas fa-calendar-alt me-2"></i>ตารางการจอง — <?= esc($field['name']) ?>
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                       <div class="calendar-wrapper" id="calendarWrapper_<?= $fieldId ?>">
+                           <div id="calendar_<?= $fieldId ?>"></div>
+                       </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
                     </div>
                 </div>
             </div>
@@ -301,7 +342,7 @@ foreach ($facilityTypes as $ft) {
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title">เพิ่มสนามย่อยใหม่</h5>
+                <h5 class="modal-title">เพิ่มพื้นที่สนามใหม่</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <form action="<?= base_url('admin/stadiums/fields/create') ?>" method="post" enctype="multipart/form-data">
@@ -707,6 +748,47 @@ foreach ($facilityTypes as $ft) {
             });
         });
 
+    });
+    
+    // Initialize Calendar when Modal Shows
+    document.addEventListener('DOMContentLoaded', function() {
+        const calendarElMap = {}; // Store instances if needed
+
+        document.querySelectorAll('[id^="fieldCalendarModal_"]').forEach(modalEl => {
+            modalEl.addEventListener('shown.bs.modal', function () {
+                const fieldId = this.id.split('_')[1];
+                const calendarEl = document.getElementById('calendar_' + fieldId);
+
+                // Check if already initialized to prevent duplicates
+                if (calendarEl.classList.contains('fc')) {
+                    calendarElMap[fieldId].render(); // Re-render to fix layout issues
+                    return;
+                }
+
+                const calendar = new FullCalendar.Calendar(calendarEl, {
+                    initialView: 'timeGridWeek', // Weekly View as requested
+                    headerToolbar: {
+                        left: 'prev,next today',
+                        center: 'title',
+                        right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                    },
+                    locale: 'th', // Thai Language
+                    height: 600,
+                    slotMinTime: '08:00:00',
+                    slotMaxTime: '24:00:00',
+                    allDaySlot: false,
+                    slotDuration: '01:00:00',
+                    expandRows: true,
+                    stickyHeaderDates: true,
+                    nowIndicator: true,
+                    events: '<?= base_url("admin/bookings/api") ?>?field_id=' + fieldId,
+                    blockTime: true // Optional: visual enhancement
+                });
+
+                calendar.render();
+                calendarElMap[fieldId] = calendar;
+            });
+        });
     });
 </script>
 <?= $this->endSection() ?>

@@ -2,14 +2,20 @@
 <?= $this->section('content') ?>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
 
 <div class="container-fluid p-0">
 
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h3 class="h3 mb-0 text-gray-800">จัดการสนาม (Stadiums)</h3>
-        <a href="<?= base_url('admin/stadiums/create') ?>" class="btn btn-primary shadow-sm">
-            <i class="fas fa-plus fa-sm text-white-50 me-1"></i> เพิ่มสนามใหม่
-        </a>
+        <div>
+            <button id="btnBulkDelete" class="btn btn-danger shadow-sm me-2 d-none">
+                <i class="fas fa-trash-alt me-1"></i> ลบที่เลือก (<span id="selectedCount">0</span>)
+            </button>
+            <a href="<?= base_url('admin/stadiums/create') ?>" class="btn btn-primary shadow-sm">
+                <i class="fas fa-plus fa-sm text-white-50 me-1"></i> เพิ่มสนามใหม่
+            </a>
+        </div>
     </div>
 
     <?php if(session()->getFlashdata('success')): ?>
@@ -30,18 +36,28 @@
     <div class="card shadow mb-4 border-0">
         <div class="card-body py-3">
             <form action="<?= base_url('admin/stadiums') ?>" method="get">
-                <div class="d-flex justify-content-between align-items-center">
-                    
-                    
+                <div class="d-flex align-items-center gap-2"> 
+                    <div style="width: 200px;">
+                        <select name="category_id" class="form-select form-select-sm bg-light border-0" onchange="this.form.submit()">
+                            <option value="all">-- ทุกประเภทกีฬา --</option>
+                            <?php if (!empty($categories)): ?>
+                                <?php foreach ($categories as $cat): ?>
+                                    <option value="<?= $cat['id'] ?>" <?= (isset($sport_filter) && $sport_filter == $cat['id']) ? 'selected' : '' ?>>
+                                        <?= esc($cat['name']) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </select>
+                    </div>
 
                     <div class="input-group" style="width: 300px;">
-                        <input type="text" name="search" class="form-control form-control-sm bg-light border-0 small" 
+                        <input type="text" id="searchInput" name="search" class="form-control form-control-sm bg-light border-0 small" 
                                placeholder="ค้นหาชื่อสนาม..." aria-label="Search" 
                                value="<?= esc($search ?? '') ?>">
                         <button class="btn btn-primary btn-sm" type="submit">
                             <i class="fas fa-search fa-sm"></i>
                         </button>
-                        <?php if(!empty($search)): ?>
+                        <?php if(!empty($search) || (!empty($sport_filter) && $sport_filter != 'all')): ?> 
                             <a href="<?= base_url('admin/stadiums') ?>" class="btn btn-secondary btn-sm" title="ล้างค่า">
                                 <i class="fas fa-times"></i>
                             </a>
@@ -60,9 +76,12 @@
         </div>
         <div class="card-body">
             <div class="table-responsive">
-                <table class="table table-bordered table-hover align-middle" id="dataTable" width="100%" cellspacing="0">
+                <table class="table table-bordered table-hover align-middle" id="stadiumTable" width="100%" cellspacing="0">
                     <thead class="table-light">
                         <tr>
+                            <th width="5%" class="text-center">
+                                <input type="checkbox" id="checkAll" class="form-check-input">
+                            </th>
                             <th width="5%" class="text-center">#</th>
                             <th width="10%">รูปปก</th>
                             <th width="20%">ชื่อสนาม</th>
@@ -77,7 +96,9 @@
                             <?php foreach($stadiums as $stadium): ?>
                             
                             <tr data-type="complex">
-                                
+                                <td class="text-center">
+                                    <input type="checkbox" class="form-check-input check-item" value="<?= $stadium['id'] ?>">
+                                </td>
                                 <td class="text-center fw-bold"><?= $stadium['id'] ?></td>
                                 
                                 <td class="text-center">
@@ -94,7 +115,7 @@
                                     <?php endif; ?>
                                 </td>
 
-                                <td>
+                                <td data-search="<?= esc($stadium['name']) ?>">
                                     <div class="fw-bold text-dark"><?= esc($stadium['name']) ?></div>
                                     <div class="small text-muted text-truncate" style="max-width: 150px;">
                                         <?= esc($stadium['description']) ?>
@@ -129,37 +150,30 @@
                                 <td class="text-center">
                                     <div class="btn-group" role="group">
                                         <a href="<?= base_url('admin/stadiums/fields/' . $stadium['id']) ?>" 
-                                        class="btn btn-success btn-sm text-white shadow-sm" 
-                                        title="ตั้งค่าราคาและข้อมูล">
+                                           class="btn btn-success btn-sm text-white shadow-sm" 
+                                           title="ตั้งค่าราคาและข้อมูล">
                                             <i class="fas fa-tag"></i> ตั้งค่าสนาม
                                         </a>
 
                                         <a href="<?= base_url('admin/stadiums/view/' . $stadium['id']) ?>" 
-                                        class="btn btn-secondary btn-sm shadow-sm" title="ดูรายละเอียด">
+                                           class="btn btn-secondary btn-sm shadow-sm" title="ดูรายละเอียด">
                                             <i class="fas fa-eye"></i>
                                         </a>
                                         
                                         <a href="<?= base_url('admin/stadiums/edit/' . $stadium['id']) ?>" 
-                                        class="btn btn-warning btn-sm text-dark shadow-sm" title="แก้ไข">
+                                           class="btn btn-warning btn-sm text-dark shadow-sm" title="แก้ไข">
                                             <i class="fas fa-pen"></i>
                                         </a>
                                         
                                         <a href="<?= base_url('admin/stadiums/delete/' . $stadium['id']) ?>" 
-                                        class="btn btn-danger btn-sm shadow-sm btn-delete" 
-                                        title="ลบ">
+                                           class="btn btn-danger btn-sm shadow-sm btn-delete" 
+                                           title="ลบ">
                                             <i class="fas fa-trash"></i>
                                         </a>
                                     </div>
                                 </td>
                             </tr>
                             <?php endforeach; ?>
-                        <?php else: ?>
-                            <tr>
-                                <td colspan="7" class="text-center py-5 text-muted">
-                                    <i class="fas fa-folder-open fa-3x mb-3 d-block text-gray-300"></i>
-                                    ยังไม่มีข้อมูลสนาม
-                                </td>
-                            </tr>
                         <?php endif; ?>
                     </tbody>
                 </table>
@@ -185,30 +199,87 @@
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    $(document).ready(function() {
+
+        // ยังคงบรรทัดนี้ไว้ตามที่ขอ (เผื่อกันเหนียว)
+        $.fn.dataTable.ext.errMode = 'none';
         
-        // --- ส่วนจัดการแผนที่ (Map) ---
+        var table = $('#stadiumTable').DataTable({
+            "dom": 'lrtip', // Hide default search box (f)
+            "searching": true, 
+            "lengthMenu": [ [10, 50, 100, -1], [10, 50, 100, "ทั้งหมด"] ],
+            "language": {
+                "lengthMenu": "แสดง _MENU_ รายการ",
+                "zeroRecords": `<div class="text-center py-5 text-muted">
+                                    <i class="fas fa-folder-open fa-3x mb-3 d-block text-gray-300"></i>
+                                    ไม่พบข้อมูลสนาม
+                                </div>`,
+                "info": "หน้า _PAGE_ จาก _PAGES_",
+                "infoEmpty": "ไม่มีข้อมูล",
+                "infoFiltered": "(กรองจาก _MAX_ รายการ)",
+                "paginate": {
+                    "first": "หน้าแรก",
+                    "last": "สุดท้าย",
+                    "next": "ถัดไป",
+                    "previous": "ก่อนหน้า"
+                }
+            }
+        });
+
+        // Live Search Logic
+        var searchInput = $('#searchInput');
+        
+        // Apply initial search from server-side param if exists
+        if(searchInput.val()) {
+            table.column(2).search(searchInput.val()).draw();
+        }
+
+        // Helper to escape regex special characters
+        function escapeRegExp(string) {
+            return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+
+        // Bind keyup event
+        searchInput.on('keyup', function() {
+             var val = this.value;
+             if (val) {
+                 // Use Regex for strict "Starts With" search
+                 var escapedVal = escapeRegExp(val);
+                 var regex = '^' + escapedVal; 
+                 table.column(2).search(regex, true, false).draw();
+             } else {
+                 table.column(2).search('').draw();
+             }
+        });
+
+        // Prevent form submission on enter in search box (optional, effectively pure JS search)
+        searchInput.on('keypress', function(e) {
+            if(e.which == 13) {
+                e.preventDefault();
+                return false;
+            }
+        });
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
         let map = null;
         let marker = null;
         const mapModal = document.getElementById('mapModal');
 
-        // เมื่อกดปุ่ม Map ให้เปิด Modal
         document.querySelectorAll('.btn-view-map').forEach(btn => {
             btn.addEventListener('click', function() {
                 const lat = parseFloat(this.getAttribute('data-lat'));
                 const lng = parseFloat(this.getAttribute('data-lng'));
                 const name = this.getAttribute('data-name');
-
-                // ตั้งชื่อหัวข้อ Modal
                 document.getElementById('mapModalTitle').textContent = name;
-
-                // เปิด Modal (ใช้ Bootstrap 5)
                 var myModal = new bootstrap.Modal(mapModal);
                 myModal.show();
 
-                // รอ Modal เปิดเสร็จค่อยวาดแผนที่ (กันแผนที่เพี้ยน)
                 mapModal.addEventListener('shown.bs.modal', function () {
                     if (!map) {
                         map = L.map('leafletMap');
@@ -216,30 +287,19 @@
                             attribution: '© OpenStreetMap contributors'
                         }).addTo(map);
                     }
-                    
-                    // set view ไปที่พิกัด
                     map.setView([lat, lng], 15);
-
-                    // ปักหมุด
                     if (marker) map.removeLayer(marker);
-                    marker = L.marker([lat, lng]).addTo(map)
-                        .bindPopup(`<b>${name}</b><br>Lat: ${lat}, Lng: ${lng}`)
-                        .openPopup();
-                    
-                    // บังคับคำนวณขนาดใหม่
+                    marker = L.marker([lat, lng]).addTo(map).bindPopup(`<b>${name}</b><br>Lat: ${lat}, Lng: ${lng}`).openPopup();
                     map.invalidateSize();
-                }, { once: true }); // event นี้รันแค่ครั้งเดียวต่อการเปิด
+                }, { once: true });
             });
         });
 
-
-        // --- ส่วน Delete (คงเดิมตามที่คุณมี) ---
         const deleteButtons = document.querySelectorAll('.btn-delete');
         deleteButtons.forEach(button => {
             button.addEventListener('click', function(e) {
                 e.preventDefault(); 
                 const href = this.getAttribute('href'); 
-
                 Swal.fire({
                     title: 'ยืนยันการลบ?',
                     text: "หากลบสนามนี้ ข้อมูลทั้งหมดจะหายไป!",
@@ -257,6 +317,76 @@
                 });
             });
         });
+
+        // --- Bulk Delete Logic ---
+        const checkAll = document.getElementById('checkAll');
+        const btnBulkDelete = document.getElementById('btnBulkDelete');
+        const selectedCountSpan = document.getElementById('selectedCount');
+        
+        // Listen ONLY to checkboxes with class 'check-item'
+        $(document).on('change', '.check-item', function() {
+            updateBulkButton();
+        });
+
+        if(checkAll) {
+            checkAll.addEventListener('change', function() {
+                $('.check-item').prop('checked', this.checked);
+                updateBulkButton();
+            });
+        }
+
+        function updateBulkButton() {
+            const checkedCount = $('.check-item:checked').length;
+            selectedCountSpan.textContent = checkedCount;
+            if (checkedCount > 0) {
+                btnBulkDelete.classList.remove('d-none');
+            } else {
+                btnBulkDelete.classList.add('d-none');
+            }
+        }
+
+        if(btnBulkDelete) {
+            btnBulkDelete.addEventListener('click', function() {
+                const selectedIds = $('.check-item:checked').map(function() {
+                    return $(this).val();
+                }).get();
+
+                if (selectedIds.length === 0) return;
+
+                Swal.fire({
+                    title: 'ยืนยันลบ ' + selectedIds.length + ' รายการ?',
+                    text: "ข้อมูลและรูปภาพทั้งหมดจะหายไปและกู้คืนไม่ได้!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'ใช่, ลบทิ้งเลย!',
+                    cancelButtonText: 'ยกเลิก'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: '<?= base_url("admin/stadiums/deleteBatch") ?>',
+                            type: 'POST',
+                            data: {
+                                ids: selectedIds,
+                                <?= csrf_token() ?>: '<?= csrf_hash() ?>'
+                            },
+                            success: function(response) {
+                                if (response.success) {
+                                    Swal.fire('สำเร็จ!', response.message, 'success')
+                                        .then(() => location.reload());
+                                } else {
+                                    Swal.fire('ผิดพลาด!', response.message, 'error');
+                                }
+                            },
+                            error: function() {
+                                Swal.fire('Error!', 'เกิดข้อผิดพลาดในการเชื่อมต่อ', 'error');
+                            }
+                        });
+                    }
+                });
+            });
+        }
     });
 </script>
 

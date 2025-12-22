@@ -58,7 +58,7 @@
 </head>
 
 <body class="bg-light">
-
+<?= $this->include('owner/layout/header') ?>
 <div class="container mt-4 mb-5" style="max-width:900px;">
     <button type="button" class="btn btn-secondary mb-3" onclick="history.back()">
     ⬅ ย้อนกลับ
@@ -99,11 +99,7 @@
             <input type="text" name="name" value="<?= esc($stadium['name']) ?>" class="form-control">
         </div>
 
-        <!-- Price -->
-        <div class="mb-3">
-            <label class="form-label">ราคา / ชั่วโมง</label>
-            <input type="number" name="price" value="<?= esc($stadium['price']) ?>" class="form-control" min="0">
-        </div>
+
 
         <!-- Open close -->
         <div class="row">

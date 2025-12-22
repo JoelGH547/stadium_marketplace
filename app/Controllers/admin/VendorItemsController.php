@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Controllers\admin;
+namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
-use App\Models\VendorProductModel;
+use App\Models\VendorItemModel; // เรียกใช้ Model ใหม่
 use App\Models\StadiumFacilityModel;
 use App\Models\FacilityTypeModel;
 use App\Models\StadiumFieldModel;
@@ -19,7 +19,7 @@ class VendorItemsController extends BaseController
 
     public function __construct()
     {
-        $this->productModel      = new VendorProductModel();
+        $this->productModel      = new VendorItemModel(); // ใช้ Model ใหม่ (vendor_items)
         $this->facilityModel     = new StadiumFacilityModel();
         $this->fieldModel        = new StadiumFieldModel();
         $this->facilityTypeModel = new FacilityTypeModel();
@@ -31,22 +31,46 @@ class VendorItemsController extends BaseController
      */
     public function index()
     {
-        $items = $this->productModel
-            ->withRelations()
-            ->orderBy('vendor_products.id', 'DESC')
-            ->findAll();
+        $db = \Config\Database::connect();
+        
+        // [แก้ไข 1] เปลี่ยนชื่อตารางเป็น vendor_items
+        $builder = $db->table('vendor_items');
+
+        $builder->select('
+            vendor_items.*, 
+            stadiums.name as stadium_name, 
+            facility_types.name as facility_type_name,
+            categories.name as sport_name
+        ');
+
+        // [แก้ไข 2] JOIN ตารางให้สัมพันธ์กับ vendor_items
+        // 1. จาก vendor_items ไปหา stadium_facilities
+        $builder->join('stadium_facilities', 'stadium_facilities.id = vendor_items.stadium_facility_id', 'left');
+
+        // 2. จาก stadium_facilities ไปหา facility_types (หมวดหมู่)
+        $builder->join('facility_types', 'facility_types.id = stadium_facilities.facility_type_id', 'left');
+
+        // 3. จาก stadium_facilities ไปหา stadium_fields (สนามย่อย)
+        $builder->join('stadium_fields', 'stadium_fields.id = stadium_facilities.field_id', 'left');
+
+        // 4. จาก stadium_fields ไปหา stadiums (สนามหลัก)
+        $builder->join('stadiums', 'stadiums.id = stadium_fields.stadium_id', 'left');
+
+        // 5. จาก stadiums ไปหา categories (ประเภทกีฬา)
+        $builder->join('categories', 'categories.id = stadiums.category_id', 'left');
+
+        $builder->orderBy('vendor_items.id', 'DESC');
+
+        $items = $builder->get()->getResultArray();
 
         $data = [
-            'title'    => 'จัดการสินค้า/และบริการเสริม',
-            'items'    => $items,
+            'title' => 'จัดการสินค้า/และบริการเสริม',
+            'items' => $items,
         ];
 
         return view('admin/vendor_items/index', $data);
     }
 
-    /**
-     * (ถ้ามีหน้า create แยก ก็ปล่อย logic แบบเดิมไว้ได้)
-     */
     public function create()
     {
         $data = [
@@ -62,9 +86,6 @@ class VendorItemsController extends BaseController
         return view('admin/vendor_items/create', $data);
     }
 
-    /**
-     * บันทึกสินค้าใหม่
-     */
     public function store()
     {
         $rules = [
@@ -84,7 +105,6 @@ class VendorItemsController extends BaseController
         $stadiumId = (int) $this->request->getPost('stadium_id');
         $typeId    = (int) $this->request->getPost('facility_type_id');
 
-        // หา stadium_facilities.id จาก stadium_id + facility_type_id
         $facilityRow = $this->facilityModel
             ->select('stadium_facilities.id')
             ->join('stadium_fields', 'stadium_fields.id = stadium_facilities.field_id')
@@ -98,13 +118,12 @@ class VendorItemsController extends BaseController
                 ->with(
                     'error',
                     'ไม่พบการเชื่อมต่อระหว่างสนามและหมวดหมู่ (stadium_facilities) ' .
-                        'กรุณาตรวจสอบการตั้งค่าหมวดหมู่ของสนามย่อยก่อน'
+                        'กรุณาตรวจสอบการตั้งค่าหมวดหมู่ของพื้นที่สนามก่อน'
                 );
         }
 
         $stadiumFacilityId = $facilityRow['id'];
 
-        // จัดการอัปโหลดรูป
         $imageName = null;
         $imageFile = $this->request->getFile('image');
         if ($imageFile && $imageFile->isValid() && ! $imageFile->hasMoved()) {
@@ -124,6 +143,8 @@ class VendorItemsController extends BaseController
             'price'               => $this->request->getPost('price'),
             'unit'                => $this->request->getPost('unit'),
             'image'               => $imageName,
+            // 'stadium_id' และ 'facility_type_id' ไม่ต้องใส่ก็ได้ เพราะอยู่ในตาราง stadium_facilities แล้ว
+            // แต่ถ้าตาราง vendor_items มีฟิลด์นี้จริงๆ ก็ใส่ได้ครับ (แต่ปกติ Normalize แล้วไม่ควรมี)
             'status'              => $this->request->getPost('status') ?? 'active',
         ];
 
@@ -133,9 +154,6 @@ class VendorItemsController extends BaseController
             ->with('success', 'เพิ่มสินค้าสำเร็จ');
     }
 
-    /**
-     * หน้าแก้ไขสินค้า
-     */
     public function edit($id)
     {
         $product = $this->productModel->find($id);
@@ -146,17 +164,14 @@ class VendorItemsController extends BaseController
         }
 
         $data = [
-            'title'      => 'แก้ไขสินค้า',
-            'product'    => $product,
-            'stadiums'   => $this->stadiumModel->findAll(),
+            'title'    => 'แก้ไขสินค้า',
+            'product'  => $product,
+            'stadiums' => $this->stadiumModel->findAll(),
         ];
 
         return view('admin/vendor_items/edit', $data);
     }
 
-    /**
-     * บันทึกการแก้ไขสินค้า
-     */
     public function update($id)
     {
         $product = $this->productModel->find($id);
@@ -183,7 +198,6 @@ class VendorItemsController extends BaseController
         $stadiumId = (int) $this->request->getPost('stadium_id');
         $typeId    = (int) $this->request->getPost('facility_type_id');
 
-        // หา stadium_facilities.id เหมือนตอนสร้าง
         $facilityRow = $this->facilityModel
             ->select('stadium_facilities.id')
             ->join('stadium_fields', 'stadium_fields.id = stadium_facilities.field_id')
@@ -197,7 +211,7 @@ class VendorItemsController extends BaseController
                 ->with(
                     'error',
                     'ไม่พบการเชื่อมต่อระหว่างสนามและหมวดหมู่ (stadium_facilities) ' .
-                        'กรุณาตรวจสอบการตั้งค่าหมวดหมู่ของสนามย่อยก่อน'
+                        'กรุณาตรวจสอบการตั้งค่าหมวดหมู่ของพื้นที่สนามก่อน'
                 );
         }
 
@@ -212,7 +226,6 @@ class VendorItemsController extends BaseController
             'status'              => $this->request->getPost('status') ?? 'active',
         ];
 
-        // ถ้ามีอัปโหลดรูปใหม่ → ย้ายไฟล์ + ลบไฟล์เก่า
         $imageFile = $this->request->getFile('image');
         if ($imageFile && $imageFile->isValid() && ! $imageFile->hasMoved()) {
             $uploadPath = FCPATH . 'assets/uploads/items/';
@@ -238,9 +251,6 @@ class VendorItemsController extends BaseController
             ->with('success', 'แก้ไขสินค้าเรียบร้อย');
     }
 
-    /**
-     * ลบสินค้า
-     */
     public function delete($id)
     {
         $product = $this->productModel->find($id);
@@ -250,7 +260,6 @@ class VendorItemsController extends BaseController
                 ->with('error', 'ไม่พบข้อมูลสินค้า');
         }
 
-        // ลบไฟล์รูปถ้ามี
         if (! empty($product['image'])) {
             $uploadPath = FCPATH . 'assets/uploads/items/';
             $filePath   = $uploadPath . $product['image'];

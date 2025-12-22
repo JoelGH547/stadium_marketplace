@@ -39,18 +39,35 @@ class StadiumModel extends Model
     protected $createdField  = 'created_at';
     protected $updatedField  = 'updated_at';
 
+    // Callbacks to trim whitespace
+    protected $beforeInsert = ['trimData'];
+    protected $beforeUpdate = ['trimData'];
+
+    protected function trimData(array $data)
+    {
+        if (isset($data['data']['name'])) {
+            $data['data']['name'] = trim($data['data']['name']);
+        }
+        return $data;
+    }
+
     
     public function getStadiumsWithCategory($id = null)
     {
-        $builder = $this->select('stadiums.*, categories.name as category_name, categories.emoji as category_emoji')
-                        ->join('categories', 'categories.id = stadiums.category_id', 'left');
+        // 1. เพิ่ม MIN(stadium_fields.price) as price เพื่อดึงราคาเริ่มต้น
+        $builder = $this->select('stadiums.*, categories.name as category_name, categories.emoji as category_emoji, MIN(stadium_fields.price) as price')
+                        ->join('categories', 'categories.id = stadiums.category_id', 'left')
+                        // 2. Join ตารางลูก (stadium_fields) เข้ามา
+                        ->join('stadium_fields', 'stadium_fields.stadium_id = stadiums.id', 'left')
+                        // 3. Group by เพื่อรวมราคาหลายๆ สนามย่อย ให้เหลือบรรทัดเดียวต่อ 1 สนามหลัก
+                        ->groupBy('stadiums.id');
 
         if ($id !== null) {
             return $builder->where('stadiums.id', $id)->first();
         }
 
         return $builder->findAll();
-    }
+    }   
 
     
     public function getStadiumsByVendor($vendorId, $stadiumId = null)
@@ -64,5 +81,25 @@ class StadiumModel extends Model
         }
 
         return $builder->findAll();
+    }
+
+    public function getStadiums($search = null, $categoryId = null)
+    {
+        $builder = $this->select('stadiums.*, categories.name as category_name, vendors.vendor_name as vendor_name');
+        $builder->join('categories', 'categories.id = stadiums.category_id', 'left');
+        $builder->join('vendors', 'vendors.id = stadiums.vendor_id', 'left');
+
+        if ($search) {
+            $builder->groupStart()
+                    ->like('stadiums.name', $search)
+                    ->orLike('vendors.vendor_name', $search)
+                    ->groupEnd();
+        }
+
+        if ($categoryId) {
+            $builder->where('stadiums.category_id', $categoryId);
+        }
+
+        return $builder->orderBy('stadiums.id', 'DESC')->findAll();
     }
 }
