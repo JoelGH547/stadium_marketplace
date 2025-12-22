@@ -263,7 +263,7 @@ class CheckoutController extends BaseController
         // ส่วนรายละเอียดการจอง
         $lines[] = ['type' => 'section', 'text' => 'รายละเอียดการจอง'];
         $lines[] = ['type' => 'kv', 'k' => 'สนาม', 'v' => (string)($cart['stadium_name'] ?? '-')];
-        $lines[] = ['type' => 'kv', 'k' => 'สนามย่อย', 'v' => (string)($cart['field_name'] ?? '-')];
+        $lines[] = ['type' => 'kv', 'k' => 'พื้นที่สนาม', 'v' => (string)($cart['field_name'] ?? '-')];
 
         if ($bookingType === 'daily') {
             $startDate = (string) ($cart['start_date'] ?? '');
@@ -383,17 +383,26 @@ class CheckoutController extends BaseController
             return redirect()->to(site_url('sport/checkout'))->with('error', 'มีผู้จองช่วงวัน/เวลานี้ไปก่อนแล้ว กรุณาเลือกวัน/เวลาใหม่');
         }
 
-        $bookingModel->insert([
-            'customer_id'        => (int) $customerId,
-            'stadium_id'         => $stadiumId,
-            'field_id'           => $fieldId,
-            'vendor_id'          => $vendorId ?: null,
-            'booking_start_time' => $startAt ? $startAt->toDateTimeString() : null,
-            'booking_end_time'   => $endAt ? $endAt->toDateTimeString() : null,
-            'total_price'        => $totalPrice,
-            'status'             => 'pending',
-            'slip_image'         => $dbSlipPath,
-        ]);
+        try {
+            $bookingModel->insert([
+                'customer_id'        => (int) $customerId,
+                'stadium_id'         => $stadiumId,
+                'field_id'           => $fieldId,
+                'vendor_id'          => $vendorId ?: null,
+                'booking_start_time' => $startAt ? $startAt->toDateTimeString() : null,
+                'booking_end_time'   => $endAt ? $endAt->toDateTimeString() : null,
+                'total_price'        => $totalPrice,
+                'status'             => 'pending',
+                'slip_image'         => $dbSlipPath,
+            ]);
+        } catch (\CodeIgniter\Database\Exceptions\DatabaseException $e) {
+            // ตรวจจับ Foreign Key Error (code 1452)
+            if ($e->getCode() === 1452) {
+                return redirect()->to(site_url('sport/checkout'))->with('error', 'เกิดข้อผิดพลาดเกี่ยวกับบัญชีผู้ใช้ของคุณ กรุณาลองออกจากระบบและเข้าสู่ระบบใหม่อีกครั้ง');
+            }
+            // สำหรับ Database error อื่นๆ ให้โยน exception ต่อไป
+            throw $e;
+        }
 
         cart_reset();
 

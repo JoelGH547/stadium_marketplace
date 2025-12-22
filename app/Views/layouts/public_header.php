@@ -1,7 +1,7 @@
 <?php $siteName = $siteName ?? 'Stadium Marketplace'; ?>
 <?php
 $customerLoggedIn = (bool) session('customer_logged_in');
-$customerName     = session('customer_name') ?? 'ผู้ใช้';
+$customerUsername = session('customer_username') ?? 'ผู้ใช้';
 $siteName = $siteName ?? 'Stadium Marketplace';
 ?>
 <header class="relative z-40">
@@ -84,7 +84,7 @@ $siteName = $siteName ?? 'Stadium Marketplace';
                             class="hidden absolute right-0 mt-3 w-56 rounded-xl border border-gray-200 bg-white shadow-xl z-[999]">
                             <div class="px-4 py-3 border-b border-gray-100">
                                 <p class="text-sm font-semibold text-gray-900 truncate">
-                                    คุณ <?= esc($customerName) ?>
+                                    ชื่อผู้ใช้ <?= esc($customerUsername) ?>
                                 </p>
                             </div>
 
@@ -104,8 +104,10 @@ $siteName = $siteName ?? 'Stadium Marketplace';
 
                                 <a href="<?= base_url('sport/booking_history') ?>"
                                     class="flex items-center gap-3 px-4 py-2 hover:bg-gray-100 transition rounded-md">
-                                    <svg class="w-5 h-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                                    <svg class="w-5 h-5 text-blue-500" fill="none" viewBox="0 0 24 24"
+                                        stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
                                     </svg>
                                     รายการจองของฉัน
                                 </a>

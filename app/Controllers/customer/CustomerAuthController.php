@@ -58,6 +58,7 @@ class CustomerAuthController extends BaseController
             'customer_id'        => $user['id'],
             'customer_email'     => $user['email'],
             'customer_name'      => $user['full_name'] ?? $user['username'] ?? $user['email'],
+            'customer_username'  => $user['username'],
             'customer_logged_in' => true,
         ]);
 
@@ -102,6 +103,7 @@ class CustomerAuthController extends BaseController
             'customer_id'        => $user['id'],
             'customer_email'     => $user['email'],
             'customer_name'      => $user['full_name'] ?? $user['username'] ?? $user['email'],
+            'customer_username'  => $user['username'],
             'customer_logged_in' => true,
         ]);
 
@@ -168,6 +170,7 @@ class CustomerAuthController extends BaseController
             'customer_id'        => $id,
             'customer_email'     => $email,
             'customer_name'      => $fullName !== '' ? $fullName : $username,
+            'customer_username'  => $username,
             'customer_logged_in' => true,
         ]);
 
@@ -183,6 +186,7 @@ class CustomerAuthController extends BaseController
             'customer_id',
             'customer_email',
             'customer_name',
+            'customer_username',
             'customer_logged_in',
         ]);
 

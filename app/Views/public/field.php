@@ -1,11 +1,11 @@
 <?= $this->extend('layouts/public') ?>
 
 <?= $this->section('title') ?>
-สนามย่อย — <?= esc($stadium['name']) ?>
+พื้นที่สนาม — <?= esc($stadium['name']) ?>
 <?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
-<!-- เนื้อหาหลัก: รายการสนามย่อย -->
+<!-- เนื้อหาหลัก: รายการพื้นที่สนาม -->
 
 <section class="pt-8 pb-10 sm:pt-10 sm:pb-14 bg-gray-50">
     <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
@@ -23,11 +23,9 @@
                     </svg>
                 </button>
                 <?php $isFav = !empty($isFavorite); ?>
-                <button type="button"
-                    title="<?= $isFav ? 'ลบออกจากรายการโปรด' : 'เพิ่มในรายการโปรด' ?>"
+                <button type="button" title="<?= $isFav ? 'ลบออกจากรายการโปรด' : 'เพิ่มในรายการโปรด' ?>"
                     class="js-fav-toggle group/favorite flex h-9 w-9 items-center justify-center rounded-full transition <?= $isFav ? 'bg-rose-100 ring-1 ring-rose-200' : 'bg-gray-100 text-gray-700 hover:bg-rose-100' ?>"
-                    data-stadium-id="<?= (int) ($stadiumId ?? 0) ?>"
-                    data-favorited="<?= $isFav ? '1' : '0' ?>">
+                    data-stadium-id="<?= (int) ($stadiumId ?? 0) ?>" data-favorited="<?= $isFav ? '1' : '0' ?>">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                         stroke="currentColor"
                         class="h-6 w-6 transition <?= $isFav ? 'text-rose-600' : 'text-gray-600' ?>">
@@ -52,18 +50,19 @@
 
                     <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs sm:text-sm text-gray-600">
                         <!-- ดาวรีวิว -->
-<?php
-    $avgRating   = (float)($ratingSummary['avg'] ?? 0);
-    $reviewCount = (int)($ratingSummary['count'] ?? 0);
-?>
-<span class="inline-flex items-center gap-1">
-    ⭐ <strong class="text-gray-900"><?= $reviewCount > 0 ? number_format($avgRating, 1) : '0.0' ?></strong>
-    <?php if ($reviewCount > 0): ?>
-        <span class="text-gray-500">(<?= $reviewCount ?> รีวิว)</span>
-    <?php else: ?>
-        <span class="text-gray-400">(ยังไม่มีรีวิว)</span>
-    <?php endif; ?>
-</span>
+                        <?php
+                        $avgRating   = (float)($ratingSummary['avg'] ?? 0);
+                        $reviewCount = (int)($ratingSummary['count'] ?? 0);
+                        ?>
+                        <span class="inline-flex items-center gap-1">
+                            ⭐ <strong
+                                class="text-gray-900"><?= $reviewCount > 0 ? number_format($avgRating, 1) : '0.0' ?></strong>
+                            <?php if ($reviewCount > 0): ?>
+                                <span class="text-gray-500">(<?= $reviewCount ?> รีวิว)</span>
+                            <?php else: ?>
+                                <span class="text-gray-400">(ยังไม่มีรีวิว)</span>
+                            <?php endif; ?>
+                        </span>
 
                         <!-- ระยะทางจากผู้ใช้ (จะให้ JS อัปเดต) -->
                         <span class="inline-flex items-center gap-1 dist-badge"
@@ -95,10 +94,10 @@
                 <div class="flex flex-wrap items-end justify-between gap-3">
                     <div>
                         <h2 class="text-lg sm:text-xl font-semibold text-gray-900">
-                            เลือกสนามย่อยที่ต้องการจอง
+                            เลือกพื้นที่สนามที่ต้องการจอง
                         </h2>
                         <p class="mt-1 text-xs sm:text-sm text-gray-600">
-                            สนามย่อยแต่ละสนามมีขนาด ราคา และบรรยากาศที่แตกต่างกัน เลือกให้เหมาะกับทีมของคุณ
+                            พื้นที่สนามแต่ละสนามมีขนาด ราคา และบรรยากาศที่แตกต่างกัน เลือกให้เหมาะกับทีมของคุณ
                         </p>
                     </div>
                 </div>
@@ -333,10 +332,11 @@
                 <div class="flex items-center justify-between mb-4">
                     <div>
                         <h2 class="text-lg sm:text-xl font-semibold text-gray-900">รีวิวจากผู้ใช้</h2>
-                        <p class="text-sm text-gray-500">รวมรีวิวจากทุกสนามย่อยของสนามนี้</p>
+                        <p class="text-sm text-gray-500">รวมรีวิวจากทุกพื้นที่ของสนามนี้</p>
                     </div>
                     <div class="text-sm text-gray-700 bg-gray-50 px-3 py-1 rounded-lg border border-gray-100">
-                        ⭐ <span class="font-semibold"><?= $reviewCount > 0 ? number_format($avgRating, 1) : '0.0' ?></span>
+                        ⭐ <span
+                            class="font-semibold"><?= $reviewCount > 0 ? number_format($avgRating, 1) : '0.0' ?></span>
                         <span class="text-gray-500">(<?= $reviewCount ?>)</span>
                     </div>
                 </div>
@@ -349,16 +349,27 @@
                     <div class="grid grid-cols-1 gap-4">
                         <?php
                         $thaiMonths = [
-                            1 => 'มกราคม', 2 => 'กุมภาพันธ์', 3 => 'มีนาคม', 4 => 'เมษายน',
-                            5 => 'พฤษภาคม', 6 => 'มิถุนายน', 7 => 'กรกฎาคม', 8 => 'สิงหาคม',
-                            9 => 'กันยายน', 10 => 'ตุลาคม', 11 => 'พฤศจิกายน', 12 => 'ธันวาคม'
+                            1 => 'มกราคม',
+                            2 => 'กุมภาพันธ์',
+                            3 => 'มีนาคม',
+                            4 => 'เมษายน',
+                            5 => 'พฤษภาคม',
+                            6 => 'มิถุนายน',
+                            7 => 'กรกฎาคม',
+                            8 => 'สิงหาคม',
+                            9 => 'กันยายน',
+                            10 => 'ตุลาคม',
+                            11 => 'พฤศจิกายน',
+                            12 => 'ธันวาคม'
                         ];
                         ?>
                         <?php foreach ($latestReviews as $r): ?>
-                            <div class="rounded-xl border border-gray-200 p-4 hover:border-gray-300 transition bg-white shadow-sm shadow-gray-100">
+                            <div
+                                class="rounded-xl border border-gray-200 p-4 hover:border-gray-300 transition bg-white shadow-sm shadow-gray-100">
                                 <div class="flex items-start justify-between gap-3 mb-2">
                                     <div class="flex items-center gap-2">
-                                        <div class="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center text-xs font-semibold text-gray-600">
+                                        <div
+                                            class="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center text-xs font-semibold text-gray-600">
                                             <?= mb_substr($r['customer_name'] ?? 'U', 0, 1) ?>
                                         </div>
                                         <div>
@@ -376,7 +387,8 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="flex items-center gap-1 bg-yellow-50 px-1.5 py-0.5 rounded text-xs font-medium text-yellow-700 border border-yellow-100">
+                                    <div
+                                        class="flex items-center gap-1 bg-yellow-50 px-1.5 py-0.5 rounded text-xs font-medium text-yellow-700 border border-yellow-100">
                                         <span>⭐</span>
                                         <span><?= (int)($r['rating'] ?? 0) ?></span>
                                     </div>
@@ -392,9 +404,10 @@
                         <?php endforeach; ?>
                     </div>
                     <?php if (count($latestReviews) >= 4): ?>
-                         <div class="mt-4 text-center">
-                            <button type="button" class="text-sm text-[var(--primary)] hover:underline font-medium">ดูรีวิวทั้งหมด</button>
-                         </div>
+                        <div class="mt-4 text-center">
+                            <button type="button"
+                                class="text-sm text-[var(--primary)] hover:underline font-medium">ดูรีวิวทั้งหมด</button>
+                        </div>
                     <?php endif; ?>
                 <?php endif; ?>
             </div>

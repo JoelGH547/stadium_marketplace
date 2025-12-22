@@ -94,7 +94,9 @@
 
                 <?php $forceDisabled = (isset($canSubmit) && $canSubmit === false); ?>
                 <div class="pt-2">
-                    <button type="submit" id="submitBtn" data-force-disabled="<?= $forceDisabled ? '1' : '0' ?>" <?= $forceDisabled ? 'disabled' : '' ?> class="inline-flex w-full items-center justify-center rounded-xl bg-[var(--primary)]
+                    <button type="submit" id="submitBtn" data-force-disabled="<?= $forceDisabled ? '1' : '0' ?>"
+                        <?= $forceDisabled ? 'disabled' : '' ?>
+                        class="inline-flex w-full items-center justify-center rounded-xl bg-[var(--primary)]
                          px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-teal-600 transition disabled:opacity-50">
                         ยืนยันการจอง
                     </button>
@@ -117,7 +119,7 @@
                     </div>
 
                     <div class="flex gap-2">
-                        <dt class="w-20 text-gray-500">สนามย่อย</dt>
+                        <dt class="w-20 text-gray-500">พื้นที่สนาม</dt>
                         <dd class="flex-1">
                             <?= esc($booking['field_name'] ?? '-') ?>
                         </dd>
@@ -181,7 +183,7 @@
 
 <?= $this->section('scripts') ?>
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
+    document.addEventListener('DOMContentLoaded', function() {
         const checkoutForm = document.getElementById('checkoutForm');
         const customerNameInput = document.getElementById('customerName');
         const customerPhoneInput = document.getElementById('customerPhone');
@@ -190,7 +192,7 @@
         function validateForm() {
             const isNameValid = customerNameInput.value.trim() !== '';
             const isPhoneValid = /^[0-9]{10}$/.test(customerPhoneInput.value);
-            
+
             const forceDisabled = submitBtn.dataset.forceDisabled === '1';
             submitBtn.disabled = forceDisabled || !isNameValid || !isPhoneValid;
         }
@@ -209,7 +211,7 @@
         // Initial validation check
         validateForm();
 
-        checkoutForm.addEventListener('submit', function (event) {
+        checkoutForm.addEventListener('submit', function(event) {
             const forceDisabled = submitBtn.dataset.forceDisabled === '1';
             if (forceDisabled) {
                 event.preventDefault();

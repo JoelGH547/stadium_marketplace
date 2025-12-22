@@ -69,7 +69,7 @@ if (empty($galleryImages)) {
     $galleryImages[] = $coverUrl;
 }
 
-// สนามย่อย (สำหรับ dropdown)
+// พื้นที่สนาม (สำหรับ dropdown)
 $fieldsRaw      = isset($fields) && is_array($fields) ? $fields : [];
 $hasAnyField    = !empty($fieldsRaw);
 $hasActiveField = false;
@@ -88,7 +88,7 @@ $initialField = $fieldsRaw[0] ?? null;
 $fieldId   = $initialField ? (int) ($initialField['id'] ?? 0) : 0;
 $fieldName = (string) ($initialField['name'] ?? '');
 
-// ✅ ตรวจสอบสถานะของ "สนามย่อย" ที่กำลังดูอยู่
+// ✅ ตรวจสอบสถานะของ "พื้นที่สนาม" ที่กำลังดูอยู่
 $stadiumStatus = strtolower((string) ($stadium['status'] ?? 'active'));
 $isMaintenance = ($stadiumStatus === 'maintenance');
 ?>
@@ -144,7 +144,7 @@ $isMaintenance = ($stadiumStatus === 'maintenance');
                                 </div>
                                 <?php if ($initialField): ?>
                                     <div class="flex justify-between gap-3">
-                                        <dt class="text-gray-500">สนามย่อย</dt>
+                                        <dt class="text-gray-500">พื้นที่สนาม</dt>
                                         <dd id="infoBoxFieldName" class="font-medium text-right">
                                             <?= esc($initialField['name']) ?></dd>
                                     </div>
@@ -159,7 +159,7 @@ $isMaintenance = ($stadiumStatus === 'maintenance');
                                 // Note: Assuming 'price_day' is the key for daily price from the controller
                                 $priceHour  = $initialField['price_hour'] ?? null;
                                 $priceDaily = $initialField['price_day'] ?? null;
-                                // ✅ สถานะสนามย่อย (active / maintenance)
+                                // ✅ สถานะพื้นที่สนาม (active / maintenance)
                                 $fieldStatusRaw   = $initialField['status'] ?? 'active';
                                 $fieldStatusKey   = strtolower((string) $fieldStatusRaw);
                                 $fieldStatusLabel = ($fieldStatusKey === 'maintenance') ? 'Maintenance' : 'Active';
@@ -197,7 +197,7 @@ $isMaintenance = ($stadiumStatus === 'maintenance');
                                     <dd class="font-medium text-right"><?= esc($timeLabel) ?></dd>
                                 </div>
                                 <?php if ($initialField): ?>
-                                    <!-- ✅ แถวแสดงสถานะสนามย่อย -->
+                                    <!-- ✅ แถวแสดงสถานะพื้นที่สนาม -->
                                     <div class="flex justify-between gap-3">
                                         <dt class="text-gray-500">สถานะ</dt>
                                         <dd class="font-medium text-right">
@@ -285,7 +285,8 @@ $isMaintenance = ($stadiumStatus === 'maintenance');
 
                                         <!-- เวลาเริ่มต้น -->
                                         <div class="space-y-1">
-                                            <label for="startTimeSelect" class="block text-xs font-medium text-gray-700">
+                                            <label for="startTimeSelect"
+                                                class="block text-xs font-medium text-gray-700">
                                                 เวลาเริ่มต้น
                                             </label>
                                             <select id="startTimeSelect" name="start_time"
@@ -341,105 +342,127 @@ $isMaintenance = ($stadiumStatus === 'maintenance');
                                 <?php if ($hasAnyField): ?>
                                     <!-- "Show schedule" button -->
                                     <button type="button" id="btnShowSchedule"
-    data-schedule-url="<?= site_url('sport/schedule/field/' . $fieldId) ?>"
-    data-field-id="<?= (int) $fieldId ?>"
-    data-field-name="<?= esc($fieldName) ?>"
-    class="inline-flex items-center justify-center rounded-full
+                                        data-schedule-url="<?= site_url('sport/schedule/field/' . $fieldId) ?>"
+                                        data-field-id="<?= (int) $fieldId ?>" data-field-name="<?= esc($fieldName) ?>"
+                                        class="inline-flex items-center justify-center rounded-full
                bg-[var(--primary)] px-8 py-3 text-sm sm:text-base
                font-semibold text-white shadow-md shadow-[var(--primary)]/40
                hover:bg-teal-600 focus-visible:outline-none
                focus-visible:ring-2 focus-visible:ring-[var(--primary)]
                focus-visible:ring-offset-2 focus-visible:ring-offset-white">
-    <span class="mr-2 text-lg">📅</span>
-    <span>Show Schedule</span>
-</button>
+                                        <span class="mr-2 text-lg">📅</span>
+                                        <span>Show Schedule</span>
+                                    </button>
 
-<!-- Schedule Modal (Overlay) -->
-<div id="scheduleOverlay" class="fixed inset-0 z-[70] hidden" aria-hidden="true" data-schedule-url="<?= site_url('sport/schedule/field/' . $fieldId) ?>" data-field-name="<?= esc($fieldName) ?>">
-    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" data-schedule-close></div>
+                                    <!-- Schedule Modal (Overlay) -->
+                                    <div id="scheduleOverlay" class="fixed inset-0 z-[70] hidden" aria-hidden="true"
+                                        data-schedule-url="<?= site_url('sport/schedule/field/' . $fieldId) ?>"
+                                        data-field-name="<?= esc($fieldName) ?>">
+                                        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" data-schedule-close>
+                                        </div>
 
-    <div class="relative mx-auto flex h-full max-w-6xl items-center justify-center p-4">
-        <div id="schedulePanel" class="w-full overflow-hidden rounded-3xl bg-white shadow-2xl ring-1 ring-black/5">
-            <!-- Header -->
-            <div class="flex items-start justify-between gap-4 border-b border-gray-100 px-6 py-5">
-                <div class="min-w-0">
-                    <p class="text-xs font-semibold text-gray-500">📅 ตารางการจอง</p>
-                    <h3 class="mt-1 text-lg sm:text-xl font-bold text-gray-900 truncate">
-                        สนาม: <?= esc($fieldName) ?>
-                    </h3>
-                    <p class="mt-1 text-xs text-gray-500">
-                        ดูได้ทั้งรายเดือน/สัปดาห์/วัน • สีแดง=จองรายวัน • สีเขียว=จองรายชั่วโมง
-                    </p>
-                </div>
+                                        <div class="relative mx-auto flex h-full max-w-6xl items-center justify-center p-4">
+                                            <div id="schedulePanel"
+                                                class="w-full overflow-hidden rounded-3xl bg-white shadow-2xl ring-1 ring-black/5">
+                                                <!-- Header -->
+                                                <div
+                                                    class="flex items-start justify-between gap-4 border-b border-gray-100 px-6 py-5">
+                                                    <div class="min-w-0">
+                                                        <p class="text-xs font-semibold text-gray-500">📅 ตารางการจอง</p>
+                                                        <h3
+                                                            class="mt-1 text-lg sm:text-xl font-bold text-gray-900 truncate">
+                                                            สนาม: <?= esc($fieldName) ?>
+                                                        </h3>
+                                                        <p class="mt-1 text-xs text-gray-500">
+                                                            ดูได้ทั้งรายเดือน/สัปดาห์/วัน • สีแดง=จองรายวัน •
+                                                            สีเขียว=จองรายชั่วโมง
+                                                        </p>
+                                                    </div>
 
-                <button type="button"
-                    class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200"
-                    data-schedule-close>
-                    <span class="sr-only">ปิด</span>
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
-            </div>
+                                                    <button type="button"
+                                                        class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200"
+                                                        data-schedule-close>
+                                                        <span class="sr-only">ปิด</span>
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5"
+                                                            viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                            stroke-width="2">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                d="M6 18L18 6M6 6l12 12" />
+                                                        </svg>
+                                                    </button>
+                                                </div>
 
-            <!-- Body -->
-            <div class="px-6 py-4">
-                <div class="mb-3 flex flex-wrap items-center gap-3 text-xs">
-                    <span class="inline-flex items-center gap-2 rounded-full bg-red-50 px-3 py-1 font-semibold text-red-700 ring-1 ring-red-100">
-                        <span class="h-2 w-2 rounded-full bg-red-500"></span> จองรายวัน
-                    </span>
-                    <span class="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 font-semibold text-emerald-700 ring-1 ring-emerald-100">
-                        <span class="h-2 w-2 rounded-full bg-emerald-500"></span> จองรายชั่วโมง
-                    </span>
+                                                <!-- Body -->
+                                                <div class="px-6 py-4">
+                                                    <div class="mb-3 flex flex-wrap items-center gap-3 text-xs">
+                                                        <span
+                                                            class="inline-flex items-center gap-2 rounded-full bg-red-50 px-3 py-1 font-semibold text-red-700 ring-1 ring-red-100">
+                                                            <span class="h-2 w-2 rounded-full bg-red-500"></span> จองรายวัน
+                                                        </span>
+                                                        <span
+                                                            class="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 font-semibold text-emerald-700 ring-1 ring-emerald-100">
+                                                            <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
+                                                            จองรายชั่วโมง
+                                                        </span>
 
-                    <span class="ml-auto text-xs text-gray-500">
-                        เวลาเปิด-ปิด: <?= esc($timeLabel) ?>
-                    </span>
-                </div>
+                                                        <span class="ml-auto text-xs text-gray-500">
+                                                            เวลาเปิด-ปิด: <?= esc($timeLabel) ?>
+                                                        </span>
+                                                    </div>
 
-                <div id="scheduleError" class="hidden mb-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"></div>
+                                                    <div id="scheduleError"
+                                                        class="hidden mb-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                                                    </div>
 
-                <div id="scheduleLoading" class="hidden mb-3 rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700">
-                    กำลังโหลดตารางการจอง...
-                </div>
+                                                    <div id="scheduleLoading"
+                                                        class="hidden mb-3 rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700">
+                                                        กำลังโหลดตารางการจอง...
+                                                    </div>
 
-                <style>
-  /* FullCalendar: highlight "today" (default is pale yellow) -> light green */
-  .fc .fc-day-today {
-    background: rgba(34, 197, 94, 0.12) !important; /* green-500 @ 12% */
-  }
-  /* Also cover timeGrid column */
-  .fc .fc-timegrid-col.fc-day-today,
-  .fc .fc-timegrid-col.fc-day-today .fc-timegrid-col-frame {
-    background: rgba(34, 197, 94, 0.10) !important;
-  }
+                                                    <style>
+                                                        /* FullCalendar: highlight "today" (default is pale yellow) -> light green */
+                                                        .fc .fc-day-today {
+                                                            background: rgba(34, 197, 94, 0.12) !important;
+                                                            /* green-500 @ 12% */
+                                                        }
 
-  /* Event styles */
-    .fc .fc-event.booking-hourly {
-    background: rgba(34, 197, 94, 0.95) !important; /* green-500 */
-    border-color: rgba(34, 197, 94, 0.95) !important;
-    color: #ffffff !important;
-  }
-    .fc .fc-event.booking-daily {
-    background: rgba(239, 68, 68, 0.95) !important; /* red-500 */
-    border-color: rgba(239, 68, 68, 0.95) !important;
-    color: #ffffff !important;
-  }
-  /* Make event text a bit cleaner in month view */
-  .fc .fc-event .fc-event-title {
-    font-weight: 600;
-  }
-</style>
-<div id="scheduleCalendar" class="min-h-[520px] rounded-2xl border border-gray-200 bg-white p-2 sm:p-3"></div>
-            </div>
-        </div>
-    </div>
-</div>
+                                                        /* Also cover timeGrid column */
+                                                        .fc .fc-timegrid-col.fc-day-today,
+                                                        .fc .fc-timegrid-col.fc-day-today .fc-timegrid-col-frame {
+                                                            background: rgba(34, 197, 94, 0.10) !important;
+                                                        }
+
+                                                        /* Event styles */
+                                                        .fc .fc-event.booking-hourly {
+                                                            background: rgba(34, 197, 94, 0.95) !important;
+                                                            /* green-500 */
+                                                            border-color: rgba(34, 197, 94, 0.95) !important;
+                                                            color: #ffffff !important;
+                                                        }
+
+                                                        .fc .fc-event.booking-daily {
+                                                            background: rgba(239, 68, 68, 0.95) !important;
+                                                            /* red-500 */
+                                                            border-color: rgba(239, 68, 68, 0.95) !important;
+                                                            color: #ffffff !important;
+                                                        }
+
+                                                        /* Make event text a bit cleaner in month view */
+                                                        .fc .fc-event .fc-event-title {
+                                                            font-weight: 600;
+                                                        }
+                                                    </style>
+                                                    <div id="scheduleCalendar"
+                                                        class="min-h-[520px] rounded-2xl border border-gray-200 bg-white p-2 sm:p-3">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
 
                                     <!-- Booking form -->
-                                    <form id="bookingSubmitForm" action="<?= site_url('sport/cart/add') ?>"
-                                        method="post" class="mt-0">
+                                    <form id="bookingSubmitForm" action="<?= site_url('sport/cart/add') ?>" method="post"
+                                        class="mt-0">
                                         <?= csrf_field() ?>
 
                                         <!-- hidden fields -->
@@ -447,19 +470,19 @@ $isMaintenance = ($stadiumStatus === 'maintenance');
                                             value="<?= isset($stadium['id']) ? (int) $stadium['id'] : 0 ?>">
                                         <input type="hidden" name="stadium_name"
                                             value="<?= esc($stadium['name'] ?? $name) ?>">
-                                        <input type="hidden" name="field_id" 
+                                        <input type="hidden" name="field_id"
                                             value="<?= isset($fields[0]['id']) ? (int) $fields[0]['id'] : 0 ?>">
-                                        <input type="hidden" name="stadium_image" 
+                                        <input type="hidden" name="stadium_image"
                                             value="<?= esc($stadium['outside_images'] ? (json_decode($stadium['outside_images'])[0] ?? '') : ($stadium['cover_image'] ?? '')) ?>">
 
                                         <input type="hidden" name="booking_type" id="bookingTypeField">
-                                        
+
                                         <!-- Hourly Fields -->
                                         <input type="hidden" name="booking_date" id="bookingDateField">
                                         <input type="hidden" name="time_start" id="bookingTimeStartField">
                                         <input type="hidden" name="time_end" id="bookingTimeEndField">
                                         <input type="hidden" name="hours" id="bookingHoursField">
-                                        
+
                                         <!-- Daily Fields -->
                                         <input type="hidden" name="start_date" id="bookingStartDateField">
                                         <input type="hidden" name="end_date" id="bookingEndDateField">
@@ -553,30 +576,32 @@ $isMaintenance = ($stadiumStatus === 'maintenance');
                                         <span class="w-1 h-6 bg-[var(--primary)] rounded-full"></span>
                                         <?= esc($category) ?>
                                     </h3>
-                                    
+
                                     <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                                         <?php foreach ($items as $item): ?>
-                                            <article class="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm hover:shadow-md transition-all duration-300">
-                                                
+                                            <article
+                                                class="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm hover:shadow-md transition-all duration-300">
+
                                                 <!-- Image -->
                                                 <div class="relative h-32 w-full bg-gray-100 overflow-hidden">
                                                     <?php if (!empty($item['image'])): ?>
-                                                        <img src="<?= base_url('assets/uploads/items/' . $item['image']) ?>" 
-                                                             alt="<?= esc($item['name']) ?>" 
-                                                             class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110">
+                                                        <img src="<?= base_url('assets/uploads/items/' . $item['image']) ?>"
+                                                            alt="<?= esc($item['name']) ?>"
+                                                            class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110">
                                                     <?php else: ?>
                                                         <div class="flex h-full items-center justify-center text-gray-400">
                                                             <i class="fas fa-image text-3xl opacity-50"></i>
                                                         </div>
                                                     <?php endif; ?>
-                                                    
+
                                                     <!-- Price Tag Removed as per request -->
                                                 </div>
 
                                                 <!-- Content -->
                                                 <div class="p-4 flex flex-col flex-1">
                                                     <div class="flex-1 space-y-1">
-                                                        <h4 class="font-bold text-gray-900 line-clamp-1" title="<?= esc($item['name']) ?>">
+                                                        <h4 class="font-bold text-gray-900 line-clamp-1"
+                                                            title="<?= esc($item['name']) ?>">
                                                             <?= esc($item['name']) ?>
                                                         </h4>
                                                         <?php if (!empty($item['description'])): ?>
@@ -590,28 +615,35 @@ $isMaintenance = ($stadiumStatus === 'maintenance');
 
                                                     <div class="mt-4 flex items-center justify-between gap-2">
                                                         <span class="text-sm font-semibold text-[var(--primary)]">
-                                                            ฿<?= number_format((float) $item['price']) ?> <span class="text-xs text-gray-500 font-normal">/ <?= esc($item['unit'] ?? 'ชิ้น') ?></span>
+                                                            ฿<?= number_format((float) $item['price']) ?> <span
+                                                                class="text-xs text-gray-500 font-normal">/
+                                                                <?= esc($item['unit'] ?? 'ชิ้น') ?></span>
                                                         </span>
-                                                        
+
                                                         <?php if (($item['status'] ?? 'active') === 'active'): ?>
-                                                            <button type="button" 
-                                                                    class="add-item-btn inline-flex items-center gap-1.5 rounded-xl bg-[var(--primary)] px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-teal-700 transition-colors"
-                                                                    data-item-id="<?= (int) $item['id'] ?>"
-                                                                    data-item-name="<?= esc($item['name']) ?>"
-                                                                    data-item-price="<?= (float) $item['price'] ?>"
-                                                                    data-item-unit="<?= esc($item['unit'] ?? 'ชิ้น') ?>"
-                                                                    data-item-image="<?= esc($item['image'] ?? '') ?>">
-                                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
-                                                                    <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
+                                                            <button type="button"
+                                                                class="add-item-btn inline-flex items-center gap-1.5 rounded-xl bg-[var(--primary)] px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-teal-700 transition-colors"
+                                                                data-item-id="<?= (int) $item['id'] ?>"
+                                                                data-item-name="<?= esc($item['name']) ?>"
+                                                                data-item-price="<?= (float) $item['price'] ?>"
+                                                                data-item-unit="<?= esc($item['unit'] ?? 'ชิ้น') ?>"
+                                                                data-item-image="<?= esc($item['image'] ?? '') ?>">
+                                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+                                                                    fill="currentColor" class="w-4 h-4">
+                                                                    <path
+                                                                        d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
                                                                 </svg>
                                                                 เพิ่ม
                                                             </button>
                                                         <?php else: ?>
-                                                            <button type="button" 
-                                                                    class="inline-flex items-center gap-1.5 rounded-xl bg-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-500 cursor-not-allowed"
-                                                                    disabled>
-                                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
-                                                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM6.75 9.25a.75.75 0 000 1.5h6.5a.75.75 0 000-1.5h-6.5z" clip-rule="evenodd" />
+                                                            <button type="button"
+                                                                class="inline-flex items-center gap-1.5 rounded-xl bg-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-500 cursor-not-allowed"
+                                                                disabled>
+                                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+                                                                    fill="currentColor" class="w-4 h-4">
+                                                                    <path fill-rule="evenodd"
+                                                                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM6.75 9.25a.75.75 0 000 1.5h6.5a.75.75 0 000-1.5h-6.5z"
+                                                                        clip-rule="evenodd" />
                                                                 </svg>
                                                                 ไม่พร้อมบริการ
                                                             </button>
@@ -769,14 +801,42 @@ $isMaintenance = ($stadiumStatus === 'maintenance');
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.19/index.global.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.19/locales-all.global.min.js"></script>
 <style>
-  /* FullCalendar small tweaks to match your rounded/mint theme */
-  #scheduleCalendar .fc .fc-toolbar-title{font-size:1rem;font-weight:800;color:#0f172a}
-  #scheduleCalendar .fc .fc-button{border-radius:9999px;padding:.35rem .75rem;font-size:.8rem}
-  #scheduleCalendar .fc .fc-button-primary{background:var(--primary);border-color:var(--primary)}
-  #scheduleCalendar .fc .fc-button-primary:not(:disabled).fc-button-active,
-  #scheduleCalendar .fc .fc-button-primary:not(:disabled):active{filter:brightness(.92)}
-  #scheduleCalendar .fc .fc-scrollgrid{border-radius:1rem;overflow:hidden}
-  #scheduleCalendar .fc .fc-event{border:0;border-radius:.75rem;padding:2px 6px}
-  #scheduleCalendar .fc .fc-timegrid-event{box-shadow:0 8px 18px rgba(15,23,42,.08)}
+    /* FullCalendar small tweaks to match your rounded/mint theme */
+    #scheduleCalendar .fc .fc-toolbar-title {
+        font-size: 1rem;
+        font-weight: 800;
+        color: #0f172a
+    }
+
+    #scheduleCalendar .fc .fc-button {
+        border-radius: 9999px;
+        padding: .35rem .75rem;
+        font-size: .8rem
+    }
+
+    #scheduleCalendar .fc .fc-button-primary {
+        background: var(--primary);
+        border-color: var(--primary)
+    }
+
+    #scheduleCalendar .fc .fc-button-primary:not(:disabled).fc-button-active,
+    #scheduleCalendar .fc .fc-button-primary:not(:disabled):active {
+        filter: brightness(.92)
+    }
+
+    #scheduleCalendar .fc .fc-scrollgrid {
+        border-radius: 1rem;
+        overflow: hidden
+    }
+
+    #scheduleCalendar .fc .fc-event {
+        border: 0;
+        border-radius: .75rem;
+        padding: 2px 6px
+    }
+
+    #scheduleCalendar .fc .fc-timegrid-event {
+        box-shadow: 0 8px 18px rgba(15, 23, 42, .08)
+    }
 </style>
 <?= $this->endSection() ?>
