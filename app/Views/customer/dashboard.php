@@ -133,7 +133,25 @@
                                             elseif ($booking['status'] == 'confirmed') { $statusClass = 'info'; $statusText = 'ยืนยันแล้ว'; }
                                             elseif ($booking['status'] == 'cancelled') { $statusClass = 'danger'; $statusText = 'ยกเลิก'; }
                                         ?>
-                                        <span class="badge badge-<?= $statusClass ?> rounded-pill px-2" style="font-size: 0.7rem; font-weight: normal;"><?= $statusText ?></span>
+                                        <span class="badge badge-<?= $statusClass ?> rounded-pill px-2 mb-1" style="font-size: 0.7rem; font-weight: normal;"><?= $statusText ?></span>
+                                        
+                                        <?php if (($booking['status'] == 'paid' || $booking['status'] == 'confirmed') && !$booking['is_reviewed']): ?>
+                                            <div class="mt-1">
+                                                <?php if ($booking['can_review']): ?>
+                                                    <button type="button" class="btn btn-outline-primary btn-sm py-0 px-2 rounded-pill" 
+                                                            style="font-size: 0.65rem;"
+                                                            onclick="event.stopPropagation(); openReviewModal(<?= $booking['id'] ?>, '<?= esc($booking['stadium_name']) ?>')">
+                                                        <i class="fas fa-star mr-1"></i>รีวิวสนาม
+                                                    </button>
+                                                <?php else: ?>
+                                                    <span class="text-muted" style="font-size: 0.65rem;" title="คุณจะรีวิวได้หลังจากใช้งานสนามเสร็จสิ้น">
+                                                        <i class="fas fa-clock mr-1"></i>รอรีวิวหลังเลิกเล่น
+                                                    </span>
+                                                <?php endif; ?>
+                                            </div>
+                                        <?php elseif ($booking['is_reviewed']): ?>
+                                            <div class="mt-1 small text-success" style="font-size: 0.65rem;"><i class="fas fa-check-circle mr-1"></i>รีวิวแล้ว</div>
+                                        <?php endif; ?>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -156,4 +174,117 @@
         </div>
     </div>
 </div>
+
+<!-- Review Modal -->
+<div class="modal fade" id="reviewModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold">รีวิวสนาม: <span id="modal_stadium_name" class="text-primary"></span></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form id="reviewForm">
+                <input type="hidden" name="booking_id" id="modal_booking_id">
+                <div class="modal-body p-4">
+                    <div class="text-center mb-4">
+                        <label class="d-block text-muted small mb-2">ให้คะแนนความพึงพอใจ</label>
+                        <div class="star-rating h3 text-warning">
+                            <i class="far fa-star star-btn" data-value="1"></i>
+                            <i class="far fa-star star-btn" data-value="2"></i>
+                            <i class="far fa-star star-btn" data-value="3"></i>
+                            <i class="far fa-star star-btn" data-value="4"></i>
+                            <i class="far fa-star star-btn" data-value="5"></i>
+                            <input type="hidden" name="rating" id="rating_value" required value="0">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="small fw-bold text-muted">ความคิดเห็นของคุณ</label>
+                        <textarea name="comment" class="form-control rounded-3 border-light bg-light" rows="4" placeholder="บอกต่อประสบการณ์การเข้าใช้งานสนามนี้..." required minlength="5"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-dismiss="modal">ยกเลิก</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm">ส่งรีวิว</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<?= $this->endSection() ?>
+
+<?= $this->section('extra-js') ?>
+<script>
+    let currentRating = 0;
+
+    function openReviewModal(bookingId, stadiumName) {
+        $('#modal_booking_id').val(bookingId);
+        $('#modal_stadium_name').text(stadiumName);
+        $('#reviewForm')[0].reset();
+        resetStars();
+        $('#reviewModal').modal('show');
+    }
+
+    $('.star-btn').click(function() {
+        currentRating = $(this).data('value');
+        $('#rating_value').val(currentRating);
+        updateStars(currentRating);
+    });
+
+    $('.star-btn').hover(function() {
+        let val = $(this).data('value');
+        updateStars(val);
+    }, function() {
+        updateStars(currentRating);
+    });
+
+    function updateStars(val) {
+        $('.star-btn').each(function() {
+            if ($(this).data('value') <= val) {
+                $(this).removeClass('far').addClass('fas');
+            } else {
+                $(this).removeClass('fas').addClass('far');
+            }
+        });
+    }
+
+    function resetStars() {
+        currentRating = 0;
+        $('#rating_value').val(0);
+        $('.star-btn').removeClass('fas').addClass('far');
+    }
+
+    $('#reviewForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        if ($('#rating_value').val() == 0) {
+            Swal.fire('กรุณาเลือกคะแนน', 'โปรดให้คะแนนดาวก่อนส่งรีวิวครับ', 'warning');
+            return;
+        }
+
+        $.ajax({
+            url: '<?= base_url('customer/review/submit') ?>',
+            method: 'POST',
+            data: $(this).serialize(),
+            success: function(res) {
+                if (res.status === 'success') {
+                    $('#reviewModal').modal('hide');
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'สำเร็จ!',
+                        text: res.message,
+                        timer: 2000,
+                        showConfirmButton: false
+                    }).then(() => {
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire('ข้อผิดพลาด', res.message || 'ไม่สามารถส่งรีวิวได้', 'error');
+                }
+            }
+        });
+    });
+</script>
 <?= $this->endSection() ?>

@@ -25,11 +25,20 @@ class CustomerController extends BaseController
         ];
 
         // Enrich bookings with stadium and field names
+        $reviewModel = new \App\Models\ReviewModel();
         foreach ($data['myBookings'] as &$b) {
             $field = (new \App\Models\StadiumFieldModel())->find($b['field_id']);
             $stadium = $stadiumModel->find($b['stadium_id']);
             $b['field_name'] = $field['name'] ?? 'N/A';
             $b['stadium_name'] = $stadium['name'] ?? 'N/A';
+            
+            // Check if already reviewed
+            $b['is_reviewed'] = $reviewModel->where('booking_id', $b['id'])->countAllResults() > 0;
+
+            // Time Logic: Only allow review if booking session has ended
+            $endTime = strtotime($b['booking_end_time']);
+            $now = time();
+            $b['can_review'] = ($now > $endTime);
         }
 
         return view('customer/dashboard', $data);

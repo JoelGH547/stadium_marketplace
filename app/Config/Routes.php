@@ -114,6 +114,11 @@ $routes->group('admin', ['filter' => ['admin']], static function ($routes) {
     $routes->get('bookings', 'Admin\BookingController::index'); 
     $routes->get('bookings/api', 'Admin\BookingController::api'); 
     
+    // --- Reviews (จัดการรีวิว) ---
+    $routes->get('reviews', 'Admin\ReviewController::index');
+    $routes->get('reviews/toggle/(:num)', 'Admin\ReviewController::toggleStatus/$1');
+    $routes->get('reviews/delete/(:num)', 'Admin\ReviewController::delete/$1');
+
     // จัดการสถานะจอง
     $routes->post('bookings/updateStatus', 'Admin\BookingController::updateStatus');
     $routes->get('bookings/approve/(:num)', 'Admin\BookingController::approve/$1');
@@ -132,6 +137,7 @@ $routes->group('customer', ['filter' => ['customer']], static function ($routes)
     $routes->post('payment/process', 'BookingController::processPayment');
     $routes->get('payment/success/(:num)', 'BookingController::paymentSuccess/$1');
     $routes->get('booking/check-availability', 'BookingController::checkAvailability');
+    $routes->post('review/submit', 'ReviewController::submit');
 
     
 
