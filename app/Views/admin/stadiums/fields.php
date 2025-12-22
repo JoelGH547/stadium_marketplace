@@ -699,7 +699,9 @@ foreach ($facilityTypes as $ft) {
                     confirmButtonColor: '#d33'
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        fetch('<?= base_url('admin/stadiums/fields/product/delete/') ?>' + id)
+                        fetch('<?= base_url('admin/stadiums/fields/product/delete/') ?>' + id, {
+                            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                        })
                         .then(res => res.json())
                         .then(data => {
                             if(data.success) {
