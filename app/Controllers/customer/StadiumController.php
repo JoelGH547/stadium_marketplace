@@ -327,12 +327,12 @@ public function show($id = null)
 
         // 6) ดึง items (products) ที่ผูกกับสนามนี้
         // join stadium_facilities -> stadium_fields -> stadiums
-        $productModel = new \App\Models\VendorProductModel();
+        $productModel = new \App\Models\VendorItemModel();
         
         $rawProducts = $productModel->withRelations()
             ->where('stadium_fields.id', $id)
             ->orderBy('facility_types.id', 'ASC')
-            ->orderBy('vendor_products.id', 'DESC')
+            ->orderBy('vendor_items.id', 'DESC')
             ->findAll();
 
         // Group by Category (Facility Type)

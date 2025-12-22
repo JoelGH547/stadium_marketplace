@@ -4,7 +4,7 @@ namespace App\Controllers\Customer;
 
 use App\Controllers\BaseController;
 use App\Models\StadiumFieldModel;
-use App\Models\VendorProductModel;
+use App\Models\VendorItemModel;
 
 class CartController extends BaseController
 {
@@ -21,14 +21,16 @@ class CartController extends BaseController
         
         // ถ้าไม่มีทั้งค่าเช่าสนามและไม่มีไอเทม แสดงว่าไม่มีสินค้า
         if ($fieldBasePrice <= 0 && empty($cart['items'])) {
-             return view('public/cart', [
-                'cartItems'  => [],
-                'subtotal'   => 0.0,
-                'serviceFee' => 0.0,
-                'total'      => 0.0,
-                'stadiumId'  => 0,
-            ]);
-        }
+             
+    return view('public/cart', [
+        'cartItems'  => $items,
+        'subtotal'   => $subtotal,
+        'serviceFee' => $serviceFee,
+        'total'      => $total,
+        'stadiumId'  => $stadiumId,
+        'fieldId'    => $fieldId, // Pass fieldId
+    ]);
+}
 
         $items = [];
         $bookingType = $cart['booking_type'] ?? 'hourly';
@@ -67,7 +69,7 @@ class CartController extends BaseController
 
         // ตามด้วยไอเทมเสริม
         if (!empty($cart['items']) && is_array($cart['items'])) {
-            $productModel = new VendorProductModel();
+            $productModel = new VendorItemModel();
             $itemIds = array_filter(array_map(static function ($item) {
                 return $item['id'] ?? null;
             }, $cart['items']));

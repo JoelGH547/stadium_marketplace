@@ -58,11 +58,11 @@ class CreateVendorProducts extends Migration
         ]);
         $this->forge->addKey('id', true);
         $this->forge->addForeignKey('stadium_facility_id', 'stadium_facilities', 'id', 'CASCADE', 'CASCADE');
-        $this->forge->createTable('vendor_products');
+        $this->forge->createTable('vendor_items');
     }
 
     public function down()
     {
-        $this->forge->dropTable('vendor_products');
+        $this->forge->dropTable('vendor_items');
     }
 }

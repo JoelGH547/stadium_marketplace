@@ -8,7 +8,7 @@ use CodeIgniter\I18n\Time;
 
 use App\Controllers\BaseController;
 use App\Models\StadiumFieldModel;
-use App\Models\VendorProductModel;
+use App\Models\VendorItemModel;
 use App\Libraries\SlipGenerator;
 
 class CheckoutController extends BaseController
@@ -91,7 +91,7 @@ class CheckoutController extends BaseController
 
         // เพิ่มไอเทมเสริม
         if (!empty($cart['items']) && is_array($cart['items'])) {
-            $productModel = new VendorProductModel();
+            $productModel = new VendorItemModel();
             $itemIds = array_filter(array_map(static function ($item) {
                 return $item['id'] ?? null;
             }, $cart['items']));
@@ -302,7 +302,7 @@ class CheckoutController extends BaseController
         $items = $cart['items'] ?? [];
         if (is_array($items) && !empty($items)) {
             // ดึงข้อมูลสินค้าล่าสุดจาก DB เพื่อเอาหน่วยนับ (unit) ที่ถุกต้อง
-            $productModel = new VendorProductModel();
+            $productModel = new VendorItemModel();
             $itemIds = array_filter(array_column($items, 'id'));
 
             $productsById = [];

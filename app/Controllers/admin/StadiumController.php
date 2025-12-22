@@ -725,23 +725,19 @@ class StadiumController extends BaseController
         return redirect()->back()->with('error', 'ไม่พบข้อมูล');
     }
 
+
     public function saveProduct()
     {
-        if (!$this->request->isAJAX()) {
-             return $this->response->setStatusCode(400)->setJSON(['success' => false, 'message' => 'Invalid Request']);
+        if (! $this->request->isAJAX()) {
+            return $this->response
+                ->setStatusCode(400)
+                ->setJSON(['success' => false, 'message' => 'Invalid request']);
         }
 
-        $productModel = new VendorProductModel();
-        
-        $id = $this->request->getPost('id');
-        $stadiumFacilityId = $this->request->getPost('stadium_facility_id');
-        
-        // Basic Validation
-        if (empty($stadiumFacilityId)) {
-            return $this->response->setJSON(['success' => false, 'message' => 'Missing Stadium Facility ID']);
-        // [แก้ไข 6] เรียกใช้ VendorItemModel
+        // ✅ ใช้ตาราง vendor_items (VendorItemModel)
         $itemModel = new VendorItemModel();
-        $id = $this->request->getPost('id');
+
+        $id   = $this->request->getPost('id');
         $sfId = $this->request->getPost('stadium_facility_id');
 
         if (empty($sfId)) {
@@ -749,20 +745,23 @@ class StadiumController extends BaseController
         }
 
         $uploadPath = FCPATH . 'assets/uploads/items/';
-        if (!is_dir($uploadPath)) mkdir($uploadPath, 0777, true);
+        if (! is_dir($uploadPath)) {
+            @mkdir($uploadPath, 0777, true);
+        }
 
+        // เก็บรูปเดิมไว้ ถ้าเป็นการแก้ไขและไม่ได้อัปโหลดรูปใหม่
         $imageName = null;
-        
-        if ($id) {
+        if (! empty($id)) {
             $existing = $itemModel->find($id);
             if ($existing) {
-                $imageName = $existing['image'];
+                $imageName = $existing['image'] ?? null;
             }
         }
 
+        // อัปโหลดรูปใหม่ (ถ้ามี)
         $file = $this->request->getFile('image');
-        if ($file && $file->isValid() && !$file->hasMoved()) {
-            if ($imageName && file_exists($uploadPath . $imageName)) {
+        if ($file && $file->isValid() && ! $file->hasMoved()) {
+            if ($imageName && is_file($uploadPath . $imageName)) {
                 @unlink($uploadPath . $imageName);
             }
             $newName = 'item_' . time() . '_' . $file->getRandomName();
@@ -771,35 +770,19 @@ class StadiumController extends BaseController
         }
 
         $data = [
-            'stadium_facility_id' => $stadiumFacilityId,
-            'name'        => $this->request->getPost('name'),
-            'description' => $this->request->getPost('description'),
-            'price'       => $this->request->getPost('price'),
-            'unit'        => $this->request->getPost('unit'),
-            'status'      => $this->request->getPost('status') ?? 'active',
+            'stadium_facility_id' => (int) $sfId,
+            'name'        => (string) $this->request->getPost('name'),
+            'description' => (string) $this->request->getPost('description'),
+            'price'       => (float)  $this->request->getPost('price'),
+            'unit'        => (string) $this->request->getPost('unit'),
+            'status'      => (string) ($this->request->getPost('status') ?? 'active'),
         ];
 
-        // Handle Image Upload
-        $file = $this->request->getFile('image');
-        if ($file && $file->isValid() && !$file->hasMoved()) {
-            $uploadPath = FCPATH . 'assets/uploads/items/';
-            if (!is_dir($uploadPath)) mkdir($uploadPath, 0777, true);
-
-            $newName = 'item_' . time() . '_' . $file->getRandomName();
-            $file->move($uploadPath, $newName);
-            
-            $data['image'] = $newName;
-
-            // Delete old image if updating
-            if ($id) {
-                $oldItem = $productModel->find($id);
-                if ($oldItem && !empty($oldItem['image'])) {
-                     if (file_exists($uploadPath . $oldItem['image'])) @unlink($uploadPath . $oldItem['image']);
-                }
-            }
+        if ($imageName) {
+            $data['image'] = $imageName;
         }
 
-        if ($id) {
+        if (! empty($id)) {
             $itemModel->update($id, $data);
             $newId = $id;
         } else {
@@ -807,37 +790,33 @@ class StadiumController extends BaseController
         }
 
         return $this->response->setJSON([
-            'success' => true, 
-            'id' => $newId,
-            'image_url' => isset($data['image']) ? base_url('assets/uploads/items/' . $data['image']) : null
+            'success'   => true,
+            'id'        => $newId,
+            'image_url' => $imageName ? base_url('assets/uploads/items/' . $imageName) : null,
         ]);
     }
 
     public function deleteProduct($id)
     {
-        $productModel = new VendorProductModel();
-        $product = $productModel->find($id);
-
-        if ($product) {
-            if (!empty($product['image'])) {
-                $path = FCPATH . 'assets/uploads/items/' . $product['image'];
-        if (!$this->request->isAJAX()) {
+        if (! $this->request->isAJAX()) {
             return $this->response->setStatusCode(400);
         }
 
-        // [แก้ไข 7] เรียกใช้ VendorItemModel
         $itemModel = new VendorItemModel();
         $item = $itemModel->find($id);
 
-        if ($item) {
-            if (!empty($item['image'])) {
-                $path = FCPATH . 'assets/uploads/items/' . $item['image'];
-                if (file_exists($path)) @unlink($path);
-            }
-            $itemModel->delete($id);
-            return $this->response->setJSON(['success' => true]);
+        if (! $item) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Not found']);
         }
-        
-        return $this->response->setJSON(['success' => false, 'message' => 'Not found']);
+
+        if (! empty($item['image'])) {
+            $path = FCPATH . 'assets/uploads/items/' . $item['image'];
+            if (is_file($path)) {
+                @unlink($path);
+            }
+        }
+
+        $itemModel->delete($id);
+        return $this->response->setJSON(['success' => true]);
     }
 }
