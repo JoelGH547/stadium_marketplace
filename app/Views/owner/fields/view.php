@@ -39,11 +39,28 @@
     <!-- Subfields List -->
     <?= $this->include('owner/fields/components/subfield_list') ?>
 
-
+    <!-- Booking List for this Stadium -->
+    <?= $this->include('owner/fields/components/booking_list_in_view') ?>
 
 </div>
 
-<!-- Modal: Add Subfield -->
+<!-- Modal: Subfield Calendar -->
+<div class="modal fade" id="subfieldCalendarModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-white">
+                <h5 class="modal-title fw-bold text-dark">
+                    <i class="fas fa-calendar-alt me-2 text-primary"></i> ปฏิทินการจอง: <span id="calendarSubfieldName" class="text-mint"></span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body bg-light p-3">
+                <div id="subfieldCalendar" class="bg-white p-3 rounded"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Modal: Add Subfield -->
 <div class="modal fade" id="addSubfieldModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg">
@@ -117,7 +134,6 @@
                              </button>
                         </div>
 
-                        <!-- Inline Item Creator (Hidden by default) -->
                         <!-- Inline Item Creator (Hidden by default) -->
                         <div id="inlineItemCreator" class="bg-white p-3 border rounded mb-3 shadow-sm" style="display: none;">
                             <h6 class="small fw-bold text-success mb-2"><i class="fas fa-plus-circle"></i> สร้างสินค้า/บริการใหม่ด่วน</h6>
@@ -410,8 +426,9 @@
                 </div>
 
                 <div class="bg-light p-4 rounded-3 border">
-                    <h6 class="fw-bold text-success mb-3"><i class="fas fa-plus-circle me-1"></i> เพิ่มสินค้าใหม่</h6>
+                    <h6 class="fw-bold text-success mb-3" id="manageItemFormTitle"><i class="fas fa-plus-circle me-1"></i> เพิ่มสินค้าใหม่</h6>
                     <form id="formAddManageItem">
+                        <input type="hidden" id="manageItemEditId">
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label small text-muted fw-bold">ชื่อสินค้า <span class="text-danger">*</span></label>
@@ -444,7 +461,10 @@
                                 <input type="text" id="manageItemDesc" class="form-control" placeholder="รายละเอียดอื่นๆ...">
                             </div>
                             <div class="col-12 text-end mt-3">
-                                <button type="button" class="btn btn-success px-4" onclick="submitManageItem()">
+                                <button type="button" id="btnCancelManageItem" class="btn btn-secondary px-4 me-2" style="display:none;" onclick="cancelManageItemEdit()">
+                                    <i class="fas fa-times me-1"></i> ยกเลิก
+                                </button>
+                                <button type="button" id="btnSaveManageItem" class="btn btn-success px-4" onclick="submitManageItem()">
                                     <i class="fas fa-save me-1"></i> บันทึกสินค้า
                                 </button>
                             </div>
@@ -457,10 +477,60 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js'></script>
 <script>
     // Define SITE_URL for external JS
     const STADIUM_ID = <?= $stadium['id'] ?>;
     const SITE_URL = '<?= base_url() ?>/';
+    
+    // Calendar Function
+    let subfieldCalendar = null;
+
+    function openSubfieldCalendar(subfieldId, subfieldName, targetDate = null) {
+        document.getElementById('calendarSubfieldName').innerText = subfieldName;
+        var modal = new bootstrap.Modal(document.getElementById('subfieldCalendarModal'));
+        modal.show();
+        
+        // Init FullCalendar
+        setTimeout(() => {
+            var calendarEl = document.getElementById('subfieldCalendar');
+            
+            if(subfieldCalendar) {
+                subfieldCalendar.destroy();
+            }
+
+            subfieldCalendar = new FullCalendar.Calendar(calendarEl, {
+              initialView: targetDate ? 'timeGridDay' : 'dayGridMonth',
+              initialDate: targetDate ? targetDate : undefined,
+              locale: 'th',
+              navLinks: true, // Enable clickable date headings
+              navLinkDayClick: 'timeGridDay', // Switch to day view on click
+              headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,timeGridDay'
+              },
+              buttonText: {
+                today: 'วันนี้',
+                month: 'เดือน',
+                week: 'สัปดาห์',
+                day: 'วัน',
+                list: 'รายการ'
+              },
+              events: '<?= base_url('owner/calendar/events') ?>?subfield_id=' + subfieldId,
+              height: 600,
+              eventClick: function(info) {
+                  // Optional: Show details ?
+              }
+            });
+            subfieldCalendar.render();
+            
+            if (targetDate) {
+                subfieldCalendar.gotoDate(targetDate);
+            }
+        }, 200); // Wait for modal slide
+    }
+
 </script>
 <script src="<?= base_url('assets/vendors_js/owner_stadium_view.js') ?>?v=<?= time() ?>"></script>
 

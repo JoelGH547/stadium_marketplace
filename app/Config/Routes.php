@@ -107,4 +107,14 @@ $routes->group('owner', ['namespace' => 'App\Controllers\Owner'], function($rout
 
 
 
+    // Bookings
+    $routes->get('bookings', 'Bookings::index');
+    $routes->post('bookings/approve/(:num)', 'Bookings::approve/$1');
+    $routes->post('bookings/reject/(:num)', 'Bookings::reject/$1');
+    $routes->get('bookings/detail/(:num)', 'Bookings::detail/$1');
+
+    // Calendar
+    $routes->get('calendar', 'Calendar::index');
+    $routes->get('calendar/events', 'Calendar::getEvents');
+
 });

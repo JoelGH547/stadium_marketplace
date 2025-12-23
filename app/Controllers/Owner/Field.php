@@ -399,11 +399,20 @@ public function view($id)
     // 4) Types for Dropdown
     $facilityTypes = $facilityTypeModel->findAll();
 
+    // 5) รายการจองของสนามนี้
+    $bookingModel = new \App\Models\BookingModel();
+    // Use the existing proven method and filter in PHP to avoid query errors
+    $allBookings = $bookingModel->getAllBookings();
+    $bookings = array_filter($allBookings, function($b) use ($id) {
+        return $b['stadium_id'] == $id;
+    });
+
     return view('owner/fields/view', [
         'stadium'   => $stadium,
         'subfields' => $subfields,
         'items'     => $items,
-        'facility_types' => $facilityTypes
+        'facility_types' => $facilityTypes,
+        'bookings'  => $bookings
     ]);
 }
 

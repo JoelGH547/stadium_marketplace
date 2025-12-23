@@ -65,6 +65,10 @@
                             <i class="fas fa-boxes me-1"></i> จัดการสินค้า
                         </a>
 
+                        <a href="javascript:void(0)" onclick="openSubfieldCalendar(<?= $sf['id'] ?>, '<?= esc($sf['name']) ?>')" class="btn btn-outline-primary btn-sm me-2">
+                            <i class="fas fa-calendar-alt me-1"></i> ตารางจอง
+                        </a>
+
                         <!-- ปุ่มลบ -->
                         <a href="<?= base_url('owner/fields/subfields/'.$stadium['id'].'/delete/'.$sf['id']) ?>"
                         class="btn btn-outline-danger btn-sm"
