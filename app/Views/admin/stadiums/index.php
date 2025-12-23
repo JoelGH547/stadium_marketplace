@@ -228,39 +228,38 @@
                     "next": "ถัดไป",
                     "previous": "ก่อนหน้า"
                 }
+            },
+            "ordering": false // ปรับให้สอดคล้องกับหน้าจัดการรีวิว (ถ้าต้องการให้เรียงตาม ID ล่าสุดจาก Server)
+        });
+
+        // Custom "Starts With" filter logic for Stadium Table
+        $.fn.dataTable.ext.search.push(
+            function(settings, data, dataIndex) {
+                // Apply only to this specific table
+                if (settings.nTable.id !== 'stadiumTable') return true;
+                
+                var searchTerm = $('#searchInput').val().toLowerCase().trim();
+                if (!searchTerm) return true;
+
+                // Column 1 is ID (#), Column 3 is Stadium Name
+                var idValue = data[1].toLowerCase().trim();
+                var stadiumName = data[3].toLowerCase().trim();
+
+                // Match if either column STARTS WITH the search term
+                return idValue.indexOf(searchTerm) === 0 || stadiumName.indexOf(searchTerm) === 0;
             }
+        );
+
+        // Bind keyup event to trigger redraw
+        $('#searchInput').on('keyup', function() {
+            table.draw();
         });
 
-        // Live Search Logic
-        var searchInput = $('#searchInput');
-        
-        // Apply initial search from server-side param if exists
-        if(searchInput.val()) {
-            table.column(2).search(searchInput.val()).draw();
-        }
-
-        // Helper to escape regex special characters
-        function escapeRegExp(string) {
-            return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        }
-
-        // Bind keyup event
-        searchInput.on('keyup', function() {
-             var val = this.value;
-             if (val) {
-                 // Use Regex for strict "Starts With" search
-                 var escapedVal = escapeRegExp(val);
-                 var regex = '^' + escapedVal; 
-                 table.column(2).search(regex, true, false).draw();
-             } else {
-                 table.column(2).search('').draw();
-             }
-        });
-
-        // Prevent form submission on enter in search box (optional, effectively pure JS search)
-        searchInput.on('keypress', function(e) {
+        // Prevent form submission on enter in search box
+        $('#searchInput').on('keypress', function(e) {
             if(e.which == 13) {
                 e.preventDefault();
+                table.draw();
                 return false;
             }
         });
