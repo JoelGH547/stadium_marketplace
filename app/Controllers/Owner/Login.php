@@ -34,6 +34,11 @@ class Login extends BaseController
             return redirect()->back()->with('error', 'รหัสผ่านไม่ถูกต้อง');
         }
 
+        // ตรวจสถานะการอนุมัติ
+        if ($owner['status'] !== 'approved') {
+            return redirect()->back()->with('error', 'บัญชีของคุณอยู่ระหว่างการตรวจสอบ (Pending Approval)');
+        }
+
         // ตั้งค่า session
         session()->set([
             'owner_id'    => $owner['id'],

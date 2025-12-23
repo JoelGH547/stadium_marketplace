@@ -66,7 +66,7 @@
                                 </td>
                                 
                                 <td><small class="text-muted"><?= esc($stadium['vendor_name']) ?></small></td>
-                                <td class="fw-bold text-success text-end">฿<?= number_format($stadium['price'], 0) ?></td>
+                                <td class="fw-bold text-success text-end">฿<?= number_format($stadium['price'] ?? 0, 0) ?></td>
                                 
                                 <!-- ปุ่ม Map -->
                                 <td class="text-center">

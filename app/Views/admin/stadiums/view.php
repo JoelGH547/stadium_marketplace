@@ -91,7 +91,7 @@
 
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <span class="text-muted">ราคา/ชั่วโมง</span>
-                        <span class="h4 font-weight-bold text-success mb-0">฿<?= number_format($stadium['price'], 0) ?></span>
+                        <span class="h4 font-weight-bold text-success mb-0">฿<?= number_format($stadium['price'] ?? 0, 0) ?></span>
                     </div>
 
                     <ul class="list-group list-group-flush small">

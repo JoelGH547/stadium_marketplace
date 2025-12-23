@@ -71,7 +71,7 @@
         <input type="number" step="0.01"
                id="price" name="price"
                class="form-control"
-               value="<?= old('price', $stadium['price']) ?>" required>
+               value="<?= old('price', $stadium['price'] ?? '') ?>" required>
     </div>
 
     <div class="form-group">

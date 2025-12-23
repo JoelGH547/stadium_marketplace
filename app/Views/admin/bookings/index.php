@@ -36,12 +36,12 @@
                             <tr>
                                 <td class="text-center fw-bold">#<?= $row['id'] ?></td>
                                 <td>
-                                    <div class="fw-bold text-dark"><?= esc($row['customer_name']) ?></div>
+                                    <div class="fw-bold text-dark"><?= esc($row['customer_name'] ?? 'Unknown') ?></div>
                                     <small class="text-muted"><i class="fas fa-phone-alt fa-xs me-1"></i><?= esc($row['customer_phone'] ?? '-') ?></small>
                                 </td>
                                 <td>
-                                    <div class="text-primary fw-bold"><?= esc($row['stadium_name']) ?></div>
-                                    <small class="text-muted">By: <?= esc($row['vendor_name']) ?></small>
+                                    <div class="text-primary fw-bold"><?= esc($row['stadium_name'] ?? '-') ?></div>
+                                    <small class="text-muted">By: <?= esc($row['vendor_name'] ?? '-') ?></small>
                                 </td>
                                 <td>
                                     <div><?= date('d/m/Y', strtotime($row['booking_start_time'])) ?></div>
@@ -49,7 +49,7 @@
                                         <?= date('H:i', strtotime($row['booking_start_time'])) ?> - <?= date('H:i', strtotime($row['booking_end_time'])) ?>
                                     </small>
                                 </td>
-                                <td class="fw-bold text-success">฿<?= number_format($row['total_price'], 0) ?></td>
+                                <td class="fw-bold text-success">฿<?= number_format($row['total_price'] ?? 0, 0) ?></td>
                                 
                                 <td>
                                     <?php 

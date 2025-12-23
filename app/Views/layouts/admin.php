@@ -166,12 +166,16 @@
                 </a>
             </li>
 
+
+
+            <!-- Start Booking Routes -->
             <li class="nav-item">
                 <a href="<?= base_url('admin/bookings') ?>" 
                    class="nav-link <?= (strpos($currentUrl, 'bookings') !== false) ? 'active-menu' : '' ?>">
                     <div><i class="fas fa-calendar-check"></i> จัดการการจอง</div>
                 </a>
             </li>
+            <!-- End Booking Routes -->
 
             <?php 
                 $isUserMenu = (strpos($currentUrl, 'admin/users') !== false || strpos($currentUrl, 'admin/vendors/pending') !== false);

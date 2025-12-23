@@ -38,7 +38,7 @@
                     <td><?= esc($vendor['username']) ?></td>
                     <td><?= esc($vendor['vendor_name']) ?></td>
                     <td><?= esc($vendor['email']) ?></td>
-                    <td><?= esc($vendor['phone_number']) ?></td>
+                    <td><?= esc($vendor['phone_number'] ?? '-') ?></td>
                     <td><?= esc($vendor['created_at']) ?></td>
                     <td>
                         <!-- 2. ⬇️ (แก้ไข) เพิ่ม 'style' บังคับสีเขียว ⬇️ -->

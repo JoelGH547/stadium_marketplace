@@ -18,31 +18,46 @@ $routes->post('admin/login', 'admin\AdminAuthController::processLogin');
 $routes->get('admin/logout', 'admin\AdminAuthController::logout');
 
 $routes->group('admin', ['filter' => ['auth', 'admin']], static function ($routes) {
-    $routes->get('dashboard', 'admin\DashboardController::index');
+    $routes->get('dashboard', 'Admin\DashboardController::index');
 
     // Category CRUD
-    $routes->get('categories', 'admin\CategoryController::index');
-    $routes->get('categories/new', 'admin\CategoryController::new');
-    $routes->post('categories/create', 'admin\CategoryController::create');
-    $routes->get('categories/edit/(:num)', 'admin\CategoryController::edit/$1');
-    $routes->post('categories/update/(:num)', 'admin\CategoryController::update/$1');
-    $routes->get('categories/delete/(:num)', 'admin\CategoryController::delete/$1');
+    $routes->get('categories', 'Admin\CategoryController::index');
+    $routes->get('categories/new', 'Admin\CategoryController::new');
+    $routes->post('categories/create', 'Admin\CategoryController::create');
+    $routes->get('categories/edit/(:num)', 'Admin\CategoryController::edit/$1');
+    $routes->post('categories/update/(:num)', 'Admin\CategoryController::update/$1');
+    $routes->get('categories/delete/(:num)', 'Admin\CategoryController::delete/$1');
 
     // Stadium (Admin) CRUD
-    $routes->get('stadiums', 'admin\StadiumController::index');
-    $routes->get('stadiums/create', 'admin\StadiumController::create');
-    $routes->post('stadiums', 'admin\StadiumController::store');
-    $routes->get('stadiums/edit/(:num)', 'admin\StadiumController::edit/$1');
-    $routes->post('stadiums/update/(:num)', 'admin\StadiumController::update/$1');
-    $routes->get('stadiums/delete/(:num)', 'admin\StadiumController::delete/$1');
+    $routes->get('stadiums', 'Admin\StadiumController::index');
+    $routes->get('stadiums/create', 'Admin\StadiumController::create');
+    $routes->post('stadiums', 'Admin\StadiumController::store');
+    $routes->get('stadiums/edit/(:num)', 'Admin\StadiumController::edit/$1');
+    $routes->post('stadiums/update/(:num)', 'Admin\StadiumController::update/$1');
+    $routes->get('stadiums/delete/(:num)', 'Admin\StadiumController::delete/$1');
+
+    // Booking Management
+    $routes->get('bookings', 'Admin\BookingController::index');
+    $routes->get('bookings/approve/(:num)', 'Admin\BookingController::approve/$1');
+    $routes->get('bookings/cancel/(:num)', 'Admin\BookingController::cancel/$1');
     
-    // User Management (3 Roles)
-    $routes->get('users', 'admin\UserController::index');
-    $routes->get('users/create', 'admin\UserController::create');
-    $routes->post('users', 'admin\UserController::store');
-    $routes->get('users/edit/(:segment)/(:num)', 'admin\UserController::edit/$1/$2');
-    $routes->post('users/update/(:segment)/(:num)', 'admin\UserController::update/$1/$2');
-    $routes->get('users/delete/(:segment)/(:num)', 'admin\UserController::delete/$1/$2');
+    // User Management
+    $routes->get('users/admins', 'Admin\UserController::admins');
+    $routes->get('users/vendors', 'Admin\UserController::vendors');
+    $routes->get('users/customers', 'Admin\UserController::customers');
+    $routes->get('users/new_customers', 'Admin\UserController::newCustomers');
+
+    // Vendor Approval
+    $routes->get('vendors/pending', 'Admin\UserController::pendingList');
+    $routes->get('vendors/approve/(:num)', 'Admin\UserController::approveVendor/$1');
+    $routes->get('vendors/reject/(:num)', 'Admin\UserController::rejectVendor/$1');
+
+    // CRUD Generic (Role specified as segment)
+    $routes->get('users/create/(:segment)', 'Admin\UserController::create/$1');
+    $routes->post('users/store/(:segment)', 'Admin\UserController::store/$1');
+    $routes->get('users/edit/(:segment)/(:num)', 'Admin\UserController::edit/$1/$2');
+    $routes->post('users/update/(:segment)/(:num)', 'Admin\UserController::update/$1/$2');
+    $routes->get('users/delete/(:segment)/(:num)', 'Admin\UserController::delete/$1/$2');
 });
 
 //vendor
