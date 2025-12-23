@@ -94,17 +94,15 @@ class Field extends BaseController
         if (!$inside || count($inside) < 1)
             return redirect()->back()->with('error','ต้องมีรูปภายในอย่างน้อย 1 รูป');
 
-        $path_out = 'uploads/stadiums/outside/';
-        $path_in  = 'uploads/stadiums/inside/';
+        $path = 'assets/uploads/stadiums/';
 
-        if (!is_dir($path_out)) mkdir($path_out, 0777, true);
-        if (!is_dir($path_in))  mkdir($path_in, 0777, true);
+        if (!is_dir($path)) mkdir($path, 0777, true);
 
         $outsideList = [];
         foreach ($outside as $file) {
             if ($file->isValid()) {
                 $name = $file->getRandomName();
-                $file->move($path_out, $name);
+                $file->move($path, $name);
                 $outsideList[] = $name;
             }
         }
@@ -113,7 +111,7 @@ class Field extends BaseController
         foreach ($inside as $file) {
             if ($file->isValid()) {
                 $name = $file->getRandomName();
-                $file->move($path_in, $name);
+                $file->move($path, $name);
                 $insideList[] = $name;
             }
         }
@@ -277,13 +275,13 @@ class Field extends BaseController
         $insideOld  = json_decode($stadium['inside_images'], true) ?? [];
 
         foreach ($deleteOutside as $name) {
-            $file = FCPATH . 'uploads/stadiums/outside/' . $name;
+            $file = FCPATH . 'assets/uploads/stadiums/' . $name;
             if (file_exists($file)) unlink($file);
             $outsideOld = array_filter($outsideOld, fn($i)=>$i!=$name);
         }
 
         foreach ($deleteInside as $name) {
-            $file = FCPATH . 'uploads/stadiums/inside/' . $name;
+            $file = FCPATH . 'assets/uploads/stadiums/' . $name;
             if (file_exists($file)) unlink($file);
             $insideOld = array_filter($insideOld, fn($i)=>$i!=$name);
         }
@@ -297,7 +295,7 @@ class Field extends BaseController
         foreach ($outsideNew as $file) {
             if ($file->isValid()) {
                 $new = $file->getRandomName();
-                $file->move('uploads/stadiums/outside/', $new);
+                $file->move('assets/uploads/stadiums/', $new);
                 $outsideOld[] = $new;
             }
         }
@@ -305,7 +303,7 @@ class Field extends BaseController
         foreach ($insideNew as $file) {
             if ($file->isValid()) {
                 $new = $file->getRandomName();
-                $file->move('uploads/stadiums/inside/', $new);
+                $file->move('assets/uploads/stadiums/', $new);
                 $insideOld[] = $new;
             }
         }
@@ -340,12 +338,12 @@ class Field extends BaseController
     $inside  = json_decode($stadium['inside_images'], true) ?? [];
 
     foreach ($outside as $img) {
-        $file = FCPATH . 'uploads/stadiums/outside/' . $img;
+        $file = FCPATH . 'assets/uploads/stadiums/' . $img;
         if (file_exists($file)) unlink($file);
     }
 
     foreach ($inside as $img) {
-        $file = FCPATH . 'uploads/stadiums/inside/' . $img;
+        $file = FCPATH . 'assets/uploads/stadiums/' . $img;
         if (file_exists($file)) unlink($file);
     }
 

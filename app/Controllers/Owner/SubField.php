@@ -62,7 +62,7 @@ class Subfield extends BaseController
             foreach ($files['outside_images'] as $img) {
                 if ($img->isValid() && !$img->hasMoved()) {
                     $newName = $img->getRandomName();
-                    $img->move('uploads/subfields/', $newName);
+                    $img->move('assets/uploads/fields/', $newName);
                     $outsideImages[] = $newName;
                 }
             }
@@ -74,7 +74,7 @@ class Subfield extends BaseController
             foreach ($files['inside_images'] as $img) {
                 if ($img->isValid() && !$img->hasMoved()) {
                     $newName = $img->getRandomName();
-                    $img->move('uploads/subfields/', $newName);
+                    $img->move('assets/uploads/fields/', $newName);
                     $insideImages[] = $newName;
                 }
             }
@@ -160,7 +160,7 @@ class Subfield extends BaseController
         // Delete images
         $images = json_decode($sub['outside_images'], true) ?? [];
         foreach ($images as $img) {
-            $path = FCPATH . 'uploads/subfields/' . $img;
+            $path = FCPATH . 'assets/uploads/fields/' . $img;
             if (file_exists($path)) {
                 unlink($path);
             }
@@ -210,7 +210,7 @@ class Subfield extends BaseController
         $deleteOutside = $this->request->getPost('delete_outside_images') ?? [];
         
         foreach ($deleteOutside as $delImg) {
-            $path = FCPATH . 'uploads/subfields/' . $delImg;
+            $path = FCPATH . 'assets/uploads/fields/' . $delImg;
             if (file_exists($path)) @unlink($path);
             $currentOutside = array_filter($currentOutside, fn($i) => $i !== $delImg);
         }
@@ -220,7 +220,7 @@ class Subfield extends BaseController
             foreach ($files['outside_images'] as $img) {
                 if ($img->isValid() && !$img->hasMoved()) {
                     $newName = $img->getRandomName();
-                    $img->move('uploads/subfields/', $newName);
+                    $img->move('assets/uploads/fields/', $newName);
                     $currentOutside[] = $newName;
                 }
             }
@@ -231,7 +231,7 @@ class Subfield extends BaseController
         $deleteInside = $this->request->getPost('delete_inside_images') ?? [];
 
         foreach ($deleteInside as $delImg) {
-            $path = FCPATH . 'uploads/subfields/' . $delImg;
+            $path = FCPATH . 'assets/uploads/fields/' . $delImg;
             if (file_exists($path)) @unlink($path);
             $currentInside = array_filter($currentInside, fn($i) => $i !== $delImg);
         }
@@ -240,7 +240,7 @@ class Subfield extends BaseController
             foreach ($files['inside_images'] as $img) {
                 if ($img->isValid() && !$img->hasMoved()) {
                     $newName = $img->getRandomName();
-                    $img->move('uploads/subfields/', $newName);
+                    $img->move('assets/uploads/fields/', $newName);
                     $currentInside[] = $newName;
                 }
             }

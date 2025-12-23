@@ -97,7 +97,7 @@
 
                 <!-- รูป -->
                 <div class="flex-shrink-0">
-                    <img src="<?= base_url('uploads/stadiums/outside/'.$thumbnail) ?>" alt="<?= esc($s['name']) ?>">
+                    <img src="<?= base_url('assets/uploads/stadiums/'.$thumbnail) ?>" alt="<?= esc($s['name']) ?>">
                 </div>
 
                 <div class="flex-grow-1 ms-4">

@@ -65,7 +65,7 @@ function openSubfieldModal(id) {
                 if (imgs.length > 0) {
                     html += `<h6 class="text-start small fw-bold text-muted mt-2">${label}</h6><div class="d-flex flex-wrap gap-2 justify-content-center">`;
                     imgs.forEach(img => {
-                        html += `<img src="${SITE_URL}uploads/subfields/${img}" class="img-thumbnail" style="height: 120px; object-fit: cover;">`;
+                        html += `<img src="${SITE_URL}assets/uploads/fields/${img}" class="img-thumbnail" style="height: 120px; object-fit: cover;">`;
                     });
                     html += `</div>`;
                 }
@@ -97,7 +97,7 @@ function openSubfieldModal(id) {
                     imgs.forEach(img => {
                         html += `
                         <div class="col-4 text-center">
-                            <img src="${SITE_URL}uploads/subfields/${img}" class="img-thumbnail mb-1" style="height: 60px; object-fit: cover;">
+                            <img src="${SITE_URL}assets/uploads/fields/${img}" class="img-thumbnail mb-1" style="height: 60px; object-fit: cover;">
                             <div class="form-check small">
                                 <input class="form-check-input" type="checkbox" name="${deleteInputName}" value="${img}" id="del_${img}">
                                 <label class="form-check-label text-danger" style="font-size: 0.7rem;" for="del_${img}">ลบ</label>
@@ -132,7 +132,7 @@ function openSubfieldModal(id) {
                 facilities.forEach(item => {
                     let imgHtml = '';
                     if (item.image) {
-                        imgHtml = `<img src="${SITE_URL}uploads/items/${item.image}" class="rounded shadow-sm me-3" style="width: 60px; height: 60px; object-fit: cover;">`;
+                        imgHtml = `<img src="${SITE_URL}assets/uploads/items/${item.image}" class="rounded shadow-sm me-3" style="width: 60px; height: 60px; object-fit: cover;">`;
                     } else {
                         imgHtml = `<div class="rounded bg-light d-flex align-items-center justify-content-center me-3" style="width: 60px; height: 60px;"><i class="fas fa-box text-muted"></i></div>`;
                     }
@@ -159,7 +159,7 @@ function openSubfieldModal(id) {
                     editHtml += `
                     <div class="d-flex justify-content-between align-items-center border-bottom py-2">
                         <div class="d-flex align-items-center">
-                            ${item.image ? `<img src="${SITE_URL}uploads/items/${item.image}" class="rounded me-2" style="width: 30px; height: 30px;">` : ''}
+                            ${item.image ? `<img src="${SITE_URL}assets/uploads/items/${item.image}" class="rounded me-2" style="width: 30px; height: 30px;">` : ''}
                             <div>
                                 <div class="fw-bold small">${item.name}</div>
                                 <div class="text-muted" style="font-size: 0.75rem;">${item.price} บ.</div>
@@ -471,7 +471,7 @@ function openItemModal(id) {
             // Image
             let imgHtml = '';
             if (item.image) {
-                imgHtml = `<img src="${SITE_URL}uploads/items/${item.image}" class="img-fluid rounded shadow-sm" style="max-height: 250px;">`;
+                imgHtml = `<img src="${SITE_URL}assets/uploads/items/${item.image}" class="img-fluid rounded shadow-sm" style="max-height: 250px;">`;
             } else {
                 imgHtml = `<div class="text-muted p-4 bg-light rounded">ไม่มีรูปภาพ</div>`;
             }
@@ -645,7 +645,7 @@ function renderManageItemsTable(items) {
 
     let html = '';
     items.forEach(item => {
-        const img = item.image ? SITE_URL + 'uploads/items/' + item.image : SITE_URL + 'uploads/no-image.png';
+        const img = item.image ? SITE_URL + 'assets/uploads/items/' + item.image : SITE_URL + 'assets/uploads/no-image.png';
         const itemId = item.item_id || item.id;
         const isChecked = (item.status === 'active') ? 'checked' : '';
 

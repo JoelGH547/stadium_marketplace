@@ -183,7 +183,7 @@
                 foreach($outsideOld as $img): 
             ?>
                 <div class="text-center me-3 mb-3">
-                    <img src="<?= base_url('uploads/stadiums/outside/'.$img) ?>" class="img-thumb"><br>
+                    <img src="<?= base_url('assets/uploads/stadiums/'.$img) ?>" class="img-thumb"><br>
                     <label class="mt-2">
                         <input type="checkbox" name="delete_outside[]" value="<?= esc($img) ?>"> ลบรูปนี้
                     </label>
@@ -204,7 +204,7 @@
                 foreach($insideOld as $img): 
             ?>
                 <div class="text-center me-3 mb-3">
-                    <img src="<?= base_url('uploads/stadiums/inside/'.$img) ?>" class="img-thumb"><br>
+                    <img src="<?= base_url('assets/uploads/stadiums/'.$img) ?>" class="img-thumb"><br>
                     <label class="mt-2">
                         <input type="checkbox" name="delete_inside[]" value="<?= esc($img) ?>"> ลบรูปนี้
                     </label>

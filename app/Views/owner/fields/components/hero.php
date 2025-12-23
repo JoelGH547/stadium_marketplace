@@ -1,6 +1,6 @@
 <?php 
     $outsideImages = json_decode($stadium['outside_images'] ?? '[]', true);
-    $heroImage = (!empty($outsideImages)) ? base_url('uploads/stadiums/outside/' . $outsideImages[0]) : base_url('uploads/no-image.png');
+    $heroImage = (!empty($outsideImages)) ? base_url('assets/uploads/stadiums/' . $outsideImages[0]) : base_url('assets/uploads/no-image.png');
 ?>
 
 <!-- Hero Banner -->

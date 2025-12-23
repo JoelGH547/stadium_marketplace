@@ -24,7 +24,7 @@
                                 ? $imgList[0]
                                 : 'no-image.png';
 
-                            $imgPath = base_url('uploads/subfields/' . $firstImg);
+                            $imgPath = base_url('assets/uploads/fields/' . $firstImg);
                         ?>
 
                         <!-- รูปสนามย่อย -->
