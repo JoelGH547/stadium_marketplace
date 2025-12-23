@@ -32,6 +32,7 @@
                             <th>ชื่อสนาม/ร้านค้า</th>
                             <th>Email</th>
                             <th>เบอร์โทร</th>
+                            <th width="10%">สถานะ</th>
                             <th width="18%">จัดการ</th>
                         </tr>
                     </thead>
@@ -44,6 +45,17 @@
                                 <td class="fw-bold"><?= esc($user['vendor_name']) ?></td>
                                 <td><?= esc($user['email']) ?></td>
                                 <td><?= esc($user['phone_number'] ?? '-') ?></td>
+                                <td class="text-center">
+                                    <?php if (($user['status'] ?? 'approved') === 'approved'): ?>
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle px-2">
+                                            <i class="fas fa-check-circle me-1"></i> Approved
+                                        </span>
+                                    <?php else: ?>
+                                        <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-2">
+                                            <i class="fas fa-clock me-1"></i> Pending
+                                        </span>
+                                    <?php endif; ?>
+                                </td>
                                 <td>
                                     <div class="d-flex gap-1 justify-content-center">
                                         <a href="<?= base_url('admin/users/edit/vendors/' . $user['id']) ?>" class="btn btn-warning btn-sm" title="แก้ไข">
@@ -73,7 +85,7 @@
                             <?php endforeach; ?>
                         <?php else: ?>
                             <tr>
-                                <td colspan="6" class="text-center text-muted py-5">
+                                <td colspan="7" class="text-center text-muted py-5">
                                     <i class="fas fa-store-slash fa-3x mb-3 d-block opacity-50"></i>
                                     ไม่พบข้อมูล Vendor
                                 </td>
@@ -122,10 +134,6 @@
                             <td id="view_bank" class="text-dark"></td>
                         </tr>
                         <tr>
-                            <th class="text-muted">สถานะ:</th>
-                            <td id="view_status"></td>
-                        </tr>
-                        <tr>
                             <th class="text-muted">วันที่สมัคร:</th>
                             <td id="view_created" class="small text-secondary"></td>
                         </tr>
@@ -160,7 +168,6 @@
             $('#view_phone').text(phone);
             $('#view_tax').text(tax);
             $('#view_bank').text(bank);
-            $('#view_status').html(status === 'approved' ? '<span class="badge bg-success">Approved</span>' : '<span class="badge bg-warning text-dark">Pending</span>');
             $('#view_created').text(created);
 
             
