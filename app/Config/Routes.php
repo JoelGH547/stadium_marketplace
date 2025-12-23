@@ -14,7 +14,7 @@ use CodeIgniter\Router\RouteCollection;
 
 // เข้าเว็บครั้งแรก → ไปหน้า admin login
 $routes->get('/', static function () {
-    return redirect()->to('/admin/login');
+    return redirect()->to('/sport');
 });
 
 $routes->get('customer/login',  'customer\CustomerAuthController::login');
