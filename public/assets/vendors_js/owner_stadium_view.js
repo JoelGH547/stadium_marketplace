@@ -607,8 +607,13 @@ function submitAddItem() {
 function openManageItemsModal(subId) {
     if (!subId) return;
 
-    // Reset Form
+    // Reset Form & Edit Mode
     document.getElementById('formAddManageItem').reset();
+    document.getElementById('manageItemEditId').value = '';
+    document.getElementById('manageItemFormTitle').innerHTML = '<i class="fas fa-plus-circle me-1"></i> เพิ่มสินค้าใหม่';
+    document.getElementById('btnSaveManageItem').innerHTML = '<i class="fas fa-save me-1"></i> บันทึกสินค้า';
+    document.getElementById('btnCancelManageItem').style.display = 'none';
+
     document.getElementById('manageItemsSubfieldId').value = subId;
     document.getElementById('manageItemsTableBody').innerHTML = '<tr><td colspan="5" class="text-center">กำลังโหลด...</td></tr>';
     document.getElementById('manageItemsSubfieldName').innerText = '...';
@@ -664,9 +669,14 @@ function renderManageItemsTable(items) {
                 </div>
             </td>
             <td class="text-center">
-                <button class="btn btn-outline-danger btn-sm rounded-pill px-3" onclick="deleteManageItem(${itemId})">
-                    <i class="fas fa-trash me-1"></i> ลบ
-                </button>
+                <div class="d-flex justify-content-center gap-2">
+                    <button class="btn btn-outline-warning btn-sm rounded-pill px-3" onclick="prepareEditManageItem(${itemId})">
+                        <i class="fas fa-edit me-1"></i> แก้ไข
+                    </button>
+                    <button class="btn btn-outline-danger btn-sm rounded-pill px-3" onclick="deleteManageItem(${itemId})">
+                        <i class="fas fa-trash me-1"></i> ลบ
+                    </button>
+                </div>
             </td>
         </tr>
         `;
@@ -719,7 +729,13 @@ function submitManageItem() {
 
     if (typeof STADIUM_ID === 'undefined') { alert('System Error: STADIUM_ID missing'); return; }
 
-    fetch(SITE_URL + 'owner/items/store/' + STADIUM_ID, {
+    const editId = document.getElementById('manageItemEditId').value;
+    let url = SITE_URL + 'owner/items/store/' + STADIUM_ID;
+    if (editId) {
+        url = SITE_URL + 'owner/items/update/' + editId;
+    }
+
+    fetch(url, {
         method: 'POST',
         body: formData,
         headers: { 'X-Requested-With': 'XMLHttpRequest' }
@@ -727,12 +743,17 @@ function submitManageItem() {
         .then(res => res.json())
         .then(data => {
             if (data.success) {
-                // Clear Form inputs but keep subfieldId
-                document.getElementById('manageItemName').value = '';
-                document.getElementById('manageItemPrice').value = '';
-                document.getElementById('manageItemUnit').value = '';
-                document.getElementById('manageItemDesc').value = '';
-                document.getElementById('manageItemImage').value = '';
+                if (editId) {
+                    alert('แก้ไขข้อมูลเรียบร้อย');
+                    cancelManageItemEdit();
+                } else {
+                    // Clear Form inputs but keep subfieldId
+                    document.getElementById('manageItemName').value = '';
+                    document.getElementById('manageItemPrice').value = '';
+                    document.getElementById('manageItemUnit').value = '';
+                    document.getElementById('manageItemDesc').value = '';
+                    document.getElementById('manageItemImage').value = '';
+                }
 
                 // Refresh Table
                 fetch(SITE_URL + 'owner/subfields/detail/' + subId)
@@ -768,4 +789,39 @@ function deleteManageItem(itemId) {
             }
         })
         .catch(err => console.error(err));
+}
+
+function prepareEditManageItem(itemId) {
+    // Fetch item detail
+    fetch(SITE_URL + 'owner/items/detail/' + itemId)
+        .then(res => res.json())
+        .then(data => {
+            if (data.error) { alert(data.error); return; }
+            const item = data.item;
+
+            document.getElementById('manageItemEditId').value = item.id;
+            document.getElementById('manageItemName').value = item.name;
+            document.getElementById('manageItemPrice').value = item.price;
+            document.getElementById('manageItemUnit').value = item.unit;
+            document.getElementById('manageItemType').value = item.facility_type_id;
+            document.getElementById('manageItemDesc').value = item.description || '';
+
+            // Change UI
+            document.getElementById('manageItemFormTitle').innerHTML = '<i class="fas fa-edit me-1"></i> แก้ไขสินค้า';
+            document.getElementById('btnSaveManageItem').innerHTML = '<i class="fas fa-save me-1"></i> บันทึกการเปลี่ยนแปลง';
+            document.getElementById('btnCancelManageItem').style.display = 'inline-block';
+
+            // Scroll to form
+            document.getElementById('formAddManageItem').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        })
+        .catch(err => console.error(err));
+}
+
+function cancelManageItemEdit() {
+    document.getElementById('formAddManageItem').reset();
+    document.getElementById('manageItemEditId').value = '';
+
+    document.getElementById('manageItemFormTitle').innerHTML = '<i class="fas fa-plus-circle me-1"></i> เพิ่มสินค้าใหม่';
+    document.getElementById('btnSaveManageItem').innerHTML = '<i class="fas fa-save me-1"></i> บันทึกสินค้า';
+    document.getElementById('btnCancelManageItem').style.display = 'none';
 }

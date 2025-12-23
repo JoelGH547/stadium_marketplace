@@ -154,6 +154,7 @@ class Items extends BaseController
         }
 
         $itemModel = new VendorItemModel();
+        $stadiumFacilityModel = new StadiumFacilityModel();
         $item = $itemModel->find($item_id);
 
         if (!$item) {

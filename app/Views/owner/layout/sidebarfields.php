@@ -20,6 +20,19 @@ $stadiums = $stadiumModel
 
     <!-- รายชื่อสนาม -->
     <div class="sidebar-content">
+        <ul class="nav flex-column mb-3">
+            <li class="nav-item">
+                <a href="<?= base_url('owner/bookings') ?>" class="nav-link stadium-item text-dark">
+                    <i class="fas fa-list-alt me-2"></i> รายการจอง
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="<?= base_url('owner/calendar') ?>" class="nav-link stadium-item text-dark">
+                    <i class="fas fa-calendar-alt me-2"></i> ปฏิทิน
+                </a>
+            </li>
+        </ul>
+        <hr class="mx-3 my-1">
         <ul class="nav flex-column stadium-list">
 
             <?php if (!empty($stadiums) && is_array($stadiums)): ?>

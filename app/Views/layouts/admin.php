@@ -134,6 +134,9 @@
                 </a>
             </li>
 
+
+
+            <!-- Start Booking Routes -->
             <li class="nav-item">
                 <a href="<?= base_url('admin/vendor-items') ?>" class="nav-link <?= (strpos($currentUrl, 'vendor-items') !== false) ? 'active-menu' : '' ?>">
                     <div><i class="fas fa-box-open"></i> จัดการสินค้า/บริการเสริม</div>
@@ -144,6 +147,7 @@
                     <div><i class="fas fa-calendar-check"></i> จัดการการจอง</div>
                 </a>
             </li>
+            <!-- End Booking Routes -->
 
             <?php $isUserMenu = (strpos($currentUrl, 'admin/users') !== false || strpos($currentUrl, 'admin/vendors/pending') !== false); ?>
             <li class="nav-item">
