@@ -154,6 +154,73 @@ $routes->group('admin', ['filter' => ['admin']], static function ($routes) {
 // --- 3. VENDOR ---
 // ==========================================================
 
-$routes->get('php-version', function () {
-    return phpversion();
+$routes->group('owner', ['namespace' => 'App\Controllers\Owner'], function ($routes) {
+    //welcome
+    $routes->get('welcome', 'Welcome::index');
+
+    // login
+    $routes->get('login', 'Login::index');
+    $routes->post('login', 'Login::auth');
+
+    // register
+    $routes->get('register', 'Register::index');
+    $routes->post('register', 'Register::store');
+
+    // dashboard
+    $routes->get('dashboard', 'Dashboard::index');
+    $routes->get('logout', 'Login::logout');
+
+
+    // ---------- CREATE FIELD ----------
+    $routes->get('fields/step1', 'Field::step1');
+    $routes->post('fields/step1', 'Field::step1_save');
+
+    $routes->get('fields/step2', 'Field::step2');
+    $routes->post('fields/step2', 'Field::step2_save');
+
+    $routes->get('fields/step3', 'Field::step3');
+    $routes->post('fields/step3', 'Field::step3_save');
+
+    $routes->get('fields/step4', 'Field::step4');
+    $routes->post('fields/step4', 'Field::step4_save');
+
+    $routes->get('fields/confirm', 'Field::confirm');
+    $routes->post('fields/store', 'Field::store');
+
+    $routes->get('fields/edit/(:num)', 'Field::edit/$1');
+    $routes->post('fields/update/(:num)', 'Field::update/$1');
+
+    $routes->get('fields/delete/(:num)', 'Field::delete/$1');
+
+    $routes->get('fields/view/(:num)', 'Field::view/$1');
+    $routes->get('fields/subfields/(:num)', 'Subfield::index/$1');
+    $routes->post('fields/subfields/(:num)/create', 'Subfield::create/$1');
+    $routes->get('fields/subfields/(:num)/delete/(:num)', 'Subfield::delete/$1/$2');
+    $routes->get('fields/subfields/toggle/(:num)/(:num)', 'Subfield::toggleStatus/$1/$2');
+
+    // AJAX Subfield Details
+    $routes->get('subfields/detail/(:num)', 'Subfield::getDetail/$1');
+    $routes->post('subfields/facilities/update/(:num)', 'Subfield::updateFacilities/$1');
+    $routes->get('subfields/edit/(:num)', 'Subfield::edit/$1');
+    $routes->post('subfields/update/(:num)', 'Subfield::update/$1');
+    $routes->post('subfields/create/(:num)', 'Subfield::create/$1'); // Added missing route
+
+    $routes->get('items/add/(:num)', 'Items::add/$1');
+    $routes->post('items/store/(:num)', 'Items::store/$1');
+    $routes->get('items/detail/(:num)', 'Items::getDetail/$1');
+    $routes->post('items/update/(:num)', 'Items::update/$1');
+    $routes->get('items/delete/(:num)', 'Items::delete/$1');
+    $routes->get('items/toggleStatus/(:num)', 'Items::toggleStatus/$1');
+
+
+
+    // Bookings
+    $routes->get('bookings', 'Bookings::index');
+    $routes->post('bookings/approve/(:num)', 'Bookings::approve/$1');
+    $routes->post('bookings/reject/(:num)', 'Bookings::reject/$1');
+    $routes->get('bookings/detail/(:num)', 'Bookings::detail/$1');
+
+    // Calendar
+    $routes->get('calendar', 'Calendar::index');
+    $routes->get('calendar/events', 'Calendar::getEvents');
 });

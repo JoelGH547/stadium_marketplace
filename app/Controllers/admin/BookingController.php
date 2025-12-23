@@ -1,4 +1,6 @@
-<?php namespace App\Controllers\Admin;
+<?php
+
+namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
 use App\Models\BookingModel;
@@ -13,7 +15,7 @@ class BookingController extends BaseController
         $this->bookingModel = new BookingModel();
     }
 
-    
+
     public function index()
     {
         $data = [
@@ -23,7 +25,7 @@ class BookingController extends BaseController
         return view('admin/bookings/index', $data);
     }
 
-    
+
     public function updateStatus()
     {
         $id = $this->request->getPost('booking_id');
@@ -36,15 +38,15 @@ class BookingController extends BaseController
         return redirect()->back()->with('error', 'เกิดข้อผิดพลาดในการแก้ไข');
     }
 
-    
+
     public function approve($id)
     {
-        
+
         $this->bookingModel->update($id, ['status' => 'confirmed']);
         return redirect()->back()->with('success', 'อนุมัติรายการเรียบร้อยแล้ว');
     }
 
-    
+
     public function cancel($id)
     {
         $this->bookingModel->update($id, ['status' => 'cancelled']);
@@ -55,11 +57,11 @@ class BookingController extends BaseController
     public function api()
     {
         $fieldId = $this->request->getGet('field_id');
-        
+
         $builder = $this->bookingModel->builder();
         $builder->select('bookings.id, bookings.booking_start_time, bookings.booking_end_time, bookings.status, customers.full_name');
         $builder->join('customers', 'customers.id = bookings.customer_id', 'left');
-        
+
         if ($fieldId) {
             $builder->where('bookings.field_id', $fieldId);
         }
