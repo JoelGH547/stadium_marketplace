@@ -41,6 +41,9 @@
                     <div class="flex flex-wrap items-center gap-2">
                         <h1 class="text-lg sm:text-xl font-semibold text-gray-900">
                             <?= esc($stadium['name']) ?>
+                            <?php if (!empty($stadium['vendor_name'])): ?>
+                                <span class="ml-1 text-sm font-normal text-gray-500">• <?= esc($stadium['vendor_name']) ?></span>
+                            <?php endif; ?>
                         </h1>
                         <span
                             class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700 border border-emerald-100">

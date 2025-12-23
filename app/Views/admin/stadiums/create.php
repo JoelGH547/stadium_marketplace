@@ -70,12 +70,13 @@
 
                 <hr>
 
-                
-                        <label class="fw-bold">Open Time</label>
+                <div class="row">
+                    <div class="col-md-6 form-group mb-3">
+                        <label class="fw-bold">Open Time <small class="text-muted">(รูปแบบ 24 ชม.)</small></label>
                         <input type="time" name="open_time" class="form-control" value="<?= old('open_time') ?>">
                     </div>
                     <div class="col-md-6 form-group mb-3">
-                        <label class="fw-bold">Close Time</label>
+                        <label class="fw-bold">Close Time <small class="text-muted">(รูปแบบ 24 ชม.)</small></label>
                         <input type="time" name="close_time" class="form-control" value="<?= old('close_time') ?>">
                     </div>
                 </div>

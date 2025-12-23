@@ -25,10 +25,10 @@
                     <?php foreach($items as $item): ?>
                         <?php 
                             $img = !empty($item['image']) 
-                                ? base_url('uploads/items/'.$item['image'])
-                                : base_url('uploads/no-image.png');
+                                ? base_url('assets/uploads/items/'.$item['image'])
+                                : base_url('assets/uploads/no-image.png');
                                 
-                            $fieldName = ($item['field_name'] === '_SYSTEM_CATALOG_') ? 'ส่วนกลาง' : esc($item['field_name']);
+                            $fieldName = (empty($item['field_id'])) ? 'ส่วนกลาง' : esc($item['field_name']);
                             
                             $statusClass = ($item['status'] === 'active') ? 'bg-success' : 'bg-secondary';
                             $statusLabel = ($item['status'] === 'active') ? 'ใช้งาน' : 'ระงับ';

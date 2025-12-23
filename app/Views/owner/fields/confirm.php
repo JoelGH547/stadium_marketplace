@@ -111,14 +111,14 @@
     <h5 class="section-title">รูปภายนอกสนาม</h5>
     <div class="d-flex flex-wrap">
       <?php foreach(json_decode(session('outside_images')) as $img): ?>
-        <img src="<?= base_url('uploads/stadiums/outside/'.$img) ?>" class="img-thumb">
+        <img src="<?= base_url('assets/uploads/stadiums/'.$img) ?>" class="img-thumb">
       <?php endforeach; ?>
     </div>
 
     <h5 class="section-title">รูปภายในสนาม</h5>
     <div class="d-flex flex-wrap">
       <?php foreach(json_decode(session('inside_images')) as $img): ?>
-        <img src="<?= base_url('uploads/stadiums/inside/'.$img) ?>" class="img-thumb">
+        <img src="<?= base_url('assets/uploads/stadiums/'.$img) ?>" class="img-thumb">
       <?php endforeach; ?>
     </div>
 

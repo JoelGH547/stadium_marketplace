@@ -90,7 +90,7 @@
                                     <?php if(!empty($booking['slip_image'])): ?>
                                         <button type="button" 
                                                 class="btn btn-sm btn-outline-primary px-3 shadow-sm fw-bold" 
-                                                onclick="viewSlip('<?= base_url('uploads/' . $booking['slip_image']) ?>')"
+                                                onclick="viewSlip('<?= base_url('assets/uploads/' . $booking['slip_image']) ?>')"
                                                 title="ดูสลิปโอนเงิน">
                                             <i class="fas fa-file-invoice me-1"></i> ดูสลิป
                                         </button>

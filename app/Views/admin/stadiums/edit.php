@@ -87,16 +87,16 @@
 
                 <div class="row">
                     <div class="form-group col-md-6 mb-3">
-                        <label for="open_time" class="fw-bold">Open Time</label>
+                        <label for="open_time" class="fw-bold">Open Time <small class="text-muted">(รูปแบบ 24 ชม.)</small></label>
                         <input type="time" id="open_time" name="open_time"
                                class="form-control"
-                               value="<?= old('open_time', $stadium['open_time']) ?>">
+                               value="<?= old('open_time', !empty($stadium['open_time']) ? date('H:i', strtotime($stadium['open_time'])) : '') ?>">
                     </div>
                     <div class="form-group col-md-6 mb-3">
-                        <label for="close_time" class="fw-bold">Close Time</label>
+                        <label for="close_time" class="fw-bold">Close Time <small class="text-muted">(รูปแบบ 24 ชม.)</small></label>
                         <input type="time" id="close_time" name="close_time"
                                class="form-control"
-                               value="<?= old('close_time', $stadium['close_time']) ?>">
+                               value="<?= old('close_time', !empty($stadium['close_time']) ? date('H:i', strtotime($stadium['close_time'])) : '') ?>">
                     </div>
                 </div>
 

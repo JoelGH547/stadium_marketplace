@@ -47,7 +47,8 @@ if (!empty($stadium['outside_images'])) {
         foreach ($decoded as $img) {
             $img = trim((string) $img);
             if ($img !== '') {
-                $galleryImages[] = base_url('assets/uploads/stadiums/' . $img);
+                $galleryPath = $stadium['field_image_path'] ?? 'assets/uploads/stadiums/';
+                $galleryImages[] = base_url($galleryPath . $img);
             }
         }
     }
@@ -59,7 +60,8 @@ if (!empty($stadium['inside_images'])) {
         foreach ($decoded as $img) {
             $img = trim((string) $img);
             if ($img !== '') {
-                $galleryImages[] = base_url('assets/uploads/stadiums/' . $img);
+                $galleryPath = $stadium['field_image_path'] ?? 'assets/uploads/stadiums/';
+                $galleryImages[] = base_url($galleryPath . $img);
             }
         }
     }
@@ -142,6 +144,12 @@ $isMaintenance = ($stadiumStatus === 'maintenance');
                                     <dt class="text-gray-500">ชื่อสนาม</dt>
                                     <dd class="font-medium text-right"><?= esc($name) ?></dd>
                                 </div>
+                                <?php if (!empty($stadium['vendor_name'])): ?>
+                                    <div class="flex justify-between gap-3">
+                                        <dt class="text-gray-500">เจ้าของสนาม</dt>
+                                        <dd class="font-medium text-right"><?= esc($stadium['vendor_name']) ?></dd>
+                                    </div>
+                                <?php endif; ?>
                                 <?php if ($initialField): ?>
                                     <div class="flex justify-between gap-3">
                                         <dt class="text-gray-500">พื้นที่สนาม</dt>
@@ -472,8 +480,12 @@ $isMaintenance = ($stadiumStatus === 'maintenance');
                                             value="<?= esc($stadium['name'] ?? $name) ?>">
                                         <input type="hidden" name="field_id"
                                             value="<?= isset($fields[0]['id']) ? (int) $fields[0]['id'] : 0 ?>">
-                                        <input type="hidden" name="stadium_image"
-                                            value="<?= esc($stadium['outside_images'] ? (json_decode($stadium['outside_images'])[0] ?? '') : ($stadium['cover_image'] ?? '')) ?>">
+                                        <input type="hidden" name="stadium_image" value="<?= esc($stadium['outside_images'] ? (json_decode($stadium['outside_images'])[0] ?? '') : ($stadium['cover_image'] ?? '')) ?>">
+
+                                        <input type="hidden" name="stadium_image_path"
+                                             value="<?= esc($stadium['field_image_path'] ?? 'assets/uploads/stadiums/') ?>">
+                                        
+                                            >
 
                                         <input type="hidden" name="booking_type" id="bookingTypeField">
 

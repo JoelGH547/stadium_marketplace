@@ -98,10 +98,9 @@ class Field extends BaseController
 
         if (!is_dir($path)) mkdir($path, 0777, true);
 
-        $outsideList = [];
         foreach ($outside as $file) {
             if ($file->isValid()) {
-                $name = $file->getRandomName();
+                $name = 'outside_' . $file->getRandomName();
                 $file->move($path, $name);
                 $outsideList[] = $name;
             }
@@ -110,7 +109,7 @@ class Field extends BaseController
         $insideList = [];
         foreach ($inside as $file) {
             if ($file->isValid()) {
-                $name = $file->getRandomName();
+                $name = 'inside_' . $file->getRandomName();
                 $file->move($path, $name);
                 $insideList[] = $name;
             }
@@ -294,7 +293,7 @@ class Field extends BaseController
 
         foreach ($outsideNew as $file) {
             if ($file->isValid()) {
-                $new = $file->getRandomName();
+                $new = 'outside_' . $file->getRandomName();
                 $file->move('assets/uploads/stadiums/', $new);
                 $outsideOld[] = $new;
             }
@@ -302,7 +301,7 @@ class Field extends BaseController
 
         foreach ($insideNew as $file) {
             if ($file->isValid()) {
-                $new = $file->getRandomName();
+                $new = 'inside_' . $file->getRandomName();
                 $file->move('assets/uploads/stadiums/', $new);
                 $insideOld[] = $new;
             }
@@ -371,6 +370,7 @@ public function view($id)
         ->select('stadiums.*, categories.name as category_name')
         ->join('categories', 'categories.id = stadiums.category_id', 'left')
         ->where('stadiums.id', $id)
+        ->where('stadiums.vendor_id', session()->get('owner_id'))
         ->first();
 
     if (!$stadium) {
@@ -385,11 +385,11 @@ public function view($id)
     // 3) ดึงสินค้าเสริม (All Items in Stadium)
     $vendorItemModel = new \App\Models\VendorItemModel();
     $items = $vendorItemModel
-        ->select('vendor_items.*, facility_types.name as type_name, stadium_fields.name as field_name')
+        ->select('vendor_items.*, stadium_facilities.field_id, facility_types.name as type_name, stadium_fields.name as field_name')
         ->join('stadium_facilities', 'stadium_facilities.id = vendor_items.stadium_facility_id')
         ->join('facility_types', 'facility_types.id = stadium_facilities.facility_type_id')
-        ->join('stadium_fields', 'stadium_fields.id = stadium_facilities.field_id')
-        ->where('stadium_fields.stadium_id', $id)
+        ->join('stadium_fields', 'stadium_fields.id = stadium_facilities.field_id', 'left')
+        ->where('(stadium_facilities.stadium_id = ' . (int)$id . ' OR stadium_fields.stadium_id = ' . (int)$id . ')')
         // ->where('vendor_items.status', 'active') // Show all statuses? User said "add status", implies showing active/inactive.
         ->orderBy('stadium_fields.name', 'ASC')
         ->findAll();

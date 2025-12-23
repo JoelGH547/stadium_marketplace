@@ -50,36 +50,17 @@ class Items extends BaseController
         $imageName = null;
 
         if ($file && $file->isValid() && !$file->hasMoved()) {
-            $imageName = $file->getRandomName();
-            $file->move('uploads/items/', $imageName);
+            $imageName = 'item_' . $file->getRandomName();
+            $file->move('assets/uploads/items/', $imageName);
         }
 
-        // 1. Determine Target Field (Real Subfield or System Catalog)
-        $targetFieldId = $this->request->getPost('field_id');
-
-        if (!$targetFieldId) {
-            // Find or Create System Catalog Subfield (for Temp Items)
-            $catalogField = $subfieldModel->where('stadium_id', $stadium_id)
-                                          ->where('name', '_SYSTEM_CATALOG_')
-                                          ->first();
-            
-            if (!$catalogField) {
-                $subfieldModel->insert([
-                    'stadium_id' => $stadium_id,
-                    'name' => '_SYSTEM_CATALOG_',
-                    'price' => 0,
-                    'description' => 'Hidden System Catalog',
-                    'status' => 'maintenance' // Hidden
-                ]);
-                $targetFieldId = $subfieldModel->getInsertID();
-            } else {
-                $targetFieldId = $catalogField['id'];
-            }
-        }
+        // 1. Determine Target Field (Real Subfield or Stadium Global)
+        $targetFieldId = $this->request->getPost('field_id') ?: null;
 
         // 2. Create Stadium Facility
         $facilityData = [
-            'field_id' => $targetFieldId,
+            'stadium_id'       => $stadium_id,
+            'field_id'         => $targetFieldId,
             'facility_type_id' => $this->request->getPost('type_id')
         ];
         $facilityId = $stadiumFacilityModel->insert($facilityData);
@@ -184,12 +165,12 @@ class Items extends BaseController
 
         if ($file && $file->isValid() && !$file->hasMoved()) {
             if (!empty($item['image'])) {
-                $oldPath = FCPATH . 'uploads/items/' . $item['image'];
+                $oldPath = FCPATH . 'assets/uploads/items/' . $item['image'];
                 if (file_exists($oldPath)) unlink($oldPath);
             }
 
-            $imageName = $file->getRandomName();
-            $file->move('uploads/items/', $imageName);
+            $imageName = 'item_' . $file->getRandomName();
+            $file->move('assets/uploads/items/', $imageName);
         }
 
         // Update vendor_items

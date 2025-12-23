@@ -126,7 +126,7 @@ function viewBooking(id) {
             if (data.slip_image) {
                 slipHtml = `<div class="mt-3">
                     <strong>รูปหลักฐานการโอน:</strong><br>
-                    <img src="<?= base_url('uploads/slips/') ?>${data.slip_image}" class="img-fluid rounded border mt-1" alt="Payment Slip">
+                    <img src="<?= base_url('assets/uploads/slips/') ?>${data.slip_image}" class="img-fluid rounded border mt-1" alt="Payment Slip">
                 </div>`;
             }
 

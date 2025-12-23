@@ -80,7 +80,7 @@
                     <?php else: ?>
                         <?php foreach($images as $img): ?>
                             <div class="col-6 col-md-3 text-center">
-                                <img src="<?= base_url('uploads/subfields/'.$img) ?>" class="img-thumbnail mb-2" style="height: 100px; object-fit: cover;">
+                                <img src="<?= base_url('assets/uploads/fields/'.$img) ?>" class="img-thumbnail mb-2" style="height: 100px; object-fit: cover;">
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" name="delete_images[]" value="<?= $img ?>" id="del_<?= $img ?>">
                                     <label class="form-check-label text-danger" for="del_<?= $img ?>">ลบรูปนี้</label>
