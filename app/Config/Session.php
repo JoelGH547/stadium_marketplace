@@ -57,7 +57,7 @@ class Session extends BaseConfig
      *
      * IMPORTANT: You are REQUIRED to set a valid save path!
      */
-    public string $savePath = 'E:\\work\\mini_project_work_experience\\Github\\stadium_marketplace\\writable\\session' . 'session';
+    public string $savePath = WRITEPATH . 'session';
 
     /**
      * --------------------------------------------------------------------------
