@@ -187,7 +187,28 @@ class UserController extends BaseController
 
     public function rejectVendor($id)
     {
-        $this->vendorModel->delete($id);
-        return redirect()->back()->with('success', 'ปฏิเสธเรียบร้อย');
+        $vendor = $this->vendorModel->find($id);
+        if ($vendor) {
+            // ลบไฟล์ที่เกี่ยวข้อง (ถ้ามี)
+            $fileFields = [
+                'profile_image'   => 'uploads/profile/',
+                'id_card_image'   => 'uploads/idcards/',
+                'bank_book_image' => 'uploads/bankbooks/'
+            ];
+
+            foreach ($fileFields as $field => $folder) {
+                if (!empty($vendor[$field])) {
+                     $basePath = FCPATH . $folder . $vendor[$field];
+                     if (is_file($basePath)) {
+                         unlink($basePath);
+                     }
+                }
+            }
+
+            $this->vendorModel->delete($id);
+            return redirect()->back()->with('success', 'ปฏิเสธและลบข้อมูล Vendor เรียบร้อยแล้ว');
+        }
+        
+        return redirect()->back()->with('error', 'ไม่พบข้อมูล Vendor');
     }
 }

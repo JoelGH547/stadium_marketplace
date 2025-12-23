@@ -149,6 +149,12 @@
             </li>
             <!-- End Booking Routes -->
 
+            <li class="nav-item">
+                <a href="<?= base_url('admin/reviews') ?>" class="nav-link <?= (strpos($currentUrl, 'reviews') !== false) ? 'active-menu' : '' ?>">
+                    <div><i class="fas fa-star"></i> จัดการรีวิวสนาม</div>
+                </a>
+            </li>
+
             <?php $isUserMenu = (strpos($currentUrl, 'admin/users') !== false || strpos($currentUrl, 'admin/vendors/pending') !== false); ?>
             <li class="nav-item">
                 <a class="nav-link <?= $isUserMenu ? 'active-menu' : 'collapsed' ?>" href="#userSubmenu" data-bs-toggle="collapse" role="button" aria-expanded="<?= $isUserMenu ? 'true' : 'false' ?>" aria-controls="userSubmenu">

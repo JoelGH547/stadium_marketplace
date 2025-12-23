@@ -37,7 +37,7 @@ class ReviewController extends BaseController
             return redirect()->back()->with('error', 'ไม่พบรีวิวที่ต้องการ');
         }
 
-        $newStatus = ($review['status'] == 'approved') ? 'hidden' : 'approved';
+        $newStatus = ($review['status'] == 'published') ? 'hidden' : 'published';
         $this->reviewModel->update($id, ['status' => $newStatus]);
 
         return redirect()->back()->with('success', 'ปรับเปลี่ยนสถานะรีวิวเรียบร้อยแล้ว');

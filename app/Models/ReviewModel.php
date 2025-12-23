@@ -6,7 +6,7 @@ use CodeIgniter\Model;
 
 class ReviewModel extends Model
 {
-    protected $table            = 'reviews';
+    protected $table            = 'stadium_reviews';
     protected $primaryKey       = 'id';
     protected $useAutoIncrement = true;
     protected $returnType       = 'array';
@@ -16,6 +16,7 @@ class ReviewModel extends Model
         'booking_id',
         'customer_id',
         'stadium_id',
+        'field_id',
         'rating',
         'comment',
         'status'
@@ -30,10 +31,10 @@ class ReviewModel extends Model
      */
     public function getReviewsWithDetails()
     {
-        return $this->select('reviews.*, stadiums.name as stadium_name, customers.full_name as customer_name')
-                    ->join('stadiums', 'stadiums.id = reviews.stadium_id', 'left')
-                    ->join('customers', 'customers.id = reviews.customer_id', 'left')
-                    ->orderBy('reviews.created_at', 'DESC')
+        return $this->select('stadium_reviews.*, stadiums.name as stadium_name, customers.full_name as customer_name')
+                    ->join('stadiums', 'stadiums.id = stadium_reviews.stadium_id', 'left')
+                    ->join('customers', 'customers.id = stadium_reviews.customer_id', 'left')
+                    ->orderBy('stadium_reviews.created_at', 'DESC')
                     ->findAll();
     }
 
@@ -44,7 +45,7 @@ class ReviewModel extends Model
     {
         $result = $this->selectAvg('rating')
                        ->where('stadium_id', $stadiumId)
-                       ->where('status', 'approved')
+                       ->where('status', 'published')
                        ->first();
         return $result ? round($result['rating'], 1) : 0;
     }

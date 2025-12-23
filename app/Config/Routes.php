@@ -12,9 +12,9 @@ use CodeIgniter\Router\RouteCollection;
 //  PUBLIC CUSTOMER AND LOGIN REGISTER
 // ==========================================================
 
-// เข้าเว็บครั้งแรก → ไปหน้า home (ตอนนี้ใช้ route sport เดิมของคุณ)
+// เข้าเว็บครั้งแรก → ไปหน้า admin login
 $routes->get('/', static function () {
-    return redirect()->to('/sport');
+    return redirect()->to('/admin/login');
 });
 
 $routes->get('customer/login',  'customer\CustomerAuthController::login');
