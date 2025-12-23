@@ -39,8 +39,8 @@ class StadiumController extends BaseController
     {
         // 1. รับค่าจากช่องค้นหา และ ตัวกรอง
         $search = $this->request->getGet('search');
-        $bookingFilter = $this->request->getGet('booking_type'); 
-        $sportFilter   = $this->request->getGet('category_id'); 
+        $bookingFilter = $this->request->getGet('booking_type');
+        $sportFilter   = $this->request->getGet('category_id');
 
         // 2. เริ่มสร้าง Query
         $builder = $this->stadiumModel
@@ -612,7 +612,7 @@ class StadiumController extends BaseController
         $stadium_id = $this->request->getPost('stadium_id');
 
         $oldData = $fieldModel->find($id);
-        
+
         // รูป Outside
         $outsideResult = json_decode($oldData['outside_images'] ?? '[]', true);
         $outsideFile = $this->request->getFile('outside_image');
@@ -661,8 +661,8 @@ class StadiumController extends BaseController
             $toDelete = array_diff($existingTypeIds, $submittedTypeIds);
             if (!empty($toDelete)) {
                 $facModel->where('field_id', $id)
-                        ->whereIn('facility_type_id', $toDelete)
-                        ->delete();
+                    ->whereIn('facility_type_id', $toDelete)
+                    ->delete();
             }
 
             // เพิ่ม
