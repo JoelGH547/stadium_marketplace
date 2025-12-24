@@ -106,7 +106,7 @@
                         <a href="<?= base_url('owner/register') ?>" style="color:#22b094;">สมัครสมาชิก</a>
                     </div>
                     <div class="mt-2 small">
-                        <a href="<?= base_url('/login') ?>" class="text-muted text-decoration-none">ไปหน้าเข้าสู่ระบบสำหรับลูกค้า</a>
+                        <a href="<?= base_url('sport') ?>" class="text-muted text-decoration-none">กลับหน้าสำหรับลูกค้า</a>
                     </div>
                 </div>
 

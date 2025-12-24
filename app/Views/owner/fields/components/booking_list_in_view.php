@@ -35,13 +35,13 @@
                                 <small class="text-muted"><?= esc($booking['customer_phone'] ?? '') ?></small>
                             </td>
                             <td>
-                                <div class="fw-bold"><?= esc($booking['subfield_name'] ?? '-') ?></div>
-                                <!-- <small class="text-muted">ID: <?= esc($booking['subfield_id'] ?? '') ?></small> -->
+                                <div class="fw-bold"><?= esc($booking['field_name'] ?? '-') ?></div>
+                                <!-- <small class="text-muted">ID: <?= esc($booking['field_id'] ?? '') ?></small> -->
                             </td>
                             <td>
                                 <?php 
                                     $fieldId = $booking['field_id'] ?? null;
-                                    $fieldName = esc($booking['subfield_name'] ?? 'สนามย่อย'); 
+                                    $fieldName = esc($booking['field_name'] ?? 'สนามย่อย'); 
                                     $bookingDate = date('Y-m-d', strtotime($booking['booking_start_time']));
                                     $showDate = date('d/m/Y', strtotime($booking['booking_start_time']));
                                 ?>
@@ -90,7 +90,7 @@
                                     <?php if(!empty($booking['slip_image'])): ?>
                                         <button type="button" 
                                                 class="btn btn-sm btn-outline-primary px-3 shadow-sm fw-bold" 
-                                                onclick="viewSlip('<?= base_url('assets/uploads/' . $booking['slip_image']) ?>')"
+                                                onclick="viewSlip('<?= base_url($booking['slip_image']) ?>')"
                                                 title="ดูสลิปโอนเงิน">
                                             <i class="fas fa-file-invoice me-1"></i> ดูสลิป
                                         </button>
@@ -104,18 +104,16 @@
                                     <?php endif; ?>
 
                                     <?php if($booking['status'] == 'pending'): ?>
-                                        <a href="<?= base_url('owner/bookings/approve/' . $booking['id']) ?>" 
-                                           class="btn btn-sm btn-success px-3 fw-bold shadow-sm" 
-                                           onclick="return confirm('ยืนยันการอนุมัติการจองนี้?');"
-                                           title="อนุมัติ">
-                                            <i class="fas fa-check me-1"></i> อนุมัติ
-                                        </a>
-                                        <a href="<?= base_url('owner/bookings/reject/' . $booking['id']) ?>" 
-                                           class="btn btn-sm btn-danger px-3 fw-bold shadow-sm" 
-                                           onclick="return confirm('ยืนยันการปฏิเสธการจองนี้?');"
-                                           title="ปฏิเสธ">
-                                            <i class="fas fa-times me-1"></i> ปฏิเสธ
-                                        </a>
+                                        <form action="<?= base_url('owner/bookings/approve/' . $booking['id']) ?>" method="post" class="d-inline">
+                                            <button type="submit" class="btn btn-sm btn-success px-3 fw-bold shadow-sm" onclick="return confirm('ยืนยันการอนุมัติการจองนี้?');" title="อนุมัติ">
+                                                <i class="fas fa-check me-1"></i> อนุมัติ
+                                            </button>
+                                        </form>
+                                        <form action="<?= base_url('owner/bookings/reject/' . $booking['id']) ?>" method="post" class="d-inline">
+                                            <button type="submit" class="btn btn-sm btn-danger px-3 fw-bold shadow-sm" onclick="return confirm('ยืนยันการปฏิเสธการจองนี้?');" title="ปฏิเสธ">
+                                                <i class="fas fa-times me-1"></i> ปฏิเสธ
+                                            </button>
+                                        </form>
                                     <?php else: ?>
                                         <span class="text-muted small"><i class="fas fa-check-circle"></i> ดำเนินการแล้ว</span>
                                     <?php endif; ?>
