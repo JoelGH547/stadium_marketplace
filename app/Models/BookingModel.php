@@ -23,9 +23,9 @@ class BookingModel extends Model
     protected $useTimestamps = true;
 
 
-    public function getAllBookings()
+    public function getAllBookings($vendorId = null)
     {
-        return $this->select('bookings.*, 
+        $query = $this->select('bookings.*, 
                               customers.full_name as customer_name, 
                               customers.phone_number as customer_phone, 
                               stadiums.name as stadium_name, 
@@ -34,10 +34,14 @@ class BookingModel extends Model
                     ->join('customers', 'customers.id = bookings.customer_id', 'left') 
                     ->join('stadiums', 'stadiums.id = bookings.stadium_id', 'left')
                     ->join('stadium_fields', 'stadium_fields.id = bookings.field_id', 'left')
-                    ->join('vendors', 'vendors.id = bookings.vendor_id', 'left')
-                    
-                    ->orderBy('bookings.created_at', 'DESC')
-                    ->findAll();
+                    ->join('vendors', 'vendors.id = bookings.vendor_id', 'left');
+
+        if ($vendorId !== null) {
+            $query->where('bookings.vendor_id', $vendorId);
+        }
+
+        return $query->orderBy('bookings.created_at', 'DESC')
+                     ->findAll();
     }
 
     public function getBookingsByCustomerId($customerId)

@@ -15,6 +15,7 @@ class CartController extends BaseController
 
         $stadiumName       = (string) ($cart['stadium_name'] ?? '');
         $stadiumImage      = (string) ($cart['stadium_image'] ?? ''); 
+        $stadiumImagePath  = (string) ($cart['stadium_image_path'] ?? 'assets/uploads/stadiums/');
         $stadiumId         = (int) ($cart['stadium_id'] ?? 0);
         $fieldId           = (int) ($cart['field_id'] ?? 0); // New
         $fieldBasePrice    = (float) ($cart['field_base_price'] ?? 0.0);
@@ -37,14 +38,14 @@ class CartController extends BaseController
 
         // แทรกแถว "ค่าจองสนาม" เป็น item ตัวแรก
         if ($fieldBasePrice > 0) {
-            // Field image is outside_image of stadium
+            // Field image path comes from cart or fallback to stadiums
             $fieldItem = [
                 'stadium_name' => $stadiumName,
                 'item_name'    => 'ค่าจองสนาม',
                 'unit'         => '',
                 'qty'          => 0,
                 'price'        => 0.0,
-                'image'        => $stadiumImage ? base_url('assets/uploads/stadiums/' . $stadiumImage) : null,
+                'image'        => $stadiumImage ? base_url($stadiumImagePath . $stadiumImage) : null,
             ];
 
             if ($bookingType === 'daily') {
@@ -128,6 +129,7 @@ class CartController extends BaseController
         $fieldId     = $this->request->getPost('field_id'); // New
         $stadiumName = $this->request->getPost('stadium_name');
         $stadiumImage = $this->request->getPost('stadium_image');
+        $stadiumImagePath = $this->request->getPost('stadium_image_path');
 
         $fieldName = '';
         if ($fieldId) {
@@ -178,6 +180,7 @@ class CartController extends BaseController
             'field_name'          => $fieldName,
             'stadium_name'        => $stadiumName,
             'stadium_image'       => $stadiumImage,
+            'stadium_image_path'  => $stadiumImagePath,
             'booking_type'        => $bookingType,
 
             'booking_date'        => $bookingDate,

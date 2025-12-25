@@ -251,7 +251,7 @@ public function show($id = null)
         $stadiumModel  = new StadiumModel();
         // $itemModel     = new VendorItemModel(); // Removed
 
-        // 1) ดึงข้อมูลสนามย่อย
+            // 1) ดึงข้อมูลสนามย่อย
         $field = $fieldModel->find($id);
         if (!$field) {
             throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('ไม่พบสนามย่อยที่ต้องการ');
@@ -277,10 +277,16 @@ public function show($id = null)
             $description = trim((string) ($row['description'] ?? ''));
         }
 
+        // 3.5) ตรวจสอบรูปภาพสนามย่อย (แกะ JSON เพื่อเช็คว่ามีรูปจริงไหม)
+        $fieldOutside = json_decode($field['outside_images'] ?? '', true);
+        $fieldInside  = json_decode($field['inside_images'] ?? '', true);
+        $hasFieldImg  = (is_array($fieldOutside) && !empty($fieldOutside)) || (is_array($fieldInside) && !empty($fieldInside));
+
         // 4) สร้าง array $stadium สำหรับให้ show.php ใช้ (บล็อคแรก)
         $stadium = [
             'id'             => (int) $row['id'],
             'name'           => $row['name'] ?? '',
+            'vendor_name'    => $row['vendor_name'] ?? '',
             // ใช้ราคา/ชม. ของสนามย่อยเป็น price หลัก
             'price'          => isset($field['price']) ? (float) $field['price'] : 0,
             'category_name'  => $row['category_name']  ?? '',
@@ -300,8 +306,9 @@ public function show($id = null)
 
             // รูปภาพ: ใช้รูปของสนามย่อยก่อน ถ้าไม่มีค่อย fallback เป็นของสนามหลัก
             'cover_image'    => $row['cover_image'] ?? null,
-            'outside_images' => $field['outside_images'] ?: ($row['outside_images'] ?? null),
-            'inside_images'  => $field['inside_images']  ?: ($row['inside_images'] ?? null),
+            'outside_images' => $hasFieldImg ? ($field['outside_images'] ?: $field['inside_images']) : ($row['outside_images'] ?? null),
+            'inside_images'  => $hasFieldImg ? $field['inside_images'] : ($row['inside_images'] ?? null),
+            'field_image_path' => $hasFieldImg ? 'assets/uploads/fields/' : 'assets/uploads/stadiums/',
 
             // rating ตอนนี้ยังไม่มีใน DB → ใส่ค่า default ไว้ก่อน
             'rating'         => 5.0,
@@ -447,6 +454,7 @@ public function show($id = null)
 
         $stadium = [
             'name'        => $row['name'],
+            'vendor_name' => $row['vendor_name'] ?? '',
             'sport_emoji' => $sportEmoji,
             'sport_name'  => $sportName,
             'location'    => $location,
@@ -490,9 +498,16 @@ public function show($id = null)
                     $thumb = reset($decoded);
                 }
             }
+            // Fallback to inside images if outside is empty
+            if (!$thumb && !empty($f['inside_images'])) {
+                $decoded = json_decode($f['inside_images'], true);
+                if (is_array($decoded) && !empty($decoded)) {
+                    $thumb = reset($decoded);
+                }
+            }
 
             $imageUrl = $thumb
-                ? base_url('assets/uploads/stadiums/' . $thumb)
+                ? base_url('assets/uploads/fields/' . $thumb)
                 : $heroImageUrl;
 
             $priceHour  = $f['price'] ?? null;

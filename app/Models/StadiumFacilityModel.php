@@ -16,6 +16,7 @@ class StadiumFacilityModel extends Model
     // ตาราง stadium_facilities ปัจจุบันเหลือแค่ field_id + facility_type_id
     // ไม่ได้ใช้ stadium_id / name / timestamps แล้ว
     protected $allowedFields    = [
+        'stadium_id',
         'field_id',
         'facility_type_id',
     ];

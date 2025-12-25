@@ -34,27 +34,16 @@ $siteName = $siteName ?? 'Stadium Marketplace';
                     หน้าแรก
                 </a>
 
-                <!-- เกี่ยวกับเรา -->
-                <a href="<?= base_url('arena#about') ?>"
+                <!-- ร่วมเป็นพาร์ทเนอร์สนาม -->
+                <a href="<?= base_url('owner/welcome') ?>"
                     class="flex items-center gap-2 text-[var(--primary)] hover:text-[var(--primary)]/80 transition">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
                         stroke-width="1.5" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round"
-                            d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
-
+                            d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a5.971 5.971 0 00-.941 3.197m0 0a5.995 5.995 0 0010.116 0zm-11.117.731a11.944 11.944 0 01-3.742-.48a3 3 0 014.682-2.721m-.94 3.197a5.971 5.971 0 00.941-3.197m0 0a5.995 5.995 0 00-10.116 0zM12 15.75h.007v.008H12v-.008z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 11.25a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
-                    เกี่ยวกับเรา
-                </a>
-
-                <!-- ติดต่อเรา -->
-                <a href="<?= base_url('arena#contact') ?>"
-                    class="flex items-center gap-2 text-[var(--primary)] hover:text-[var(--primary)]/80 transition">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
-                        stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                            d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
-                    </svg>
-                    ติดต่อเรา
+                    ร่วมเป็นพาร์ทเนอร์สนาม
                 </a>
                 <?php if (! $customerLoggedIn): ?>
                     <!-- ยังไม่ล็อกอิน: แสดงปุ่ม Login -->

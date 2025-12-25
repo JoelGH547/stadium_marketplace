@@ -61,7 +61,7 @@ class Subfield extends BaseController
         if (!empty($files['outside_images'])) {
             foreach ($files['outside_images'] as $img) {
                 if ($img->isValid() && !$img->hasMoved()) {
-                    $newName = $img->getRandomName();
+                    $newName = 'field_out_' . $img->getRandomName();
                     $img->move('assets/uploads/fields/', $newName);
                     $outsideImages[] = $newName;
                 }
@@ -73,7 +73,7 @@ class Subfield extends BaseController
         if (!empty($files['inside_images'])) {
             foreach ($files['inside_images'] as $img) {
                 if ($img->isValid() && !$img->hasMoved()) {
-                    $newName = $img->getRandomName();
+                    $newName = 'field_in_' . $img->getRandomName();
                     $img->move('assets/uploads/fields/', $newName);
                     $insideImages[] = $newName;
                 }
@@ -219,7 +219,7 @@ class Subfield extends BaseController
         if (!empty($files['outside_images'])) {
             foreach ($files['outside_images'] as $img) {
                 if ($img->isValid() && !$img->hasMoved()) {
-                    $newName = $img->getRandomName();
+                    $newName = 'field_out_' . $img->getRandomName();
                     $img->move('assets/uploads/fields/', $newName);
                     $currentOutside[] = $newName;
                 }
@@ -239,7 +239,7 @@ class Subfield extends BaseController
         if (!empty($files['inside_images'])) {
             foreach ($files['inside_images'] as $img) {
                 if ($img->isValid() && !$img->hasMoved()) {
-                    $newName = $img->getRandomName();
+                    $newName = 'field_in_' . $img->getRandomName();
                     $img->move('assets/uploads/fields/', $newName);
                     $currentInside[] = $newName;
                 }

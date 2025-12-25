@@ -104,12 +104,12 @@
         <!-- Open close -->
         <div class="row">
             <div class="col-md-6 mb-3">
-                <label class="form-label">เวลาเปิด</label>
-                <input type="time" name="open_time" value="<?= esc($stadium['open_time']) ?>" class="form-control">
+                <label class="form-label">เวลาเปิด <small class="text-muted">(รูปแบบ 24 ชม.)</small></label>
+                <input type="time" name="open_time" value="<?= !empty($stadium['open_time']) ? date('H:i', strtotime($stadium['open_time'])) : '' ?>" class="form-control">
             </div>
             <div class="col-md-6 mb-3">
-                <label class="form-label">เวลาปิด</label>
-                <input type="time" name="close_time" value="<?= esc($stadium['close_time']) ?>" class="form-control">
+                <label class="form-label">เวลาปิด <small class="text-muted">(รูปแบบ 24 ชม.)</small></label>
+                <input type="time" name="close_time" value="<?= !empty($stadium['close_time']) ? date('H:i', strtotime($stadium['close_time'])) : '' ?>" class="form-control">
             </div>
         </div>
 
