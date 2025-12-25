@@ -389,7 +389,7 @@ public function view($id)
         ->join('stadium_facilities', 'stadium_facilities.id = vendor_items.stadium_facility_id')
         ->join('facility_types', 'facility_types.id = stadium_facilities.facility_type_id')
         ->join('stadium_fields', 'stadium_fields.id = stadium_facilities.field_id', 'left')
-        ->where('(stadium_facilities.stadium_id = ' . (int)$id . ' OR stadium_fields.stadium_id = ' . (int)$id . ')')
+        ->where('stadium_fields.stadium_id', (int)$id)
         // ->where('vendor_items.status', 'active') // Show all statuses? User said "add status", implies showing active/inactive.
         ->orderBy('stadium_fields.name', 'ASC')
         ->findAll();
