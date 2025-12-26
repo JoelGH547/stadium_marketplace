@@ -115,7 +115,18 @@ function render_profile_item($label, $value, $default = 'ยังไม่ไ�
                         elseif ($gender === 'other') $genderDisplay = 'อื่นๆ';
                         render_profile_item('เพศ', $genderDisplay, 'ยังไม่ได้ระบุ', $genderIcon);
 
-                        render_profile_item('วันเกิด', $birthday ? date('d F Y', strtotime($birthday)) : null, 'ยังไม่ได้ระบุ', $cakeIcon);
+                        $thaiBirthday = null;
+                        if ($birthday) {
+                            $ts = strtotime($birthday);
+                            $thaiMonths = [
+                                1 => 'มกราคม', 2 => 'กุมภาพันธ์', 3 => 'มีนาคม', 4 => 'เมษายน',
+                                5 => 'พฤษภาคม', 6 => 'มิถุนายน', 7 => 'กรกฎาคม', 8 => 'สิงหาคม',
+                                9 => 'กันยายน', 10 => 'ตุลาคม', 11 => 'พฤศจิกายน', 12 => 'ธันวาคม'
+                            ];
+                            $thaiYear = date('Y', $ts) + 543;
+                            $thaiBirthday = date('j', $ts) . ' ' . $thaiMonths[date('n', $ts)] . ' ' . $thaiYear;
+                        }
+                        render_profile_item('วันเกิด', $thaiBirthday, 'ยังไม่ได้ระบุ', $cakeIcon);
 
                         $age = null;
                         if ($birthday) {

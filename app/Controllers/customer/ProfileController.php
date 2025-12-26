@@ -103,6 +103,19 @@ class ProfileController extends BaseController
             'birthday'     => !empty($validatedData['birthday']) ? $validatedData['birthday'] : null,
         ];
 
+        // Calculate Age if birthday is present
+        if (!empty($updateData['birthday'])) {
+            try {
+                $birthDate = new \DateTime($updateData['birthday']);
+                $today     = new \DateTime();
+                $updateData['age'] = $today->diff($birthDate)->y;
+            } catch (\Exception $e) {
+                $updateData['age'] = null;
+            }
+        } else {
+            $updateData['age'] = null;
+        }
+
 
         // --- จัดการรูปจาก CropperJS (data URL) ---
         $dataUrl = $this->request->getPost('avatar_cropped');

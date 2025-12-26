@@ -122,8 +122,76 @@ $initial = mb_substr($displayName, 0, 1, 'UTF-8');
                                 </select>
                             </div>
                             <div>
-                                <label for="birthday" class="block text-sm font-medium text-gray-700 mb-1.5">วันเกิด</label>
-                                <input type="date" id="birthday" name="birthday" value="<?= $birthday ? esc($birthday) : '' ?>" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-[var(--primary)] focus:ring-[var(--primary)] sm:text-sm">
+                                <label class="block text-sm font-medium text-gray-700 mb-1.5">วันเกิด</label>
+                                <div class="grid grid-cols-3 gap-2">
+                                    <?php
+                                    $bDay = $birthday ? date('j', strtotime($birthday)) : '';
+                                    $bMonth = $birthday ? date('n', strtotime($birthday)) : '';
+                                    $bYear = $birthday ? date('Y', strtotime($birthday)) : '';
+
+                                    $thaiMonths = [
+                                        1 => 'มกราคม', 2 => 'กุมภาพันธ์', 3 => 'มีนาคม', 4 => 'เมษายน',
+                                        5 => 'พฤษภาคม', 6 => 'มิถุนายน', 7 => 'กรกฎาคม', 8 => 'สิงหาคม',
+                                        9 => 'กันยายน', 10 => 'ตุลาคม', 11 => 'พฤศจิกายน', 12 => 'ธันวาคม'
+                                    ];
+                                    ?>
+                                    <!-- Day -->
+                                    <select id="dob_day" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-[var(--primary)] focus:ring-[var(--primary)] sm:text-sm">
+                                        <option value="">วัน</option>
+                                        <?php for ($d = 1; $d <= 31; $d++): ?>
+                                            <option value="<?= $d ?>" <?= $bDay == $d ? 'selected' : '' ?>><?= $d ?></option>
+                                        <?php endfor; ?>
+                                    </select>
+
+                                    <!-- Month -->
+                                    <select id="dob_month" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-[var(--primary)] focus:ring-[var(--primary)] sm:text-sm">
+                                        <option value="">เดือน</option>
+                                        <?php foreach ($thaiMonths as $num => $name): ?>
+                                            <option value="<?= $num ?>" <?= $bMonth == $num ? 'selected' : '' ?>><?= $name ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+
+                                    <!-- Year -->
+                                    <select id="dob_year" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-[var(--primary)] focus:ring-[var(--primary)] sm:text-sm">
+                                        <option value="">ปี</option>
+                                        <?php
+                                        $currentYear = date('Y');
+                                        for ($y = $currentYear; $y >= $currentYear - 100; $y--):
+                                            $thaiYear = $y + 543;
+                                        ?>
+                                            <option value="<?= $y ?>" <?= $bYear == $y ? 'selected' : '' ?>><?= $thaiYear ?></option>
+                                        <?php endfor; ?>
+                                    </select>
+                                </div>
+                                <input type="hidden" id="birthday" name="birthday" value="<?= $birthday ? esc($birthday) : '' ?>">
+
+                                <script>
+                                    document.addEventListener('DOMContentLoaded', function() {
+                                        const daySelect = document.getElementById('dob_day');
+                                        const monthSelect = document.getElementById('dob_month');
+                                        const yearSelect = document.getElementById('dob_year');
+                                        const birthdayInput = document.getElementById('birthday');
+
+                                        function updateBirthday() {
+                                            const d = daySelect.value;
+                                            const m = monthSelect.value;
+                                            const y = yearSelect.value;
+
+                                            if (d && m && y) {
+                                                // Pad single digits with leading zero
+                                                const dd = d.toString().padStart(2, '0');
+                                                const mm = m.toString().padStart(2, '0');
+                                                birthdayInput.value = `${y}-${mm}-${dd}`;
+                                            } else {
+                                                birthdayInput.value = '';
+                                            }
+                                        }
+
+                                        daySelect.addEventListener('change', updateBirthday);
+                                        monthSelect.addEventListener('change', updateBirthday);
+                                        yearSelect.addEventListener('change', updateBirthday);
+                                    });
+                                </script>
                             </div>
                         </div>
 
