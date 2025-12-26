@@ -9,7 +9,8 @@
         <div>
             <a href="<?= base_url('owner/bookings') ?>" class="btn btn-outline-secondary btn-sm me-1 <?= !request()->getGet('status') ? 'active' : '' ?>">ทั้งหมด</a>
             <a href="<?= base_url('owner/bookings?status=pending') ?>" class="btn btn-outline-warning btn-sm me-1 <?= request()->getGet('status') == 'pending' ? 'active' : '' ?>">รอตรวจสอบ</a>
-            <a href="<?= base_url('owner/bookings?status=paid') ?>" class="btn btn-outline-success btn-sm me-1 <?= request()->getGet('status') == 'paid' ? 'active' : '' ?>">อนุมัติแล้ว/จ่ายเงินแล้ว</a>
+            <a href="<?= base_url('owner/bookings?status=confirmed') ?>" class="btn btn-outline-success btn-sm me-1 <?= request()->getGet('status') == 'confirmed' ? 'active' : '' ?>">ยืนยันแล้ว</a>
+            <a href="<?= base_url('owner/bookings?status=paid') ?>" class="btn btn-outline-success btn-sm me-1 <?= request()->getGet('status') == 'paid' ? 'active' : '' ?>">จ่ายเงินแล้ว</a>
             <a href="<?= base_url('owner/bookings?status=rejected') ?>" class="btn btn-outline-danger btn-sm <?= request()->getGet('status') == 'rejected' ? 'active' : '' ?>">ปฏิเสธ/ยกเลิก</a>
         </div>
     </div>
@@ -54,9 +55,9 @@
                                     $statusBadge = 'secondary';
                                     $statusText = $booking['status'];
                                     
-                                    if ($booking['status'] == 'approved' || $booking['status'] == 'paid') {
+                                    if ($booking['status'] == 'confirmed' || $booking['status'] == 'paid') {
                                         $statusBadge = 'success';
-                                        $statusText = 'อนุมัติแล้ว';
+                                        $statusText = 'ยืนยันแล้ว';
                                     }
                                     if ($booking['status'] == 'pending') {
                                         $statusBadge = 'warning text-dark';
@@ -131,7 +132,7 @@ function viewBooking(id) {
             }
 
             let statusText = data.status;
-            if(data.status == 'approved' || data.status == 'paid') statusText = '<span class="text-success">อนุมัติแล้ว</span>';
+            if(data.status == 'confirmed' || data.status == 'paid') statusText = '<span class="text-success">ยืนยันแล้ว</span>';
             if(data.status == 'pending') statusText = '<span class="text-warning">รอตรวจสอบ</span>';
             if(data.status == 'rejected') statusText = '<span class="text-danger">ปฏิเสธ</span>';
             

@@ -61,7 +61,7 @@
         
         let statusText = props.status;
         if(props.status == 'pending') statusText = 'รอตรวจสอบ';
-        if(props.status == 'approved' || props.status == 'paid') statusText = 'อนุมัติแล้ว';
+        if(props.status == 'approved' || props.status == 'paid' || props.status == 'confirmed') statusText = 'ยืนยันแล้ว';
         if(props.status == 'rejected') statusText = 'ปฏิเสธ';
         if(props.status == 'cancelled') statusText = 'ยกเลิก';
 

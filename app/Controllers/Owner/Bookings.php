@@ -50,8 +50,8 @@ class Bookings extends BaseController
             return redirect()->back()->with('error', 'ไม่พบรายการจองหรือไม่มีสิทธิ์ดำเนินการ');
         }
 
-        $this->bookingModel->update($id, ['status' => 'approved']);
-        return redirect()->back()->with('success', 'อนุมัติรายการจองสำเร็จ');
+        $this->bookingModel->update($id, ['status' => 'confirmed']);
+        return redirect()->back()->with('success', 'ยืนยันรายการจองสำเร็จ');
     }
 
     public function reject($id)
