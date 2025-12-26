@@ -36,7 +36,7 @@ class Calendar extends BaseController
             }
 
             $color = '#6c757d'; // Default secondary
-            if ($booking['status'] == 'approved' || $booking['status'] == 'paid') $color = '#198754';
+            if ($booking['status'] == 'confirmed' || $booking['status'] == 'paid') $color = '#198754';
             if ($booking['status'] == 'pending') $color = '#ffc107';
             if ($booking['status'] == 'rejected' || $booking['status'] == 'cancelled') $color = '#dc3545';
 

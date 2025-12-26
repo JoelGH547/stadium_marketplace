@@ -66,9 +66,9 @@
                                     $statusBadge = 'secondary';
                                     $statusText = $booking['status'];
                                     
-                                    if ($booking['status'] == 'approved' || $booking['status'] == 'paid') {
+                                    if ($booking['status'] == 'confirmed' || $booking['status'] == 'paid') {
                                         $statusBadge = 'success';
-                                        $statusText = 'อนุมัติแล้ว';
+                                        $statusText = 'ยืนยันแล้ว';
                                     }
                                     if ($booking['status'] == 'pending') {
                                         $statusBadge = 'warning text-dark';
