@@ -484,8 +484,6 @@ $isMaintenance = ($stadiumStatus === 'maintenance');
 
                                         <input type="hidden" name="stadium_image_path"
                                              value="<?= esc($stadium['field_image_path'] ?? 'assets/uploads/stadiums/') ?>">
-                                        
-                                            >
 
                                         <input type="hidden" name="booking_type" id="bookingTypeField">
 
@@ -810,8 +808,71 @@ $isMaintenance = ($stadiumStatus === 'maintenance');
 <?= $this->section('scripts') ?>
 <!-- FullCalendar (CSS) : จำเป็น ไม่งั้นปฏิทินจะ render แล้วดูว่าง/พัง layout -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.19/index.global.min.css">
+<!-- Flatpickr (Date Picker) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/airbnb.css">
+
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.19/index.global.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.19/locales-all.global.min.js"></script>
+<!-- Flatpickr JS + Thai Locale -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/th.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Common config for consistency
+        const commonConfig = {
+            locale: 'th',
+            altInput: true,
+            altFormat: "j F Y", // 12 มกราคม 2026
+            dateFormat: "Y-m-d", // 2026-01-12
+            disableMobile: "true", // Force custom picker on mobile to show Thai
+            theme: "airbnb"
+        };
+
+        // 1. Hourly Booking Date
+        const bookingDateEl = document.getElementById('bookingDate');
+        if (bookingDateEl) {
+            flatpickr(bookingDateEl, {
+                ...commonConfig,
+                minDate: bookingDateEl.min || "today",
+                maxDate: bookingDateEl.max || new Date().fp_incr(365 * 5),
+                defaultDate: bookingDateEl.value
+            });
+        }
+
+        // 2. Daily Booking - Start Date
+        const startDateEl = document.getElementById('startDate');
+        const endDateEl = document.getElementById('endDate');
+        
+        let startPicker = null;
+        let endPicker = null;
+
+        if (startDateEl) {
+            startPicker = flatpickr(startDateEl, {
+                ...commonConfig,
+                minDate: "today", // Start date min is today unless specified otherwise
+                onChange: function(selectedDates, dateStr, instance) {
+                    // When start date changes, update end date's minDate
+                    if (endPicker && dateStr) {
+                         endPicker.set('minDate', dateStr);
+                         // If end date is now invalid (before new start), clear it?
+                         // The show.js logic also handles clearing, but setting minDate helps UI.
+                    }
+                }
+            });
+        }
+
+        // 3. Daily Booking - End Date
+        if (endDateEl) {
+            endPicker = flatpickr(endDateEl, {
+                ...commonConfig,
+                minDate: "today", 
+                // We don't strictly set maxDate here unless logic requires it
+            });
+        }
+    });
+</script>
 <style>
     /* FullCalendar small tweaks to match your rounded/mint theme */
     #scheduleCalendar .fc .fc-toolbar-title {

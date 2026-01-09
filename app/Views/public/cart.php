@@ -52,7 +52,7 @@ $items = $cartItems ?? [];
                             รายการทั้งหมด (<?= count($items) ?>)
                         </span>
                         <?php if ((isset($fieldId) && $fieldId > 0) || (isset($stadiumId) && $stadiumId > 0)): ?>
-                             <!-- Link back to stadium details for adding more items -->
+                            <!-- Link back to stadium details for adding more items -->
                             <a href="<?= site_url('sport/show/' . ($fieldId > 0 ? $fieldId : $stadiumId) . '?restore=1') ?>"
                                 class="text-[11px] font-medium text-[var(--primary)] hover:underline">
                                 เลือกเพิ่ม
@@ -137,11 +137,6 @@ $items = $cartItems ?? [];
           px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-teal-600 transition text-center">
                 ดำเนินการจองขั้นถัดไป
             </a>
-
-            <p class="text-[11px] text-gray-500">
-                ปุ่มนี้ยังเป็นเพียงตัวอย่างเบื้องต้นสำหรับหน้า Cart เท่านั้น
-                เมื่อเชื่อมต่อระบบจองจริงแล้ว จะพาไปสู่หน้ากรอกข้อมูลผู้จอง / ยืนยันการชำระเงินต่อไป
-            </p>
         </aside>
     </div>
 </section>
