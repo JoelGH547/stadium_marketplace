@@ -19,6 +19,10 @@ class BookingController extends BaseController
 
         // 2. Fetch Bookings
         $bookingModel = new BookingModel();
+
+        // Auto-cancel overdue bookings whenever this page is loaded
+        $bookingModel->cancelOverdueBookings();
+        
         $bookings = $bookingModel->getBookingsByCustomerId($customerId);
 
         // 2.1 Review eligibility (confirmed + ended + not reviewed)

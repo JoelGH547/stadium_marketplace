@@ -57,19 +57,37 @@ class BookingModel extends Model
                 ->orderBy('bookings.created_at', 'DESC')
                 ->findAll();
 }
-/**
- * ดึงรายการจองของสนามย่อยในช่วงเวลา (สำหรับปฏิทิน)
- * เงื่อนไข overlap:
- *   booking_start_time < $end AND booking_end_time > $start
- */
-public function getScheduleForField(int $fieldId, string $start, string $end): array
-{
-    return $this->select('id, booking_start_time, booking_end_time, status')
-                ->where('field_id', $fieldId)
-                ->whereIn('status', ['pending', 'confirmed'])
-                ->where('booking_start_time <', $end)
-                ->where('booking_end_time >', $start)
-                ->orderBy('booking_start_time', 'ASC')
-                ->findAll();
-}
+    /**
+     * ดึงรายการจองของสนามย่อยในช่วงเวลา (สำหรับปฏิทิน)
+     * เงื่อนไข overlap:
+     *   booking_start_time < $end AND booking_end_time > $start
+     */
+    public function getScheduleForField(int $fieldId, string $start, string $end): array
+    {
+        return $this->select('id, booking_start_time, booking_end_time, status')
+                    ->where('field_id', $fieldId)
+                    ->whereIn('status', ['pending', 'confirmed'])
+                    ->where('booking_start_time <', $end)
+                    ->where('booking_end_time >', $start)
+                    ->orderBy('booking_start_time', 'ASC')
+                    ->findAll();
+    }
+
+    /**
+     * ยกเลิกรายการจองที่สถานะเป็น pending และเลยเวลาเริ่มจองไปแล้ว
+     * (เรียกว่า "สลิปที่เลยเวลา")
+     */
+    public function cancelOverdueBookings()
+    {
+        // เงื่อนไข: status = 'pending' AND booking_start_time < NOW()
+        // CodeIgniter 4 Model update supports WHERE clauses
+        // ใช้ date('Y-m-d H:i:s') เพื่อความชัวร์เรื่อง format
+        $now = date('Y-m-d H:i:s');
+        
+        // เราจะ update โดยตรงด้วย Builder เพื่อความเร็วและไม่ต้อง fetch มาก่อน
+        return $this->where('status', 'pending')
+                    ->where('booking_start_time <', $now)
+                    ->set(['status' => 'cancelled'])
+                    ->update();
+    }
 }

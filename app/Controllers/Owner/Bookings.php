@@ -18,6 +18,9 @@ class Bookings extends BaseController
     {
         $ownerId = session()->get('owner_id');
 
+        // Auto-cancel overdue bookings whenever this page is loaded
+        $this->bookingModel->cancelOverdueBookings();
+
         $data['bookings'] = $this->bookingModel->getAllBookings($ownerId);
         
         $status = $this->request->getGet('status');
