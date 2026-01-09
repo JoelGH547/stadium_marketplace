@@ -527,7 +527,7 @@ public function show($id = null)
         // รีวิว + คะแนนดาว (รวมของสนามย่อยทั้งหมดเข้าที่สนามหลัก)
         $reviewModel   = new StadiumReviewModel();
         $ratingSummary = $reviewModel->getSummaryForStadium((int) $id);
-        $latestReviews = $reviewModel->getLatestForStadium((int) $id, 8);
+        $latestReviews = $reviewModel->getLatestForStadium((int) $id, 100);
 
         
         // Favorite state for this stadium

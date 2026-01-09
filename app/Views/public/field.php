@@ -407,10 +407,7 @@
                         <?php endforeach; ?>
                     </div>
                     <?php if (count($latestReviews) >= 4): ?>
-                        <div class="mt-4 text-center">
-                            <button type="button"
-                                class="text-sm text-[var(--primary)] hover:underline font-medium">ดูรีวิวทั้งหมด</button>
-                        </div>
+                        <!-- Limit removed, showing all loaded reviews (up to 100) -->
                     <?php endif; ?>
                 <?php endif; ?>
             </div>
